@@ -21,9 +21,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +103,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (conversationHistoryJSONString!=null) {
+        if (conversationHistoryJSONString != null) {
             outState.putString("history-json", conversationHistoryJSONString)
         }
     }
@@ -111,14 +114,20 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainContent() {
         val modelRunnerInstance by modelRunner.observeAsState()
-        val chatMessageHistory:  List<ChatMessageDisplayItem> by chatMessageHistory.observeAsState(listOf())
+        val chatMessageHistory: List<ChatMessageDisplayItem> by chatMessageHistory.observeAsState(
+            listOf()
+        )
         var userInputFieldText by remember { mutableStateOf("") }
         val chatHistoryFocusRequester = remember { FocusRequester() }
         val isInGeneration = this.isInGeneration.observeAsState(false)
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().windowInsetsPadding(
+                NavigationBarDefaults.windowInsets.union(
+                    WindowInsets.ime
+                )
+            ),
             bottomBar = {
-                Box(Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets)) {
+                Box {
                     if (modelRunnerInstance == null) {
                         ModelLoadingIndicator(modelRunnerInstance) {
                             loadModel(it)
@@ -228,7 +237,10 @@ class MainActivity : ComponentActivity() {
 
                         else -> {}
                     }
-                    updateLastAssistantMessage(generateTextBuffer.toString(), generatedReasoningBuffer.toString())
+                    updateLastAssistantMessage(
+                        generateTextBuffer.toString(),
+                        generatedReasoningBuffer.toString()
+                    )
                 }
                     .onCompletion {
                         this@MainActivity.isInGeneration.value = false
@@ -261,7 +273,7 @@ class MainActivity : ComponentActivity() {
     private fun loadState(state: Bundle) {
         conversationHistoryJSONString = state.getString("history-json")
 
-        if (conversationHistoryJSONString!=null) {
+        if (conversationHistoryJSONString != null) {
             getConversationHistory()?.map {
                 val textContent = it.content.joinToString { (it as ChatMessageContent.Text).text }
                 ChatMessageDisplayItem(
@@ -280,7 +292,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun appendUserMessage(content: String) {
         val chatMessageHistoryValue = chatMessageHistory.value
-        val newMessage = ChatMessageDisplayItem(ChatMessage.Role.USER, text=content)
+        val newMessage = ChatMessageDisplayItem(ChatMessage.Role.USER, text = content)
         if (chatMessageHistoryValue.isNullOrEmpty()) {
             chatMessageHistory.value = listOf(newMessage)
         } else {
@@ -294,7 +306,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun updateLastAssistantMessage(content: String, reasoning: String?) {
         val chatMessageHistoryValue = chatMessageHistory.value
-        val newChatMessageHistory = (chatMessageHistoryValue?: listOf()).toMutableList()
+        val newChatMessageHistory = (chatMessageHistoryValue ?: listOf()).toMutableList()
         if (newChatMessageHistory.lastOrNull()?.role == ChatMessage.Role.ASSISTANT) {
             newChatMessageHistory.removeAt(newChatMessageHistory.lastIndex)
         }
