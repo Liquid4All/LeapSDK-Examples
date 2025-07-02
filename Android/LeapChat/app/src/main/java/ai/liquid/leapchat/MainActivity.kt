@@ -1,5 +1,6 @@
 package ai.liquid.leapchat
 
+import ai.liquid.leap.Conversation
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.LeapModelLoadingException
 import ai.liquid.leap.ModelRunner
@@ -62,6 +63,10 @@ class MainActivity : ComponentActivity() {
     private val modelRunner: MutableLiveData<ModelRunner> by lazy {
         MutableLiveData<ModelRunner>()
     }
+
+    // The conversation instance. It will be cached and shared between the generations. If the
+    // activity is destroyed and restored, it will be re-created from the dumped states.
+    private var conversation: Conversation? = null
 
     // The chat message history for displaying
     private val chatMessageHistory: MutableLiveData<List<ChatMessageDisplayItem>> by lazy {
@@ -191,13 +196,19 @@ class MainActivity : ComponentActivity() {
      */
     private fun sendText(input: String) {
         val modelRunner = checkNotNull(modelRunner.value)
-        val conversationHistory = getConversationHistory()
-        val conversation =
+        val conversationInstance = conversation
+        val conversation = if (conversationInstance == null) {
+            val conversationHistory = getConversationHistory()
+
             if (conversationHistory == null) {
                 modelRunner.createConversation(getString(R.string.chat_system_prompt))
             } else {
                 modelRunner.createConversationFromHistory(conversationHistory)
             }
+        } else {
+            conversationInstance
+        }
+
         job =
             lifecycleScope.launch {
                 appendUserMessage(input)
