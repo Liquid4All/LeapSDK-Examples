@@ -10,4 +10,5 @@ Almost all logic interacting with LeapSDK is in [MainActivity.kt](app/src/main/j
 
 ## Screenshot
 This is a screenshot of the app running a Qwen3 reasoning model.
+
 <img src="docs/screenshot.png" width="200">
