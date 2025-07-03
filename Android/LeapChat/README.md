@@ -1,6 +1,6 @@
 Example Chat App for LeapSDK
 ===
-This is a simple chat app for LeapSDK in Android to illustrate how to use LeapSDK.
+This is a simple chat app for LeapSDK in Android to illustrate how to use LeapSDK. The UI is implemented with [Jetpack Compose](https://developer.android.com/develop/ui/compose/documentation).
 
 Almost all logic interacting with LeapSDK is in [MainActivity.kt](app/src/main/java/ai/liquid/leapchat/MainActivity.kt). Following features are touched:
 * Loading a model.
