@@ -13,6 +13,7 @@ Swift Package Manager integration with XcodeGen project generation.
 ### 🤖 [Android Examples](./Android/)
 - **SloganApp**: Basic slogan generator using Jetpack Compose
 - **LeapChat**: Full-featured chat application with modern Android UI
+- **ShareAI**: Web page summary generator
 
 Gradle-based projects using the LeapSDK Android library.
 
