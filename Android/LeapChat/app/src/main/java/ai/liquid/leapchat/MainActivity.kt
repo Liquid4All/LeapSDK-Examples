@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val MODEL_FILE_PATH = "/data/local/tmp/liquid/qwen3-0_6b.bundle"
+        const val MODEL_FILE_PATH = "/data/local/tmp/liquid/LFM2-1.2B-8da4w_output_8da8w-seq_4096.bundle"
     }
 }
 

@@ -50,9 +50,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.gson)
-    implementation(files("libs/leap_sdk-release.aar"))
-    implementation(files("libs/leap_gson-release.aar"))
-    implementation("com.charleskorn.kaml:kaml:0.81.0")
+    implementation(libs.leap.sdk)
+    implementation(libs.leap.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
