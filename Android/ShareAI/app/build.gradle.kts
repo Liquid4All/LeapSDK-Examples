@@ -57,8 +57,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation(files("libs/leap_sdk-release.aar"))
-    implementation(libs.kaml)
+    implementation(libs.leap.sdk)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.jsoup)
 

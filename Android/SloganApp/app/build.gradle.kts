@@ -49,8 +49,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(files("libs/leap_sdk-release.aar"))
-    implementation("com.charleskorn.kaml:kaml:0.81.0")
+    implementation(libs.leap.sdk)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
