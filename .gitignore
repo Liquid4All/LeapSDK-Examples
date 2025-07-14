@@ -62,7 +62,6 @@ fastlane/test_output
 # Code Injection
 iOSInjectionProject/
 
-*.xcodeproj/
 *.xcframework/
 
 ####################
