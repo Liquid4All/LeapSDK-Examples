@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
             bottomBar = {
                 Box {
                     if (modelRunnerInstance == null) {
-                        ModelLoadingIndicator(modelRunnerInstance) {onError, onStatusChange ->
+                        ModelLoadingIndicator(modelRunnerInstance) { onError, onStatusChange ->
                             loadModel(onError, onStatusChange)
                         }
                     } else {
@@ -210,9 +210,18 @@ class MainActivity : ComponentActivity() {
                         LeapModelDownloader.ModelDownloadStatusType.NOT_ON_LOCAL -> {
                             onStatusChange("Model is not downloaded. Waiting for downloading...")
                         }
+
                         LeapModelDownloader.ModelDownloadStatusType.DOWNLOAD_IN_PROGRESS -> {
-                            onStatusChange("Downloading the model: ${String.format("%.2f", status.progress * 100.0)}%")
+                            onStatusChange(
+                                "Downloading the model: ${
+                                    String.format(
+                                        "%.2f",
+                                        status.progress * 100.0
+                                    )
+                                }%"
+                            )
                         }
+
                         LeapModelDownloader.ModelDownloadStatusType.DOWNLOADED -> {
                             isModelAvailable = true
                         }
@@ -351,7 +360,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val MODEL_SLUG = "lfm2-1.2b"
-        const val QUANTIZATION_SLUG = "lfm2-1.2b-20250710-8da4w" }
+        const val QUANTIZATION_SLUG = "lfm2-1.2b-20250710-8da4w"
+    }
 }
 
 /**
@@ -369,8 +379,8 @@ fun ModelLoadingIndicator(
             loadModelAction({ error ->
                 modelLoadingStatusText =
                     context.getString(R.string.loading_model_fail_content, error.message)
-            },{
-                status ->  modelLoadingStatusText = status
+            }, { status ->
+                modelLoadingStatusText = status
             })
         }
     }
