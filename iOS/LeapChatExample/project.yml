@@ -17,8 +17,8 @@ settings:
 
 packages:
   LeapSDK:
-    url: https://github.com/Liquid4All/leap-ios
-    majorVersion: 1.0.0
+    url: https://github.com/liquid4all/leap-ios
+    from: 0.3.0
 
 targets:
   LeapChatExample:
@@ -39,6 +39,9 @@ targets:
         createIntermediateGroups: true
     dependencies:
       - package: LeapSDK
+        product: LeapSDK
+      - package: LeapSDK
+        product: LeapSDKTypes
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapChatExample

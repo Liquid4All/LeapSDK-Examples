@@ -110,29 +110,36 @@ class SloganStore {
 
       let stream = conversation!.generateResponse(message: userMessage)
 
-      for await response in stream {
-        if Task.isCancelled { break }
+      do {
+        for try await response in stream {
+          if Task.isCancelled { break }
 
-        switch response {
-        case .chunk(let text):
-          isThinking = false
-          if generatedText.hasPrefix("Generating...") {
-            generatedText = text
-          } else {
-            generatedText.append(text)
+          switch response {
+          case .chunk(let text):
+            isThinking = false
+            if generatedText.hasPrefix("Generating...") {
+              generatedText = text
+            } else {
+              generatedText.append(text)
+            }
+          case .complete(_, _):
+            isGenerating = false
+            isThinking = false
+            generationTask = nil
+          case .reasoningChunk(_):
+            // Set thinking state when we receive reasoning chunks
+            if !isThinking {
+              isThinking = true
+            }
+          @unknown default:
+            break  // Handle any future cases
           }
-        case .complete(_, _):
-          isGenerating = false
-          isThinking = false
-          generationTask = nil
-        case .reasoningChunk(_):
-          // Set thinking state when we receive reasoning chunks
-          if !isThinking {
-            isThinking = true
-          }
-        @unknown default:
-          break  // Handle any future cases
         }
+      } catch {
+        isGenerating = false
+        isThinking = false
+        generationTask = nil
+        generatedText = "Error generating slogans: \(error.localizedDescription)"
       }
     }
   }

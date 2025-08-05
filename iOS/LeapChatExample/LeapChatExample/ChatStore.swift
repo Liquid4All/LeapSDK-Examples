@@ -80,19 +80,26 @@ class ChatStore {
     currentAssistantMessage = ""
 
     let stream = conversation!.generateResponse(message: userMessage)
-    for await resp in stream {
-      print(resp)
-      switch resp {
-      case .reasoningChunk(let str): break
-      case .chunk(let str):
-        currentAssistantMessage.append(str)
-      case .complete(_, _):
-        if !currentAssistantMessage.isEmpty {
-          messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
+    do {
+      for try await resp in stream {
+        print(resp)
+        switch resp {
+        case .reasoningChunk(let str): break
+        case .chunk(let str):
+          currentAssistantMessage.append(str)
+        case .complete(_, _):
+          if !currentAssistantMessage.isEmpty {
+            messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
+          }
+          currentAssistantMessage = ""
+          isLoading = false
         }
-        currentAssistantMessage = ""
-        isLoading = false
       }
+    } catch {
+      currentAssistantMessage = "Error: \(error.localizedDescription)"
+      messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
+      currentAssistantMessage = ""
+      isLoading = false
     }
   }
 }
