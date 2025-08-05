@@ -47,8 +47,8 @@ LeapSDK enables running AI models locally on mobile devices using the Liquid Inf
 
 ## Documentation
 
-- 📚 [iOS Quick Start Guide](https://leap.liquid.ai/docs/ios/ios-quick-start-guide)
-- 📚 [Android Quick Start Guide](https://leap.liquid.ai/docs/android/android-quick-start-guide)
+- 📚 [iOS Quick Start Guide](https://leap.liquid.ai/docs/edge-sdk/ios/ios-quick-start-guide)
+- 📚 [Android Quick Start Guide](https://leap.liquid.ai/docs/edge-sdk/android/android-quick-start-guide)
 - 🔗 [iOS SDK Repository](https://github.com/Liquid4All/leap-ios)
 - 🔗 [Android SDK Repository](https://github.com/Liquid4All/leap-android-sdk)
 
