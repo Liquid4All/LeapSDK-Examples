@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-ios
-    majorVersion: 1.0.0
+    from: 0.3.0
 
 targets:
   LeapSloganExample:
@@ -31,6 +31,9 @@ targets:
           - "Resources/**"
     dependencies:
       - package: LeapSDK
+        product: LeapSDK
+      - package: LeapSDK
+        product: LeapSDKTypes
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapSloganExample

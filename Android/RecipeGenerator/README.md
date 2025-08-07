@@ -1,5 +1,6 @@
 Recipe Generator
 ===
+
 This example illustrate how to use LeapSDK to generate structured outputs with constraints. See [Leap document](https://leap.liquid.ai/docs/edge-sdk/android/constrained-generation) for more details.
 
 Main business logics is in [MainActivityViewModel.kt](app/src/main/java/ai/liquid/recipegenerator/MainActivityViewModel.kt).

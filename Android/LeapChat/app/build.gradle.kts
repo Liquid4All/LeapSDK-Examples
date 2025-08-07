@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.leap.sdk)
     implementation(libs.leap.gson)
+    implementation(libs.leap.model.downloader)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

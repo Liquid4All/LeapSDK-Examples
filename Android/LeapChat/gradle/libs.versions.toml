@@ -5,7 +5,7 @@ coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-leapSdk = "0.1.0"
+leapSdk = "0.2.0"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2025.06.01"
@@ -32,6 +32,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 gson = { group= "com.google.code.gson", name="gson", version.ref="gson"}
 leap-sdk = { module = "ai.liquid.leap:leap-sdk", version.ref = "leapSdk" }
 leap-gson = { module = "ai.liquid.leap:leap-gson", version.ref = "leapSdk" }
+leap-model-downloader = { module = "ai.liquid.leap:leap-model-downloader", version.ref = "leapSdk"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -7,6 +7,8 @@ import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.gson.LeapGson
 import ai.liquid.leap.gson.registerLeapAdapters
 import ai.liquid.leap.message.ChatMessage
+import ai.liquid.leap.downloader.LeapModelDownloader
+import ai.liquid.leap.downloader.LeapDownloadableModel
 import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
 import ai.liquid.leapchat.models.ChatMessageDisplayItem
@@ -51,6 +53,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
@@ -129,8 +132,8 @@ class MainActivity : ComponentActivity() {
             bottomBar = {
                 Box {
                     if (modelRunnerInstance == null) {
-                        ModelLoadingIndicator(modelRunnerInstance) {
-                            loadModel(it)
+                        ModelLoadingIndicator(modelRunnerInstance) { onError, onStatusChange ->
+                            loadModel(onError, onStatusChange)
                         }
                     } else {
                         Column {
@@ -190,10 +193,45 @@ class MainActivity : ComponentActivity() {
     /**
      * Load the model file.
      */
-    private fun loadModel(onError: (Throwable) -> Unit) {
+    private fun loadModel(onError: (Throwable) -> Unit, onStatusChange: (String) -> Unit) {
         lifecycleScope.launch {
             try {
-                modelRunner.value = LeapClient.loadModel(MODEL_FILE_PATH)
+                val modelToUse = LeapDownloadableModel.resolve(MODEL_SLUG, QUANTIZATION_SLUG)
+                if (modelToUse == null) {
+                    throw RuntimeException("Model $QUANTIZATION_SLUG not found in Leap Model Library!")
+                }
+                val modelDownloader = LeapModelDownloader(this@MainActivity)
+                modelDownloader.requestDownloadModel(modelToUse)
+
+                var isModelAvailable = false
+                while (!isModelAvailable) {
+                    val status = modelDownloader.queryStatus(modelToUse)
+                    when (status.type) {
+                        LeapModelDownloader.ModelDownloadStatusType.NOT_ON_LOCAL -> {
+                            onStatusChange("Model is not downloaded. Waiting for downloading...")
+                        }
+
+                        LeapModelDownloader.ModelDownloadStatusType.DOWNLOAD_IN_PROGRESS -> {
+                            onStatusChange(
+                                "Downloading the model: ${
+                                    String.format(
+                                        "%.2f",
+                                        status.progress * 100.0
+                                    )
+                                }%"
+                            )
+                        }
+
+                        LeapModelDownloader.ModelDownloadStatusType.DOWNLOADED -> {
+                            isModelAvailable = true
+                        }
+                    }
+                    delay(500)
+                }
+                val modelFile = modelDownloader.getModelFile(modelToUse)
+                onStatusChange("Loading the model: ${modelFile.path}")
+
+                modelRunner.value = LeapClient.loadModel(modelFile.path)
             } catch (e: LeapModelLoadingException) {
                 onError(e)
             }
@@ -321,7 +359,8 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val MODEL_FILE_PATH = "/data/local/tmp/liquid/LFM2-1.2B-8da4w_output_8da8w-seq_4096.bundle"
+        const val MODEL_SLUG = "lfm2-1.2b"
+        const val QUANTIZATION_SLUG = "lfm2-1.2b-20250710-8da4w"
     }
 }
 
@@ -331,16 +370,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ModelLoadingIndicator(
     modelRunnerState: ModelRunner?,
-    loadModelAction: (onError: (e: Throwable) -> Unit) -> Unit,
+    loadModelAction: (onError: (e: Throwable) -> Unit, onStatusChange: (String) -> Unit) -> Unit,
 ) {
     val context = LocalContext.current
     var modelLoadingStatusText by remember { mutableStateOf(context.getString(R.string.loading_model_content)) }
     LaunchedEffect(modelRunnerState) {
         if (modelRunnerState == null) {
-            loadModelAction { error ->
+            loadModelAction({ error ->
                 modelLoadingStatusText =
                     context.getString(R.string.loading_model_fail_content, error.message)
-            }
+            }, { status ->
+                modelLoadingStatusText = status
+            })
         }
     }
     Box(Modifier.padding(4.dp).fillMaxSize(1.0f), contentAlignment = Alignment.Center) {
