@@ -1,0 +1,19 @@
+name: RecipeGenerator
+options:
+  bundleIdPrefix: ai.liquid
+packages:
+  LeapSDK:
+    url: https://github.com/liquid4All/leap-ios.git
+    branch: main
+targets:
+  RecipeGenerator:
+    type: application
+    platform: iOS
+    deploymentTarget:
+      iOS: 18.0
+    info:
+      path: RecipeGenerator/Info.plist
+    sources: [RecipeGenerator, Resources]
+    dependencies:
+      - package: LeapSDK
+

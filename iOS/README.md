@@ -43,6 +43,16 @@ make setup
 make open  # Opens in Xcode
 ```
 
+### 3. RecipeGenerator
+An example to show how to use [constrained generation](https://leap.liquid.ai/docs/edge-sdk/ios/constrained-generation).
+
+**To run:**
+```bash
+cd RecipeGenerator
+xcodegen generate
+open RecipeGenerator.xcodeproj
+```
+
 ## Getting Started
 
 All examples use:
