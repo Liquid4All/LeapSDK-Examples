@@ -149,14 +149,12 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 Button(
                                     onClick = {
-                                        this@MainActivity.isInGeneration.value = true
-                                        sendText(userInputFieldText)
-                                        userInputFieldText = ""
-                                        chatHistoryFocusRequester.requestFocus()
+                                        conversationHistoryJSONString = null
+                                        this@MainActivity.chatMessageHistory.value = listOf()
                                     },
-                                    enabled = !isInGeneration.value
+                                    enabled = !isInGeneration.value && (conversationHistoryJSONString != null)
                                 ) {
-                                    Text(getString(R.string.send_message_button_label))
+                                    Text(getString(R.string.clean_history_button_label))
                                 }
                                 Button(
                                     onClick = {
@@ -168,12 +166,14 @@ class MainActivity : ComponentActivity() {
                                 }
                                 Button(
                                     onClick = {
-                                        conversationHistoryJSONString = null
-                                        this@MainActivity.chatMessageHistory.value = listOf()
+                                        this@MainActivity.isInGeneration.value = true
+                                        sendText(userInputFieldText)
+                                        userInputFieldText = ""
+                                        chatHistoryFocusRequester.requestFocus()
                                     },
-                                    enabled = !isInGeneration.value && (conversationHistoryJSONString != null)
+                                    enabled = !isInGeneration.value
                                 ) {
-                                    Text(getString(R.string.clean_history_button_label))
+                                    Text(getString(R.string.send_message_button_label))
                                 }
                             }
                         }
