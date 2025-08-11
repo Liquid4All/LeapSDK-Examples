@@ -206,23 +206,29 @@ class MainActivity : ComponentActivity() {
                 var isModelAvailable = false
                 while (!isModelAvailable) {
                     val status = modelDownloader.queryStatus(modelToUse)
-                    when (status.type) {
-                        LeapModelDownloader.ModelDownloadStatusType.NOT_ON_LOCAL -> {
+                    when (status) {
+                        LeapModelDownloader.ModelDownloadStatus.NotOnLocal -> {
                             onStatusChange("Model is not downloaded. Waiting for downloading...")
                         }
 
-                        LeapModelDownloader.ModelDownloadStatusType.DOWNLOAD_IN_PROGRESS -> {
-                            onStatusChange(
-                                "Downloading the model: ${
-                                    String.format(
-                                        "%.2f",
-                                        status.progress * 100.0
-                                    )
-                                }%"
-                            )
+                        is LeapModelDownloader.ModelDownloadStatus.DownloadInProgress -> {
+                            if (status.totalSizeInBytes > 0) {
+                                val progress =
+                                    status.downloadedSizeInBytes.toDouble() / status.totalSizeInBytes;
+                                onStatusChange(
+                                    "Downloading the model: ${
+                                        String.format(
+                                            "%.2f",
+                                            progress * 100.0
+                                        )
+                                    }%"
+                                )
+                            } else {
+                                onStatusChange("Downloading the model...")
+                            }
                         }
 
-                        LeapModelDownloader.ModelDownloadStatusType.DOWNLOADED -> {
+                        is LeapModelDownloader.ModelDownloadStatus.Downloaded -> {
                             isModelAvailable = true
                         }
                     }
