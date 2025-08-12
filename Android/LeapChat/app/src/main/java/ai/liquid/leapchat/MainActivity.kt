@@ -9,10 +9,15 @@ import ai.liquid.leap.gson.registerLeapAdapters
 import ai.liquid.leap.message.ChatMessage
 import ai.liquid.leap.downloader.LeapModelDownloader
 import ai.liquid.leap.downloader.LeapDownloadableModel
+import ai.liquid.leap.function.LeapFunction
+import ai.liquid.leap.function.LeapFunctionCall
+import ai.liquid.leap.function.LeapFunctionParameter
+import ai.liquid.leap.function.LeapFunctionParameterType
 import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
 import ai.liquid.leapchat.models.ChatMessageDisplayItem
 import ai.liquid.leapchat.views.ChatHistory
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -124,11 +129,13 @@ class MainActivity : ComponentActivity() {
         val chatHistoryFocusRequester = remember { FocusRequester() }
         val isInGeneration = this.isInGeneration.observeAsState(false)
         Scaffold(
-            modifier = Modifier.fillMaxSize().windowInsetsPadding(
-                NavigationBarDefaults.windowInsets.union(
-                    WindowInsets.ime
-                )
-            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(
+                    NavigationBarDefaults.windowInsets.union(
+                        WindowInsets.ime
+                    )
+                ),
             bottomBar = {
                 Box {
                     if (modelRunnerInstance == null) {
@@ -140,7 +147,9 @@ class MainActivity : ComponentActivity() {
                             TextField(
                                 value = userInputFieldText,
                                 onValueChange = { userInputFieldText = it },
-                                modifier = Modifier.padding(4.dp).fillMaxWidth(1.0f),
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(1.0f),
                                 enabled = !isInGeneration.value
                             )
                             Row(
@@ -182,7 +191,9 @@ class MainActivity : ComponentActivity() {
             },
         ) { innerPadding ->
             Box(
-                Modifier.padding(innerPadding).focusRequester(chatHistoryFocusRequester)
+                Modifier
+                    .padding(innerPadding)
+                    .focusRequester(chatHistoryFocusRequester)
                     .focusable(true)
             ) {
                 ChatHistory(chatMessageHistory)
@@ -251,28 +262,27 @@ class MainActivity : ComponentActivity() {
      * Send a text as user message and start generation.
      */
     private fun sendText(input: String) {
+        appendUserMessage(input)
         val modelRunner = checkNotNull(modelRunner.value)
-        val conversationInstance = conversation
-        val conversation = if (conversationInstance == null) {
-            val conversationHistory = getConversationHistory()
+        val conversation = getOrRestoreConversation(modelRunner)
+        sendMessage(conversation, ChatMessage(role = ChatMessage.Role.USER, textContent = input))
+    }
 
-            if (conversationHistory == null) {
-                modelRunner.createConversation(getString(R.string.chat_system_prompt))
-            } else {
-                modelRunner.createConversationFromHistory(conversationHistory)
-            }
-        } else {
-            conversationInstance
-        }
+    private fun sendToolText(toolText: String) {
+        appendToolMessage(toolText)
+        val modelRunner = checkNotNull(modelRunner.value)
+        val conversation = getOrRestoreConversation(modelRunner)
+        sendMessage(conversation, ChatMessage(role = ChatMessage.Role.TOOL, textContent = toolText))
+    }
 
+    private fun sendMessage(conversation: Conversation, message: ChatMessage) {
         job =
             lifecycleScope.launch {
-                appendUserMessage(input)
                 val generateTextBuffer = StringBuilder()
                 val generatedReasoningBuffer = StringBuilder()
-
+                val functionCallsToInvoke = mutableListOf<LeapFunctionCall>()
                 // Generate the response
-                conversation.generateResponse(input).onEach {
+                conversation.generateResponse(message).onEach {
                     when (it) {
                         is MessageResponse.Chunk -> {
                             generateTextBuffer.append(it.text)
@@ -280,6 +290,13 @@ class MainActivity : ComponentActivity() {
 
                         is MessageResponse.ReasoningChunk -> {
                             generatedReasoningBuffer.append(it.reasoning)
+                        }
+
+                        is MessageResponse.FunctionCalls -> {
+                            it.functionCalls.forEach { call ->
+                                generatedReasoningBuffer.append("Calling tool: ${call.name}")
+                                functionCallsToInvoke.add(call)
+                            }
                         }
 
                         else -> {}
@@ -300,7 +317,64 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     .collect()
+                if (functionCallsToInvoke.isNotEmpty()) {
+                    processFunctionCalls(functionCallsToInvoke)
+                }
             }
+    }
+
+    private fun processFunctionCalls(functionCalls: List<LeapFunctionCall>) {
+        for (call in functionCalls) {
+            when (call.name) {
+                "compute_sum" -> {
+                    val numbers = call.arguments["values"] as? List<String> ?: listOf()
+                    var sum = 0.0
+                    for (v in numbers) {
+                        sum += v.toDoubleOrNull() ?: 0.0
+                    }
+                    sendToolText("Sum = $sum")
+                }
+
+                else -> {
+                    sendToolText("Tool: ${call.name} is not available")
+                }
+            }
+        }
+    }
+
+    /**
+     * In case `conversation` is not available due to the activity destroy, restore it from the
+     * conversation history.
+     */
+    private fun getOrRestoreConversation(modelRunner: ModelRunner): Conversation {
+        val conversationInstance = conversation
+        val conversation = if (conversationInstance == null) {
+            val conversationHistory = getConversationHistory()
+            if (conversationHistory == null) {
+                modelRunner.createConversation(getString(R.string.chat_system_prompt))
+            } else {
+                modelRunner.createConversationFromHistory(conversationHistory)
+            }
+        } else {
+            conversationInstance
+        }
+
+
+        conversation.registerFunction(
+            LeapFunction(
+                "compute_sum", "Compute sum of a series of numbers", listOf(
+                    LeapFunctionParameter(
+                        name = "values",
+                        type = LeapFunctionParameterType.Array(
+                            itemType = LeapFunctionParameterType.String()
+                        ),
+                        description = "Numbers to compute sum. Values should be represented in string."
+                    )
+                )
+            )
+        )
+
+        return conversation
     }
 
     /**
@@ -340,6 +414,19 @@ class MainActivity : ComponentActivity() {
     private fun appendUserMessage(content: String) {
         val chatMessageHistoryValue = chatMessageHistory.value
         val newMessage = ChatMessageDisplayItem(ChatMessage.Role.USER, text = content)
+        if (chatMessageHistoryValue.isNullOrEmpty()) {
+            chatMessageHistory.value = listOf(newMessage)
+        } else {
+            chatMessageHistory.value = chatMessageHistoryValue + listOf(newMessage)
+        }
+    }
+
+    /**
+     * Append a user message to the history
+     */
+    private fun appendToolMessage(content: String) {
+        val chatMessageHistoryValue = chatMessageHistory.value
+        val newMessage = ChatMessageDisplayItem(ChatMessage.Role.TOOL, text = content)
         if (chatMessageHistoryValue.isNullOrEmpty()) {
             chatMessageHistory.value = listOf(newMessage)
         } else {
@@ -393,7 +480,9 @@ fun ModelLoadingIndicator(
             })
         }
     }
-    Box(Modifier.padding(4.dp).fillMaxSize(1.0f), contentAlignment = Alignment.Center) {
+    Box(Modifier
+        .padding(4.dp)
+        .fillMaxSize(1.0f), contentAlignment = Alignment.Center) {
         Text(modelLoadingStatusText, style = MaterialTheme.typography.titleSmall)
     }
 }

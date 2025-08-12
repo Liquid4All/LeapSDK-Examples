@@ -36,6 +36,10 @@ fun ChatHistory(
                         AssistantMessage(message.text, message.reasoning)
                     }
 
+                    ChatMessage.Role.TOOL -> {
+                        ToolMessage(message.text)
+                    }
+
                     else -> {}
                 }
             }
