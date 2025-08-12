@@ -8,6 +8,7 @@ Almost all logic interacting with LeapSDK is in [MainActivity.kt](app/src/main/j
 * Generating responses from a conversation.
 * Continue generation from the chat history.
 * Serialize/deserialize the chat history with Gson.
+* Function calling to get accurate answers for math compuation.
 
 ## Screenshot
 This is a screenshot of the app running a Qwen3 reasoning model.
