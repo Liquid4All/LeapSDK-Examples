@@ -10,6 +10,7 @@
 		4DEEB90F6D2D2F0DE4802B71 /* SloganStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1807EB4474C6CFE6F741978 /* SloganStore.swift */; };
 		933BF833B0A8BD90473D1822 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 885630536C0AA36026D99108 /* Assets.xcassets */; };
 		94ACD34F87EA3BEAE115CA93 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2DEE461B73E28FE4304817 /* ContentView.swift */; };
+		A5963AF3F7F3D9FC9B431470 /* SloganGeneratable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */; };
 		B8A09F7C6B1231F88EB65956 /* LeapSloganExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A1DAD152B2F4AB77F7F3CE /* LeapSloganExampleApp.swift */; };
 		CA753FA13EA002F308976E67 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0C9F134A6A19B80ECC11E5F /* Preview Assets.xcassets */; };
 		CE82A54940A70C970D4D73E9 /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 000309645F503650732E41D9 /* LeapSDK */; };
@@ -18,6 +19,7 @@
 /* Begin PBXFileReference section */
 		885630536C0AA36026D99108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E2DEE461B73E28FE4304817 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloganGeneratable.swift; sourceTree = "<group>"; };
 		B1807EB4474C6CFE6F741978 /* SloganStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloganStore.swift; sourceTree = "<group>"; };
 		BCF872115CBFB31559F15F9C /* LeapSloganExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LeapSloganExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2A1DAD152B2F4AB77F7F3CE /* LeapSloganExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeapSloganExampleApp.swift; sourceTree = "<group>"; };
@@ -42,6 +44,7 @@
 				885630536C0AA36026D99108 /* Assets.xcassets */,
 				8E2DEE461B73E28FE4304817 /* ContentView.swift */,
 				D2A1DAD152B2F4AB77F7F3CE /* LeapSloganExampleApp.swift */,
+				A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */,
 				B1807EB4474C6CFE6F741978 /* SloganStore.swift */,
 				A1AB7E54FBF734774F7E384E /* Preview Content */,
 			);
@@ -117,7 +120,7 @@
 			mainGroup = 14A66CD5DDEA138765EBEC89;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */,
+				263940535956B24062540972 /* XCRemoteSwiftPackageReference "leap-ios" */,
 			);
 			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
@@ -147,6 +150,7 @@
 			files = (
 				94ACD34F87EA3BEAE115CA93 /* ContentView.swift in Sources */,
 				B8A09F7C6B1231F88EB65956 /* LeapSloganExampleApp.swift in Sources */,
+				A5963AF3F7F3D9FC9B431470 /* SloganGeneratable.swift in Sources */,
 				4DEEB90F6D2D2F0DE4802B71 /* SloganStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -355,12 +359,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */ = {
+		263940535956B24062540972 /* XCRemoteSwiftPackageReference "leap-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Liquid4All/leap-ios";
+			repositoryURL = "https://github.com/liquid4all/leap-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.4.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -368,7 +372,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		000309645F503650732E41D9 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */;
+			package = 263940535956B24062540972 /* XCRemoteSwiftPackageReference "leap-ios" */;
 			productName = LeapSDK;
 		};
 /* End XCSwiftPackageProductDependency section */

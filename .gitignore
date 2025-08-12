@@ -194,12 +194,12 @@ yarn-error.log*
 # Model Files
 ####################
 
-# Large model files (commented out - uncomment if models should not be tracked)
-# *.bundle
-# *.mlmodel
-# *.mlpackage
-# *.onnx
-# *.tflite
+# Large model files (should not be tracked in git)
+*.bundle
+*.mlmodel
+*.mlpackage
+*.onnx
+*.tflite
 
 ####################
 # Secrets

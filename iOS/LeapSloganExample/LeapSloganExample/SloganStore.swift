@@ -32,7 +32,7 @@ class SloganStore {
     do {
       guard
         let modelURL = Bundle.main.url(
-          forResource: "qwen3-1_7b_8da4w",
+          forResource: "LFM2-1.2B-8da4w",
           withExtension: "bundle"
         )
       else {
@@ -40,6 +40,8 @@ class SloganStore {
       }
 
       modelRunner = try await Leap.load(url: modelURL)
+
+      // Initialize conversation for regular generation
       let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
       conversation = Conversation(
         modelRunner: modelRunner!,
@@ -51,6 +53,7 @@ class SloganStore {
       modelStatusColor = .green
       generatedText = "Slogan generator ready! Time to create your brand's tagline! 🎯\n\n"
     } catch {
+      print(error)
       generatedText =
         "Error loading slogan generator: \(error.localizedDescription)\n\nOops! An error happened."
       modelStatus = "● Model: Error"
@@ -98,48 +101,111 @@ class SloganStore {
     generatedText = "Generating...\n\n"
 
     generationTask = Task { @MainActor in
-      // Reset conversation for each generation to avoid context length issues
-      let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
-      conversation = Conversation(
-        modelRunner: modelRunner!,
-        history: [systemMessage]
-      )
-
-      let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
-      let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
-
-      let stream = conversation!.generateResponse(message: userMessage)
-
       do {
+        // Use constrained generation for structured output
+        generatedText = "Generating structured slogans...\n\n"
+
+        // Create conversation with constrained generation options
+        let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
+        let constrainedConversation = Conversation(
+          modelRunner: modelRunner!,
+          history: [systemMessage]
+        )
+
+        // Set up generation options with structured output
+        var options = GenerationOptions()
+        try options.setResponseFormat(type: SloganResponse.self)
+
+        let userMessage = ChatMessage(
+          role: .user, content: [.text(String(format: USER_PROMPT_TEMPLATE, topic))])
+        let stream = constrainedConversation.generateResponse(
+          message: userMessage, generationOptions: options)
+
+        var jsonResponse = ""
         for try await response in stream {
           if Task.isCancelled { break }
-
           switch response {
           case .chunk(let text):
-            isThinking = false
-            if generatedText.hasPrefix("Generating...") {
-              generatedText = text
-            } else {
-              generatedText.append(text)
-            }
+            jsonResponse.append(text)
           case .complete(_, _):
-            isGenerating = false
-            isThinking = false
-            generationTask = nil
+            break
           case .reasoningChunk(_):
-            // Set thinking state when we receive reasoning chunks
-            if !isThinking {
-              isThinking = true
-            }
-          @unknown default:
-            break  // Handle any future cases
+            break  // Not used in constrained generation
+          case .functionCall(_):
+            break  // Function calls not used in this example
           }
         }
-      } catch {
+
+        // Parse the JSON response
+        let jsonData = jsonResponse.data(using: .utf8)!
+        let sloganResponse = try JSONDecoder().decode(SloganResponse.self, from: jsonData)
+
+        // Format the structured output nicely
+        var formattedOutput = ""
+        formattedOutput += "🎯 **Short Slogan:**\n\(sloganResponse.shortSlogan)\n\n"
+        formattedOutput += "📝 **Long Tagline:**\n\(sloganResponse.longTagline)\n\n"
+        formattedOutput += "🎭 **Tone:** \(sloganResponse.tone)\n\n"
+        formattedOutput += "👥 **Target Audience:** \(sloganResponse.targetAudience)\n\n"
+        formattedOutput += "✨ **Key Benefits:**\n"
+        for benefit in sloganResponse.keyBenefits {
+          formattedOutput += "  • \(benefit)\n"
+        }
+
+        generatedText = formattedOutput
         isGenerating = false
         isThinking = false
         generationTask = nil
-        generatedText = "Error generating slogans: \(error.localizedDescription)"
+
+      } catch {
+        // Fallback to regular conversation if constrained generation fails
+        print("Constrained generation failed: \(error)")
+        print("Falling back to regular conversation...")
+
+        // Reset conversation for each generation to avoid context length issues
+        let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
+        conversation = Conversation(
+          modelRunner: modelRunner!,
+          history: [systemMessage]
+        )
+
+        let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
+        let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
+
+        let stream = conversation!.generateResponse(message: userMessage)
+
+        generatedText = "Generating (fallback mode)...\n\n"
+
+        do {
+          for try await response in stream {
+            if Task.isCancelled { break }
+
+            switch response {
+            case .chunk(let text):
+              isThinking = false
+              if generatedText.hasPrefix("Generating (fallback mode)...") {
+                generatedText = text
+              } else {
+                generatedText.append(text)
+              }
+            case .complete(_, _):
+              isGenerating = false
+              isThinking = false
+              generationTask = nil
+            case .reasoningChunk(_):
+              // Set thinking state when we receive reasoning chunks
+              if !isThinking {
+                isThinking = true
+              }
+            case .functionCall(_):
+              break  // Function calls not used in this example
+            }
+          }
+        } catch {
+          isGenerating = false
+          isThinking = false
+          generationTask = nil
+          generatedText = "Error generating slogans: \(error.localizedDescription)"
+        }
       }
     }
   }

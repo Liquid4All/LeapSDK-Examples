@@ -92,8 +92,8 @@ class ChatStore {
           }
           currentAssistantMessage = ""
           isLoading = false
-        default:
-          continue
+        case .functionCall(_):
+          break  // Function calls not used in this example
         }
       }
     } catch {
