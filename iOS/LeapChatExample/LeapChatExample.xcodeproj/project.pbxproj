@@ -12,7 +12,6 @@
 		1FD7C3B554B6B9D9B8C686E1 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E0E8DAC812EFA333A05707 /* ChatStore.swift */; };
 		5A8DE8111668A5CDAF017FDD /* ChatInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41D9A0B14EA28A1C90B1CC6 /* ChatInputView.swift */; };
 		73110802E4DD764BA181AB70 /* MessagesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E823D9B11B9B01D46F68 /* MessagesListView.swift */; };
-		791E073536F85CB75E032CAA /* LeapSDKTypes in Frameworks */ = {isa = PBXBuildFile; productRef = B59502058F28FA2BC8E5649E /* LeapSDKTypes */; };
 		7A602B29B7ABA501D6300330 /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = ED5F88F2A83CAD024F54D0E3 /* LeapSDK */; };
 		7D329B4AC8701EB0588E2228 /* MessageBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24FE2EF676750A8CE6D61F2F /* MessageBubble.swift */; };
 		B6FC183EE0C9BA0A7E35913A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 31830A56D781777FE7FDB96C /* Assets.xcassets */; };
@@ -64,7 +63,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A602B29B7ABA501D6300330 /* LeapSDK in Frameworks */,
-				791E073536F85CB75E032CAA /* LeapSDKTypes in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,7 +159,6 @@
 			name = LeapChatExample;
 			packageProductDependencies = (
 				ED5F88F2A83CAD024F54D0E3 /* LeapSDK */,
-				B59502058F28FA2BC8E5649E /* LeapSDKTypes */,
 			);
 			productName = LeapChatExample;
 			productReference = AB8D0D10DEAC7A307D5D59E3 /* LeapChatExample.app */;
@@ -569,11 +566,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B59502058F28FA2BC8E5649E /* LeapSDKTypes */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B43CA0374E95637CE0CF935D /* XCRemoteSwiftPackageReference "leap-ios" */;
-			productName = LeapSDKTypes;
-		};
 		ED5F88F2A83CAD024F54D0E3 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B43CA0374E95637CE0CF935D /* XCRemoteSwiftPackageReference "leap-ios" */;

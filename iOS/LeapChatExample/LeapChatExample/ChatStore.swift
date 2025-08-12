@@ -84,7 +84,6 @@ class ChatStore {
       for try await resp in stream {
         print(resp)
         switch resp {
-        case .reasoningChunk(let str): break
         case .chunk(let str):
           currentAssistantMessage.append(str)
         case .complete(_, _):
@@ -93,6 +92,8 @@ class ChatStore {
           }
           currentAssistantMessage = ""
           isLoading = false
+        default:
+          continue
         }
       }
     } catch {
