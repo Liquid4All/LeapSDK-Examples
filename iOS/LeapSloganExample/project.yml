@@ -32,8 +32,6 @@ targets:
     dependencies:
       - package: LeapSDK
         product: LeapSDK
-      - package: LeapSDK
-        product: LeapSDKTypes
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapSloganExample
