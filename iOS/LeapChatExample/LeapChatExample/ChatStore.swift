@@ -94,6 +94,8 @@ class ChatStore {
           isLoading = false
         case .functionCall(_):
           break  // Function calls not used in this example
+        case default:
+          break  // Handle any other case
         }
       }
     } catch {
