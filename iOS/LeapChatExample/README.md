@@ -9,6 +9,7 @@ A comprehensive chat application demonstrating advanced LeapSDK features includi
 - **Message History**: Persistent conversation management
 - **Rich UI Components**: Custom message rows, input views, and animations
 - **Error Handling**: Robust error management and user feedback
+- **Function Calling**: Tool support with compute_sum example function
 
 ## Requirements
 
@@ -55,12 +56,13 @@ LeapChatExample/
     ├── ChatStore.swift           # Core business logic
     ├── MessagesListView.swift    # Message list component
     ├── MessageRow.swift          # Individual message display
-    ├── MessageBubble.swift       # Message bubble UI
+    ├── MessageBubble.swift       # Message bubble data model
+    ├── ToolMessageRow.swift      # Tool message display component
     ├── ChatInputView.swift       # Input field component
     ├── TypingIndicator.swift     # Typing animation
     ├── Assets.xcassets          # App assets
     └── Resources/               # Model bundles
-        └── qwen3-1_7b_8da4w.bundle
+        └── LFM2-1.2B-8da4w_output_8da8w-seq_4096.bundle
 ```
 
 ## Code Overview
@@ -118,6 +120,36 @@ for try await chunk in modelRunner.generateResponse(for: conversation) {
 }
 ```
 
+### Function Calling
+The app includes tool support with a `compute_sum` function that can add numbers:
+```swift
+// Function registration
+conversation.registerFunction(
+    LeapFunction(
+        name: "compute_sum",
+        description: "Compute sum of a series of numbers",
+        parameters: [
+            LeapFunctionParameter(
+                name: "values",
+                type: .array(.string),
+                description: "Numbers to compute sum. Values should be represented as strings."
+            )
+        ]
+    )
+)
+
+// Function call handling
+case .functionCall(let calls):
+    for call in calls {
+        if call.name == "compute_sum" {
+            let result = computeSum(call.arguments["values"])
+            // Display tool result and continue conversation
+        }
+    }
+```
+
+Try asking the model: "Can you compute the sum of 5, 10, and 15?"
+
 ### Conversation Management
 Maintains chat context across messages:
 ```swift
@@ -146,7 +178,7 @@ Smooth animations for message appearance and typing indicators.
 Update the model path in `ChatStore.swift`:
 ```swift
 let modelRunner = try await Leap.load(
-    modelPath: Bundle.main.bundlePath + "/qwen3-1_7b_8da4w.bundle"
+    modelPath: Bundle.main.bundlePath + "/LFM2-1.2B-8da4w_output_8da8w-seq_4096.bundle"
 )
 ```
 
