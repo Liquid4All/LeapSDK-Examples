@@ -21,7 +21,7 @@ struct MessagesListView: View {
 
             if store.isLoading && !store.currentAssistantMessage.isEmpty {
               MessageRow(
-                message: MessageBubble(content: store.currentAssistantMessage, isUser: false)
+                message: MessageBubble(content: store.currentAssistantMessage, messageType: .assistant)
               )
               .id("streaming")
             } else if store.isLoading {
