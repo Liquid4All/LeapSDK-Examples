@@ -1,4 +1,5 @@
 import LeapSDK
+import PhotosUI
 import SwiftUI
 
 @Observable
@@ -8,6 +9,7 @@ class ChatStore {
   var isLoading = false
   var isModelLoading = true
   var currentAssistantMessage = ""
+  var attachedImage: UIImage?
 
   var conversation: Conversation?
   var modelRunner: ModelRunner?
@@ -27,7 +29,7 @@ class ChatStore {
 
       guard
         let modelURL = Bundle.main.url(
-          forResource: "qwen3-1_7b_8da4w", withExtension: "bundle")
+          forResource: "LFM2-VL-1_6B_8da4w", withExtension: "bundle")
       else {
         messages.append(
           MessageBubble(
@@ -71,11 +73,38 @@ class ChatStore {
     guard conversation != nil else { return }
 
     let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else { return }
+    guard !trimmed.isEmpty || attachedImage != nil else { return }
 
-    let userMessage = ChatMessage(role: .user, content: [.text(trimmed)])
-    messages.append(MessageBubble(content: trimmed, isUser: true))
+    // Create message content array
+    var messageContent: [ChatMessageContent] = []
+
+    // Add image if present
+    if let image = attachedImage {
+      do {
+        let imageContent = try ChatMessageContent.fromUIImage(image)
+        messageContent.append(imageContent)
+      } catch {
+        print("Error converting image: \(error)")
+        return
+      }
+    }
+
+    // Add text if present
+    if !trimmed.isEmpty {
+      messageContent.append(.text(trimmed))
+    }
+
+    let userMessage = ChatMessage(role: .user, content: messageContent)
+
+    // Create display content for the message bubble
+    var displayContent = trimmed
+    if attachedImage != nil {
+      displayContent = displayContent.isEmpty ? "[Image]" : "[Image] \(displayContent)"
+    }
+
+    messages.append(MessageBubble(content: displayContent, isUser: true, image: attachedImage))
     input = ""
+    attachedImage = nil
     isLoading = true
     currentAssistantMessage = ""
 
@@ -84,6 +113,7 @@ class ChatStore {
       for try await resp in stream {
         print(resp)
         switch resp {
+        case .reasoningChunk(let str): break
         case .chunk(let str):
           currentAssistantMessage.append(str)
         case .complete(_, _):
@@ -94,8 +124,6 @@ class ChatStore {
           isLoading = false
         case .functionCall(_):
           break  // Function calls not used in this example
-        case default:
-          break  // Handle any other case
         }
       }
     } catch {
@@ -104,5 +132,20 @@ class ChatStore {
       currentAssistantMessage = ""
       isLoading = false
     }
+  }
+
+  @MainActor
+  func loadImageFrom(item: PhotosPickerItem) async {
+    guard let data = try? await item.loadTransferable(type: Data.self),
+      let image = UIImage(data: data)
+    else {
+      print("Failed to load image from PhotosPickerItem")
+      return
+    }
+    attachedImage = image
+  }
+
+  func removeAttachedImage() {
+    attachedImage = nil
   }
 }
