@@ -17,7 +17,6 @@ import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
 import ai.liquid.leapchat.models.ChatMessageDisplayItem
 import ai.liquid.leapchat.views.ChatHistory
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -93,6 +92,10 @@ class MainActivity : ComponentActivity() {
         MutableLiveData<Boolean>(false)
     }
 
+    private val isToolEnabled: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>(false)
+    }
+
     private val gson = GsonBuilder().registerLeapAdapters().create()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -156,16 +159,15 @@ class MainActivity : ComponentActivity() {
                                 horizontalArrangement = Arrangement.End,
                                 modifier = Modifier.fillMaxWidth(1.0f)
                             ) {
-                                Button(
-                                    onClick = {
-                                        this@MainActivity.isInGeneration.value = true
-                                        sendText(userInputFieldText)
-                                        userInputFieldText = ""
-                                        chatHistoryFocusRequester.requestFocus()
-                                    },
-                                    enabled = !isInGeneration.value
-                                ) {
-                                    Text(getString(R.string.send_message_button_label))
+                                val isToolEnabledState by isToolEnabled.observeAsState(false)
+                                Button(onClick = {
+                                    isToolEnabled.value = !isToolEnabledState
+                                }) {
+                                    if (isToolEnabledState) {
+                                        Text(getString(R.string.tool_on_button_label))
+                                    } else {
+                                        Text(getString(R.string.tool_off_button_label))
+                                    }
                                 }
                                 Button(
                                     onClick = {
@@ -183,6 +185,17 @@ class MainActivity : ComponentActivity() {
                                     enabled = !isInGeneration.value && (conversationHistoryJSONString != null)
                                 ) {
                                     Text(getString(R.string.clean_history_button_label))
+                                }
+                                Button(
+                                    onClick = {
+                                        this@MainActivity.isInGeneration.value = true
+                                        sendText(userInputFieldText)
+                                        userInputFieldText = ""
+                                        chatHistoryFocusRequester.requestFocus()
+                                    },
+                                    enabled = !isInGeneration.value
+                                ) {
+                                    Text(getString(R.string.send_message_button_label))
                                 }
                             }
                         }
@@ -359,20 +372,21 @@ class MainActivity : ComponentActivity() {
             conversationInstance
         }
 
-
-        conversation.registerFunction(
-            LeapFunction(
-                "compute_sum", "Compute sum of a series of numbers", listOf(
-                    LeapFunctionParameter(
-                        name = "values",
-                        type = LeapFunctionParameterType.Array(
-                            itemType = LeapFunctionParameterType.String()
-                        ),
-                        description = "Numbers to compute sum. Values should be represented in string."
+        if (isToolEnabled.value == true) {
+            conversation.registerFunction(
+                LeapFunction(
+                    "compute_sum", "Compute sum of a series of numbers", listOf(
+                        LeapFunctionParameter(
+                            name = "values",
+                            type = LeapFunctionParameterType.Array(
+                                itemType = LeapFunctionParameterType.String()
+                            ),
+                            description = "Numbers to compute sum. Values should be represented in string."
+                        )
                     )
                 )
             )
-        )
+        }
 
         return conversation
     }
@@ -480,9 +494,11 @@ fun ModelLoadingIndicator(
             })
         }
     }
-    Box(Modifier
-        .padding(4.dp)
-        .fillMaxSize(1.0f), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier
+            .padding(4.dp)
+            .fillMaxSize(1.0f), contentAlignment = Alignment.Center
+    ) {
         Text(modelLoadingStatusText, style = MaterialTheme.typography.titleSmall)
     }
 }
