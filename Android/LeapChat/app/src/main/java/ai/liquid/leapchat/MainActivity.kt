@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -152,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                 onValueChange = { userInputFieldText = it },
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(1.0f),
+                                    .fillMaxWidth(1.0f).testTag("InputBox"),
                                 enabled = !isInGeneration.value
                             )
                             Row(
@@ -469,8 +470,8 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val MODEL_SLUG = "lfm2-1.2b"
-        const val QUANTIZATION_SLUG = "lfm2-1.2b-20250710-8da4w"
+        const val MODEL_SLUG = "lfm2-350m"
+        const val QUANTIZATION_SLUG = "lfm2-350m-20250710-8da4w"
     }
 }
 
@@ -497,7 +498,9 @@ fun ModelLoadingIndicator(
     Box(
         Modifier
             .padding(4.dp)
-            .fillMaxSize(1.0f), contentAlignment = Alignment.Center
+            .fillMaxSize(1.0f)
+            .testTag("ModelLoadingIndicator"),
+        contentAlignment = Alignment.Center
     ) {
         Text(modelLoadingStatusText, style = MaterialTheme.typography.titleSmall)
     }
