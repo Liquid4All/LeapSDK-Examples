@@ -37,5 +37,5 @@ jobs:
             --device model=MediumPhone.arm,version=36,locale=en,orientation=portrait \
             --project liquid-leap
       env:
-        SERVICE_ACCOUNT = ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
