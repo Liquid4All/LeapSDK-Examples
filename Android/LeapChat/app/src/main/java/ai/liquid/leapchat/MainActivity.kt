@@ -17,7 +17,6 @@ import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
 import ai.liquid.leapchat.models.ChatMessageDisplayItem
 import ai.liquid.leapchat.views.ChatHistory
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -53,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -90,6 +90,10 @@ class MainActivity : ComponentActivity() {
 
     // Whether the generation is still ongoing
     private val isInGeneration: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>(false)
+    }
+
+    private val isToolEnabled: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>(false)
     }
 
@@ -149,23 +153,22 @@ class MainActivity : ComponentActivity() {
                                 onValueChange = { userInputFieldText = it },
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(1.0f),
+                                    .fillMaxWidth(1.0f).testTag("InputBox"),
                                 enabled = !isInGeneration.value
                             )
                             Row(
                                 horizontalArrangement = Arrangement.End,
                                 modifier = Modifier.fillMaxWidth(1.0f)
                             ) {
-                                Button(
-                                    onClick = {
-                                        this@MainActivity.isInGeneration.value = true
-                                        sendText(userInputFieldText)
-                                        userInputFieldText = ""
-                                        chatHistoryFocusRequester.requestFocus()
-                                    },
-                                    enabled = !isInGeneration.value
-                                ) {
-                                    Text(getString(R.string.send_message_button_label))
+                                val isToolEnabledState by isToolEnabled.observeAsState(false)
+                                Button(onClick = {
+                                    isToolEnabled.value = !isToolEnabledState
+                                }) {
+                                    if (isToolEnabledState) {
+                                        Text(getString(R.string.tool_on_button_label))
+                                    } else {
+                                        Text(getString(R.string.tool_off_button_label))
+                                    }
                                 }
                                 Button(
                                     onClick = {
@@ -183,6 +186,17 @@ class MainActivity : ComponentActivity() {
                                     enabled = !isInGeneration.value && (conversationHistoryJSONString != null)
                                 ) {
                                     Text(getString(R.string.clean_history_button_label))
+                                }
+                                Button(
+                                    onClick = {
+                                        this@MainActivity.isInGeneration.value = true
+                                        sendText(userInputFieldText)
+                                        userInputFieldText = ""
+                                        chatHistoryFocusRequester.requestFocus()
+                                    },
+                                    enabled = !isInGeneration.value
+                                ) {
+                                    Text(getString(R.string.send_message_button_label))
                                 }
                             }
                         }
@@ -359,20 +373,21 @@ class MainActivity : ComponentActivity() {
             conversationInstance
         }
 
-
-        conversation.registerFunction(
-            LeapFunction(
-                "compute_sum", "Compute sum of a series of numbers", listOf(
-                    LeapFunctionParameter(
-                        name = "values",
-                        type = LeapFunctionParameterType.Array(
-                            itemType = LeapFunctionParameterType.String()
-                        ),
-                        description = "Numbers to compute sum. Values should be represented in string."
+        if (isToolEnabled.value == true) {
+            conversation.registerFunction(
+                LeapFunction(
+                    "compute_sum", "Compute sum of a series of numbers", listOf(
+                        LeapFunctionParameter(
+                            name = "values",
+                            type = LeapFunctionParameterType.Array(
+                                itemType = LeapFunctionParameterType.String()
+                            ),
+                            description = "Numbers to compute sum. Values should be represented in string."
+                        )
                     )
                 )
             )
-        )
+        }
 
         return conversation
     }
@@ -455,8 +470,8 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val MODEL_SLUG = "lfm2-1.2b"
-        const val QUANTIZATION_SLUG = "lfm2-1.2b-20250710-8da4w"
+        const val MODEL_SLUG = "lfm2-350m"
+        const val QUANTIZATION_SLUG = "lfm2-350m-20250710-8da4w"
     }
 }
 
@@ -480,9 +495,13 @@ fun ModelLoadingIndicator(
             })
         }
     }
-    Box(Modifier
-        .padding(4.dp)
-        .fillMaxSize(1.0f), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier
+            .padding(4.dp)
+            .fillMaxSize(1.0f)
+            .testTag("ModelLoadingIndicator"),
+        contentAlignment = Alignment.Center
+    ) {
         Text(modelLoadingStatusText, style = MaterialTheme.typography.titleSmall)
     }
 }

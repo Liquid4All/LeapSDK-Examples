@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,7 @@ fun AssistantMessage(
     reasoningText: String?,
 ) {
     val reasoningText = reasoningText?.trim()
-    Row(modifier = Modifier.padding(all = 8.dp).fillMaxWidth(1.0f), horizontalArrangement = Arrangement.Absolute.Left) {
+    Row(modifier = Modifier.padding(all = 8.dp).fillMaxWidth(1.0f).testTag("AssistantMessageView"), horizontalArrangement = Arrangement.Absolute.Left) {
         Image(
             painter = painterResource(R.drawable.smart_toy_outline),
             contentDescription = "Assistant icon",
@@ -43,7 +44,7 @@ fun AssistantMessage(
                 Text(text = reasoningText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = text, style = MaterialTheme.typography.bodyMedium)
+            Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("AssistantMessageViewText"))
         }
     }
 }

@@ -6,5 +6,6 @@
     <string name="send_message_button_label">Send</string>
     <string name="clean_history_button_label">Clean</string>
     <string name="stop_generation_button_label">Stop</string>
-
+    <string name="tool_on_button_label">Tool ON</string>
+    <string name="tool_off_button_label">Tool OFF</string>
 </resources>
