@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.performClick
@@ -44,8 +45,11 @@ class MainActivityE2EAssetTests {
             hasTestTag("AssistantMessageView"),
             timeoutMillis = 5000L
         )
-        composeTestRule.onNode(hasTestTag("AssistantMessageViewText"))
-            .assertTextContains("strawberry", substring = true)
+        composeTestRule.waitUntil(timeoutMillis = 5000L) {
+            composeTestRule.onNode(hasTestTag("AssistantMessageViewText").and(hasText("strawberry", substring = true)))
+                .isDisplayed()
+        }
+
 
         // Continue the chat with a second prompt
         composeTestRule.onNode(inputBoxMatcher).performTextInput("What about letter 'a'?")

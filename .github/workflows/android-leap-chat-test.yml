@@ -1,0 +1,41 @@
+name: Android LeapChat Build
+on: 
+  push:
+    branches: [ main ]
+    paths:
+      - 'Android/LeapChat/**'
+      - '.github/workflows/android-leap-chat-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Android/LeapChat/**'
+      - '.github/workflows/android-leap-chat-test.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+    - name: Build LeapChat
+      run: cd Android/LeapChat && ./gradlew :app:assemble
+    - name: Build E2E test
+      run: cd Android/LeapChat && ./gradlew :app:assembleAndroidTest
+    - name: Run E2E test on Firebase Test Lab
+      run: |
+          echo "$SERVICE_ACCOUNT" > /tmp/service_account.json
+          gcloud auth activate-service-account --key-file=/tmp/service_account.json
+          gcloud firebase test android run --type instrumentation \
+            --app app/build/outputs/apk/debug/app-debug.apk \
+            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --device model=MediumPhone.arm,version=36,locale=en,orientation=portrait \
+            --project liquid-leap
+      env:
+        SERVICE_ACCOUNT = ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
