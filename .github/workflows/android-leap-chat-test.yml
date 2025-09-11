@@ -32,8 +32,8 @@ jobs:
           echo "$SERVICE_ACCOUNT" > /tmp/service_account.json
           gcloud auth activate-service-account --key-file=/tmp/service_account.json
           gcloud firebase test android run --type instrumentation \
-            --app app/build/outputs/apk/debug/app-debug.apk \
-            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --app Android/LeapChat/app/build/outputs/apk/debug/app-debug.apk \
+            --test Android/LeapChat/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
             --device model=MediumPhone.arm,version=36,locale=en,orientation=portrait \
             --project liquid-leap
       env:
