@@ -12,6 +12,6 @@ fun CalculatorToolRoute() {
 
     CalculatorToolScreen(
         state = state,
-        onEvent = CalculatorToolViewModel::onEvent
+        onEvent = viewModel::onEvent
     )
 }

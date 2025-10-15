@@ -10,7 +10,7 @@ activityCompose = "1.11.0"
 composeBom = "2025.10.00"
 material = "1.13.0"
 
-koog = "0.5.0"
+koog = "0.5.1"
 leap = "0.6.0"
 
 kotlinx-serialization = "1.9.0"

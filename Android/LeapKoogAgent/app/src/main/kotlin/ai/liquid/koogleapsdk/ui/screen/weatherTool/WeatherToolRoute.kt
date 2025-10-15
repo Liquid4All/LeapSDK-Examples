@@ -12,6 +12,6 @@ fun WeatherToolRoute() {
 
     WeatherToolScreen(
         state = state,
-        onEvent = WeatherToolViewModel::onEvent
+        onEvent = viewModel::onEvent
     )
 }

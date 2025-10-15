@@ -12,6 +12,6 @@ fun ToolsListRoute() {
 
     ToolsListScreen(
         state = state,
-        onEvent = ToolsListViewModel::onEvent
+        onEvent = viewModel::onEvent
     )
 }
