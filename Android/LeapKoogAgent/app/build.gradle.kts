@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.lemcoder.koogleapsdk"
+    namespace = "ai.liquid.koogleapsdk"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     kotlin {
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.github.lemcoder.koog_leap_sdk"
+        applicationId = "ai.liquid.koog_leap_sdk"
         minSdk = libs.versions.minSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"

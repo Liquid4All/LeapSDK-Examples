@@ -2,7 +2,7 @@ package ai.liquid.koogleapsdk.ui.screen.toolsList.util
 
 import ai.liquid.koogleapsdk.App
 import ai.liquid.koogleapsdk.ui.screen.toolsList.ToolsListState
-import io.github.lemcoder.koogleapsdk.R
+import ai.liquid.koogleapsdk.R
 import ai.liquid.koogleapsdk.ui.screen.toolsList.ToolsListState.ToolItem.Companion.TOOL_ID_CALCULATOR
 import ai.liquid.koogleapsdk.ui.screen.toolsList.ToolsListState.ToolItem.Companion.TOOL_ID_WEATHER
 
