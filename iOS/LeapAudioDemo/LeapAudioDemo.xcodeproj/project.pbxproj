@@ -1,0 +1,381 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3CDC16DB21F1625FB0ADBD32 /* AudioDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FA776FD950E1203A3F9F6EE /* AudioDemoApp.swift */; };
+		40646CD03E26F84C140CF55D /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1B537F7C0CA9A53E4676FC92 /* LeapSDK */; };
+		50893BA122E0D5C5D8893C9A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D8B333E3DE9AD29A8F7F3E7E /* Assets.xcassets */; };
+		51CD55222E004D65D07C2374 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A83AB90368E259DC45FDF0 /* AudioRecorder.swift */; };
+		6238DC43629096521121BF99 /* AudioDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE149F781D99A21E58820F2 /* AudioDemoView.swift */; };
+		782645AA45321AF1158C0B75 /* AudioPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A420EFCCB89E7AE7FE9512F1 /* AudioPlaybackManager.swift */; };
+		D488582DA22FA4FEAC48CC0D /* AudioDemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53ECF28854F137D471134B12 /* AudioDemoStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		3BE149F781D99A21E58820F2 /* AudioDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDemoView.swift; sourceTree = "<group>"; };
+		41A83AB90368E259DC45FDF0 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
+		4FA776FD950E1203A3F9F6EE /* AudioDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDemoApp.swift; sourceTree = "<group>"; };
+		53ECF28854F137D471134B12 /* AudioDemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDemoStore.swift; sourceTree = "<group>"; };
+		53F44F917B6BBB709AEECF08 /* LeapAudioDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LeapAudioDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A420EFCCB89E7AE7FE9512F1 /* AudioPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackManager.swift; sourceTree = "<group>"; };
+		D8B333E3DE9AD29A8F7F3E7E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3DBE36D5058D94B591426B99 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40646CD03E26F84C140CF55D /* LeapSDK in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08D81D3247D5CA1D8D72FF08 = {
+			isa = PBXGroup;
+			children = (
+				12DC65FB0D279D903DC9B644 /* LeapAudioDemo */,
+				B4036A8AC7B70EDB46361BDC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		12DC65FB0D279D903DC9B644 /* LeapAudioDemo */ = {
+			isa = PBXGroup;
+			children = (
+				D8B333E3DE9AD29A8F7F3E7E /* Assets.xcassets */,
+				4FA776FD950E1203A3F9F6EE /* AudioDemoApp.swift */,
+				53ECF28854F137D471134B12 /* AudioDemoStore.swift */,
+				A420EFCCB89E7AE7FE9512F1 /* AudioPlaybackManager.swift */,
+				41A83AB90368E259DC45FDF0 /* AudioRecorder.swift */,
+				986D567A2ACD5C55D2211938 /* Views */,
+			);
+			path = LeapAudioDemo;
+			sourceTree = "<group>";
+		};
+		986D567A2ACD5C55D2211938 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3BE149F781D99A21E58820F2 /* AudioDemoView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B4036A8AC7B70EDB46361BDC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				53F44F917B6BBB709AEECF08 /* LeapAudioDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A258A605AFC3070635FF55BE /* LeapAudioDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49DE8D8B9E5F85BB375DBD84 /* Build configuration list for PBXNativeTarget "LeapAudioDemo" */;
+			buildPhases = (
+				66DAD5D207DE2B52A444B81B /* Sources */,
+				981C1E8935477DC4A32D940B /* Resources */,
+				3DBE36D5058D94B591426B99 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LeapAudioDemo;
+			packageProductDependencies = (
+				1B537F7C0CA9A53E4676FC92 /* LeapSDK */,
+			);
+			productName = LeapAudioDemo;
+			productReference = 53F44F917B6BBB709AEECF08 /* LeapAudioDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9F4962CFD3A128C03D014992 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = C956CEDA372EC2837C338AA5 /* Build configuration list for PBXProject "LeapAudioDemo" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 08D81D3247D5CA1D8D72FF08;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */,
+			);
+			preferredProjectObjectVersion = 54;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A258A605AFC3070635FF55BE /* LeapAudioDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		981C1E8935477DC4A32D940B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50893BA122E0D5C5D8893C9A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		66DAD5D207DE2B52A444B81B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3CDC16DB21F1625FB0ADBD32 /* AudioDemoApp.swift in Sources */,
+				D488582DA22FA4FEAC48CC0D /* AudioDemoStore.swift in Sources */,
+				6238DC43629096521121BF99 /* AudioDemoView.swift in Sources */,
+				782645AA45321AF1158C0B75 /* AudioPlaybackManager.swift in Sources */,
+				51CD55222E004D65D07C2374 /* AudioRecorder.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4041DB5319B4EAAF3FBD6F53 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio input is used to capture prompts.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapAudioDemo;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		74D7B3DFE8374AB1E5CD9695 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		CAECF27C171C5B477C7FFB1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio input is used to capture prompts.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapAudioDemo;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F39544F128C20748BD77D5DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		49DE8D8B9E5F85BB375DBD84 /* Build configuration list for PBXNativeTarget "LeapAudioDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4041DB5319B4EAAF3FBD6F53 /* Debug */,
+				CAECF27C171C5B477C7FFB1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C956CEDA372EC2837C338AA5 /* Build configuration list for PBXProject "LeapAudioDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F39544F128C20748BD77D5DF /* Debug */,
+				74D7B3DFE8374AB1E5CD9695 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/liquid4all/leap-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1B537F7C0CA9A53E4676FC92 /* LeapSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */;
+			productName = LeapSDK;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 9F4962CFD3A128C03D014992 /* Project object */;
+}

@@ -1,4 +1,4 @@
-name: LeapSloganExample
+name: LeapAudioDemo
 options:
   bundleIdPrefix: ai.liquid.examples
   createIntermediateGroups: true
@@ -21,30 +21,36 @@ packages:
     from: 0.7.0
 
 targets:
-  LeapSloganExample:
+  LeapAudioDemo:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: LeapSloganExample
+      - path: LeapAudioDemo
         excludes:
           - "Resources/**"
+    resources:
+      - path: LeapAudioDemo/Assets.xcassets
+        name: Assets
+      - path: LeapAudioDemo/Resources
+        name: Resources
+        createIntermediateGroups: true
     dependencies:
       - package: LeapSDK
         product: LeapSDK
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapSloganExample
+        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapAudioDemo
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
         INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Audio input is used to capture prompts."
+        INFOPLIST_KEY_UIBackgroundModes: "audio"
         SWIFT_EMIT_LOC_STRINGS: YES
         SWIFT_VERSION: "5.9"
-        DEVELOPMENT_ASSET_PATHS: "\"LeapSloganExample/Preview Content\""
-        ENABLE_PREVIEWS: YES
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
       configs:
         Debug:

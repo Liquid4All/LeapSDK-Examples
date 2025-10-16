@@ -29,11 +29,11 @@ class ChatStore {
 
       guard
         let modelURL = Bundle.main.url(
-          forResource: "LFM2-VL-1_6B_8da4w", withExtension: "bundle")
+          forResource: "LFM2-8B-A1B-Q4_0", withExtension: "gguf")
       else {
         messages.append(
           MessageBubble(
-            content: "❗️ Could not find qwen3-1_7b_8da4w.bundle in the bundle.",
+            content: "❗️ Could not find LFM2-VL-1.6B-Q8_0.gguf in the bundle.",
             isUser: false))
         isModelLoading = false
         return
@@ -42,10 +42,21 @@ class ChatStore {
       print("Model URL: \(modelURL)")
       messages.append(
         MessageBubble(
-          content: "📁 Found model bundle at: \(modelURL.lastPathComponent)",
+          content: "📁 Found model at: \(modelURL.lastPathComponent)",
           isUser: false))
 
-      let modelRunner = try await Leap.load(url: modelURL)
+      // The SDK will automatically look for mmproj-*.gguf files
+      messages.append(
+        MessageBubble(
+          content: "🔍 Checking for vision support files...",
+          isUser: false))
+
+      let modelRunner = try await Leap.load(
+        url: modelURL,
+        options: LiquidInferenceEngineOptions(
+          bundlePath: modelURL.path(),
+          contextSize: 1024,
+        ))
       self.modelRunner = modelRunner
       conversation = Conversation(modelRunner: modelRunner, history: [])
       messages.append(
@@ -116,7 +127,18 @@ class ChatStore {
         case .reasoningChunk(let str): break
         case .chunk(let str):
           currentAssistantMessage.append(str)
-        case .complete(_, _):
+        case .audioSample:
+          break
+        case .complete(let completion):
+          let finalText = completion.message.content.compactMap { content -> String? in
+            if case .text(let text) = content {
+              return text
+            }
+            return nil
+          }.joined()
+          if !finalText.isEmpty {
+            currentAssistantMessage = finalText
+          }
           if !currentAssistantMessage.isEmpty {
             messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
           }

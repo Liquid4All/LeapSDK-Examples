@@ -127,7 +127,9 @@ class SloganStore {
           switch response {
           case .chunk(let text):
             jsonResponse.append(text)
-          case .complete(_, _):
+          case .audioSample:
+            break
+          case .complete:
             break
           case .reasoningChunk(_):
             break  // Not used in constrained generation
@@ -187,7 +189,9 @@ class SloganStore {
               } else {
                 generatedText.append(text)
               }
-            case .complete(_, _):
+            case .audioSample:
+              break
+            case .complete:
               isGenerating = false
               isThinking = false
               generationTask = nil
