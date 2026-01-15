@@ -13,4 +13,5 @@
     <string name="generation_in_progress_label">Generating…</string>
     <string name="model_loading_in_progress_label">Initiating AI model …</string>
     <string name="model_loaded_label">Model ready! 🎯</string>
+    <string name="error_loading_ai_model_oops_an_error_happened">Error loading AI model: %1$s\n\nOops! An error happened.</string>
 </resources>
