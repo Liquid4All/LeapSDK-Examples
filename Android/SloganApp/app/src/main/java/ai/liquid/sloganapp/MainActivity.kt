@@ -2,7 +2,10 @@ package ai.liquid.sloganapp
 
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.ModelRunner
+import ai.liquid.leap.manifest.LeapDownloader
+import ai.liquid.leap.manifest.LeapDownloaderConfig
 import ai.liquid.leap.message.MessageResponse
+import android.graphics.Color
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.Button
@@ -54,18 +57,26 @@ class MainActivity : ComponentActivity() {
             modelStatus.text = resources.getText(R.string.model_status_loading)
 
             modelStatus.setTextColor(resources.getColor(R.color.model_loading_status_color, null))
-            modelRunner = LeapClient.loadModel("/data/local/tmp/liquid/qwen3-0_6b.bundle")
+            val downloader = LeapDownloader(
+                config = LeapDownloaderConfig(
+                    saveDir = "$filesDir/leap_models"
+                )
+            )
+            modelRunner = downloader.loadModel(
+                modelSlug = "Qwen3-0.6B",
+                quantizationSlug = "Q8_0",
+            )
             modelLoaded = true
 
             modelStatus.text = resources.getText(R.string.model_status_loaded)
-            modelStatus.setTextColor(android.graphics.Color.GREEN)
+            modelStatus.setTextColor(Color.GREEN)
             textView.text = getText(R.string.model_loaded_label)
             return true
         } catch (e: Exception) {
             textView.text =
-                "Error loading AI model: ${e.message}\n\nOops! An error happened."
+                getString(R.string.error_loading_ai_model_oops_an_error_happened, e.message)
             modelStatus.text = getText(R.string.model_status_error)
-            modelStatus.setTextColor(android.graphics.Color.RED)
+            modelStatus.setTextColor(Color.RED)
         }
         return false
     }
