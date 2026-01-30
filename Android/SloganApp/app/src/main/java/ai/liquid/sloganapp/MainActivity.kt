@@ -2,8 +2,8 @@ package ai.liquid.sloganapp
 
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.ModelRunner
-import ai.liquid.leap.manifest.LeapDownloader
-import ai.liquid.leap.manifest.LeapDownloaderConfig
+import ai.liquid.leap.downloader.LeapModelDownloader
+import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
 import ai.liquid.leap.message.MessageResponse
 import android.graphics.Color
 import android.os.Bundle
@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
 // System prompt constants
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var modelRunner: ModelRunner
     private var modelLoaded = false
     private var generationJob: Job? = null
+    private var downloader: LeapModelDownloader? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,15 +59,61 @@ class MainActivity : ComponentActivity() {
             modelStatus.text = resources.getText(R.string.model_status_loading)
 
             modelStatus.setTextColor(resources.getColor(R.color.model_loading_status_color, null))
-            val downloader = LeapDownloader(
-                config = LeapDownloaderConfig(
-                    saveDir = "$filesDir/leap_models"
+
+            val modelName = "Qwen3-0.6B"
+            val quantType = "Q8_0"
+
+            // Reuse downloader instance to avoid concurrent download issues
+            if (downloader == null) {
+                downloader = LeapModelDownloader(
+                    this@MainActivity,
+                    notificationConfig = LeapModelDownloaderNotificationConfig.build {
+                        notificationTitleDownloading = "Downloading Slogan Generator Model"
+                        notificationTitleDownloaded = "Model Ready!"
+                    }
                 )
-            )
-            modelRunner = downloader.loadModel(
-                modelSlug = "Qwen3-0.6B",
-                quantizationSlug = "Q8_0",
-            )
+            }
+            val downloaderInstance = downloader!!
+
+            // Check if model needs to be downloaded
+            val currentStatus = downloaderInstance.queryStatus(modelName, quantType)
+
+            if (currentStatus is LeapModelDownloader.ModelDownloadStatus.NotOnLocal) {
+                // Model needs to be downloaded
+                textView.text = "Starting download..."
+
+                // Observe download progress
+                val progressFlow = downloaderInstance.observeDownloadProgress(modelName, quantType)
+
+                // Start the download
+                downloaderInstance.requestDownloadModel(modelName, quantType)
+
+                // Collect progress updates until download completes
+                progressFlow
+                    .onEach { progress ->
+                        if (progress != null) {
+                            val downloadedMB = progress.downloadedSizeInBytes / (1024 * 1024)
+                            val totalMB = progress.totalSizeInBytes / (1024 * 1024)
+                            val percentage = if (progress.totalSizeInBytes > 0) {
+                                (progress.downloadedSizeInBytes * 100.0 / progress.totalSizeInBytes).toInt()
+                            } else {
+                                0
+                            }
+                            textView.text = "Downloading: $percentage% ($downloadedMB MB / $totalMB MB)"
+                        } else {
+                            val downloadStatus = downloaderInstance.queryStatus(modelName, quantType)
+                            if (downloadStatus is LeapModelDownloader.ModelDownloadStatus.Downloaded) {
+                                textView.text = "Download complete!"
+                            }
+                        }
+                    }
+                    .takeWhile { progress ->
+                        progress != null || downloaderInstance.queryStatus(modelName, quantType) is LeapModelDownloader.ModelDownloadStatus.DownloadInProgress
+                    }
+                    .collect()
+            }
+
+            modelRunner = downloaderInstance.loadModel(modelName, quantType)
             modelLoaded = true
 
             modelStatus.text = resources.getText(R.string.model_status_loaded)
