@@ -20,6 +20,7 @@ Swift Package Manager integration with XcodeGen project generation.
 - **ShareAI**: Web page summary generator
 - **RecipeGenerator**: Recipe generation with constrained JSON output
 - **VLMExample**: Vision language model demo for image understanding
+- **LeapKoogAgent**: AI agent demo integrating [Koog framework](https://docs.koog.ai) with LeapSDK
 
 Gradle-based projects using the LeapSDK Android library.
 
