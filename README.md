@@ -8,6 +8,8 @@ This repository contains example applications demonstrating how to use the LeapS
 
 - **LeapSloganExample**: Simple SwiftUI app for slogan generation
 - **LeapChatExample**: Comprehensive chat application with real-time streaming
+- **LeapAudioDemo**: Audio processing and transcription demo
+- **RecipeGenerator**: Recipe generation with constrained JSON output
 
 Swift Package Manager integration with XcodeGen project generation.
 
@@ -16,6 +18,9 @@ Swift Package Manager integration with XcodeGen project generation.
 - **SloganApp**: Basic slogan generator using Jetpack Compose
 - **LeapChat**: Full-featured chat application with modern Android UI
 - **ShareAI**: Web page summary generator
+- **RecipeGenerator**: Recipe generation with constrained JSON output
+- **VLMExample**: Vision language model demo for image understanding
+- **LeapKoogAgent**: AI agent demo integrating [Koog framework](https://docs.koog.ai) with LeapSDK
 
 Gradle-based projects using the LeapSDK Android library.
 

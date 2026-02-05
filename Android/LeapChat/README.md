@@ -7,7 +7,7 @@ Almost all logic interacting with LeapSDK is in [MainActivity.kt](app/src/main/j
 * Loading a model.
 * Generating responses from a conversation.
 * Continue generation from the chat history.
-* Serialize/deserialize the chat history with Gson.
+* Serialize/deserialize the chat history with Kotlin Serialization.
 * Function calling to get accurate answers for math compuation.
 
 ## Screenshot

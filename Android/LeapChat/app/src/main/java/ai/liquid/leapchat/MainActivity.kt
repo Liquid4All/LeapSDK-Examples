@@ -4,11 +4,9 @@ import ai.liquid.leap.Conversation
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.LeapModelLoadingException
 import ai.liquid.leap.ModelRunner
-import ai.liquid.leap.gson.LeapGson
-import ai.liquid.leap.gson.registerLeapAdapters
 import ai.liquid.leap.message.ChatMessage
 import ai.liquid.leap.downloader.LeapModelDownloader
-import ai.liquid.leap.downloader.LeapDownloadableModel
+import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
 import ai.liquid.leap.function.LeapFunction
 import ai.liquid.leap.function.LeapFunctionCall
 import ai.liquid.leap.function.LeapFunctionParameter
@@ -17,6 +15,7 @@ import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
 import ai.liquid.leapchat.models.ChatMessageDisplayItem
 import ai.liquid.leapchat.views.ChatHistory
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -56,15 +55,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlin.collections.plus
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 
 class MainActivity : ComponentActivity() {
     // The generation job instance.
@@ -74,6 +76,9 @@ class MainActivity : ComponentActivity() {
     private val modelRunner: MutableLiveData<ModelRunner> by lazy {
         MutableLiveData<ModelRunner>()
     }
+
+    // The model downloader instance (reused to avoid concurrent download issues)
+    private var downloader: LeapModelDownloader? = null
 
     // The conversation instance. It will be cached and shared between the generations. If the
     // activity is destroyed and restored, it will be re-created from the dumped states.
@@ -97,7 +102,7 @@ class MainActivity : ComponentActivity() {
         MutableLiveData<Boolean>(false)
     }
 
-    private val gson = GsonBuilder().registerLeapAdapters().create()
+    private val json = Json { ignoreUnknownKeys = true }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -221,51 +226,60 @@ class MainActivity : ComponentActivity() {
     private fun loadModel(onError: (Throwable) -> Unit, onStatusChange: (String) -> Unit) {
         lifecycleScope.launch {
             try {
-                val modelToUse = LeapDownloadableModel.resolve(MODEL_SLUG, QUANTIZATION_SLUG)
-                if (modelToUse == null) {
-                    throw RuntimeException("Model $QUANTIZATION_SLUG not found in Leap Model Library!")
-                }
-                val modelDownloader = LeapModelDownloader(this@MainActivity)
-                modelDownloader.requestDownloadModel(modelToUse)
-
-                var isModelAvailable = false
-                while (!isModelAvailable) {
-                    val status = modelDownloader.queryStatus(modelToUse)
-                    when (status) {
-                        LeapModelDownloader.ModelDownloadStatus.NotOnLocal -> {
-                            onStatusChange("Model is not downloaded. Waiting for downloading...")
+                // Reuse downloader instance to avoid concurrent download issues
+                if (downloader == null) {
+                    downloader = LeapModelDownloader(
+                        this@MainActivity,
+                        notificationConfig = LeapModelDownloaderNotificationConfig.build {
+                            notificationTitleDownloading = "Downloading Chat Model"
+                            notificationTitleDownloaded = "Model Ready!"
                         }
+                    )
+                }
+                val downloaderInstance = downloader!!
 
-                        is LeapModelDownloader.ModelDownloadStatus.DownloadInProgress -> {
-                            if (status.totalSizeInBytes > 0) {
-                                val progress =
-                                    status.downloadedSizeInBytes.toDouble() / status.totalSizeInBytes
-                                onStatusChange(
-                                    "Downloading the model: ${
-                                        String.format(
-                                            "%.2f",
-                                            progress * 100.0
-                                        )
-                                    }%"
-                                )
+                // Check if model needs to be downloaded
+                val currentStatus = downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION_SLUG)
+
+                if (currentStatus is LeapModelDownloader.ModelDownloadStatus.NotOnLocal) {
+                    // Model needs to be downloaded
+                    onStatusChange("Starting download...")
+
+                    // Observe download progress
+                    val progressFlow = downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION_SLUG)
+
+                    // Start the download
+                    downloaderInstance.requestDownloadModel(MODEL_NAME, QUANTIZATION_SLUG)
+
+                    // Collect progress updates until download completes
+                    progressFlow
+                        .onEach { progress ->
+                            if (progress != null) {
+                                val downloadedMB = progress.downloadedSizeInBytes / (1024 * 1024)
+                                val totalMB = progress.totalSizeInBytes / (1024 * 1024)
+                                val percentage = if (progress.totalSizeInBytes > 0) {
+                                    (progress.downloadedSizeInBytes * 100.0 / progress.totalSizeInBytes).toInt()
+                                } else {
+                                    0
+                                }
+                                onStatusChange("Downloading model: $percentage% ($downloadedMB MB / $totalMB MB)")
                             } else {
-                                onStatusChange(
-                                    "Downloading the model..."
-                                )
+                                val downloadStatus = downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION_SLUG)
+                                if (downloadStatus is LeapModelDownloader.ModelDownloadStatus.Downloaded) {
+                                    onStatusChange("Download complete!")
+                                }
                             }
-
                         }
-
-                        is LeapModelDownloader.ModelDownloadStatus.Downloaded -> {
-                            isModelAvailable = true
+                        .takeWhile { progress ->
+                            progress != null || downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION_SLUG) is LeapModelDownloader.ModelDownloadStatus.DownloadInProgress
                         }
-                    }
-                    delay(500)
+                        .collect()
                 }
-                val modelFile = modelDownloader.getModelFile(modelToUse)
-                onStatusChange("Loading the model: ${modelFile.path}")
 
-                modelRunner.value = LeapClient.loadModel(modelFile.path)
+                modelRunner.value = downloaderInstance.loadModel(
+                    modelName = MODEL_NAME,
+                    quantizationType = QUANTIZATION_SLUG,
+                )
             } catch (e: LeapModelLoadingException) {
                 onError(e)
             }
@@ -322,7 +336,7 @@ class MainActivity : ComponentActivity() {
                 }
                     .onCompletion {
                         this@MainActivity.isInGeneration.value = false
-                        conversationHistoryJSONString = gson.toJson(conversation.history)
+                        conversationHistoryJSONString = json.encodeToString(conversation.history)
                     }
                     .catch { exception ->
                         Log.e(
@@ -379,8 +393,8 @@ class MainActivity : ComponentActivity() {
                     "compute_sum", "Compute sum of a series of numbers", listOf(
                         LeapFunctionParameter(
                             name = "values",
-                            type = LeapFunctionParameterType.Array(
-                                itemType = LeapFunctionParameterType.String()
+                            type = LeapFunctionParameterType.LeapArr(
+                                itemType = LeapFunctionParameterType.LeapStr()
                             ),
                             description = "Numbers to compute sum. Values should be represented in string."
                         )
@@ -400,7 +414,7 @@ class MainActivity : ComponentActivity() {
         if (jsonStr == null) {
             return null
         }
-        return gson.fromJson(jsonStr, LeapGson.messageListTypeToken)
+        return json.decodeFromString<List<ChatMessage>>(jsonStr)
     }
 
     /**
@@ -470,14 +484,15 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val MODEL_SLUG = "lfm2-350m"
-        const val QUANTIZATION_SLUG = "lfm2-350m-20250710-8da4w"
+        const val MODEL_NAME = "LFM2-350M"
+        const val QUANTIZATION_SLUG = "Q8_0"
     }
 }
 
 /**
  * The screen to show when the app is loading the model.
  */
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun ModelLoadingIndicator(
     modelRunnerState: ModelRunner?,
@@ -495,13 +510,18 @@ fun ModelLoadingIndicator(
             })
         }
     }
-    Box(
-        Modifier
-            .padding(4.dp)
-            .fillMaxSize(1.0f)
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
             .testTag("ModelLoadingIndicator"),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(modelLoadingStatusText, style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = modelLoadingStatusText,
+            style = MaterialTheme.typography.titleSmall,
+            textAlign = TextAlign.Center
+        )
     }
 }

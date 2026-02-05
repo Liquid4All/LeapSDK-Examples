@@ -1,10 +1,14 @@
 package ai.liquid.recipegenerator
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,36 +18,77 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     val viewModel: MainActivityViewModel by viewModels()
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startGeneration()
+        } else {
+            // Permission denied, proceed without notifications
+            startGeneration()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        lifecycleScope.launch {
-            viewModel.generateRecipe()
+
+        // Check and request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    startGeneration()
+                }
+                else -> {
+                    requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            startGeneration()
         }
+
         setContent {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Column(Modifier.padding(innerPadding)) {
-                    val recipe = viewModel.recipeState
-                    if (recipe == null) {
+                val recipe = viewModel.recipeState
+                if (recipe == null) {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         Text(
-                            text=viewModel.status,
-                            modifier=Modifier.align(Alignment.CenterHorizontally).padding(8.dp),
+                            text = viewModel.status,
                             fontStyle = FontStyle.Italic,
-                            fontSize = 24.sp
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
                         )
-                    } else {
+                    }
+                } else {
+                    Column(Modifier.padding(innerPadding)) {
                         RecipeView(recipe, modifier = Modifier.padding(8.dp))
                     }
                 }
             }
         }
+    }
+
+    private fun startGeneration() {
+        viewModel.generateRecipe(this)
     }
 }
 

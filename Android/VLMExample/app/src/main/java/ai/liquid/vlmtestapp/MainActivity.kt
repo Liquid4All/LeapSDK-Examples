@@ -2,6 +2,8 @@ package ai.liquid.vlmtestapp
 
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.ModelRunner
+import ai.liquid.leap.downloader.LeapModelDownloader
+import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
 import ai.liquid.leap.message.ChatMessage
 import ai.liquid.leap.message.ChatMessageContent
 import ai.liquid.leap.message.MessageResponse
@@ -31,6 +33,7 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -42,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private val isTakePictureButtonEnabled: MutableLiveData<Boolean> =
         MutableLiveData<Boolean>(true)
     private lateinit var modelRunner: ModelRunner
+    private var downloader: LeapModelDownloader? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,9 +116,62 @@ class MainActivity : ComponentActivity() {
 
     suspend fun generateWithImage(imageData: ByteArray) {
         if (!this::modelRunner.isInitialized) {
+            val modelName = "LFM2.5-VL-1.6B"
+            val quantType = "Q8_0"
+
             generateText.value = "Loading the model..."
-            val modelFilePath = "/data/local/tmp/liquid/LFM2-VL-1_6B.bundle"
-            modelRunner = LeapClient.loadModelAsResult(modelFilePath).getOrThrow()
+
+            // Reuse downloader instance to avoid concurrent download issues
+            if (downloader == null) {
+                downloader = LeapModelDownloader(
+                    this@MainActivity,
+                    notificationConfig = LeapModelDownloaderNotificationConfig.build {
+                        notificationTitleDownloading = "Downloading VLM Model"
+                        notificationTitleDownloaded = "Model Ready!"
+                    }
+                )
+            }
+            val downloaderInstance = downloader!!
+
+            // Check if model needs to be downloaded
+            val currentStatus = downloaderInstance.queryStatus(modelName, quantType)
+
+            if (currentStatus is LeapModelDownloader.ModelDownloadStatus.NotOnLocal) {
+                // Model needs to be downloaded
+                generateText.value = "Starting download..."
+
+                // Observe download progress
+                val progressFlow = downloaderInstance.observeDownloadProgress(modelName, quantType)
+
+                // Start the download
+                downloaderInstance.requestDownloadModel(modelName, quantType)
+
+                // Collect progress updates until download completes
+                progressFlow
+                    .onEach { progress ->
+                        if (progress != null) {
+                            val downloadedMB = progress.downloadedSizeInBytes / (1024 * 1024)
+                            val totalMB = progress.totalSizeInBytes / (1024 * 1024)
+                            val percentage = if (progress.totalSizeInBytes > 0) {
+                                (progress.downloadedSizeInBytes * 100.0 / progress.totalSizeInBytes).toInt()
+                            } else {
+                                0
+                            }
+                            generateText.value = "Downloading: $percentage% ($downloadedMB MB / $totalMB MB)"
+                        } else {
+                            val downloadStatus = downloaderInstance.queryStatus(modelName, quantType)
+                            if (downloadStatus is LeapModelDownloader.ModelDownloadStatus.Downloaded) {
+                                generateText.value = "Download complete!"
+                            }
+                        }
+                    }
+                    .takeWhile { progress ->
+                        progress != null || downloaderInstance.queryStatus(modelName, quantType) is LeapModelDownloader.ModelDownloadStatus.DownloadInProgress
+                    }
+                    .collect()
+            }
+
+            modelRunner = downloaderInstance.loadModel(modelName, quantType)
         }
         generateText.value = "Looking at the image and generating a description..."
         val conversation =
@@ -146,7 +203,7 @@ class MainActivity : ComponentActivity() {
                 }
             }.onCompletion {
                 conversation.history.forEach {
-                    Log.d("MainActivity", it.toJSONObject().toString())
+                    Log.d("MainActivity", it.toString())
                 }
             }.collect()
     }
