@@ -37,6 +37,7 @@ xcuserdata/
 
 # Swift Package Manager
 .swiftpm/
+.build/
 Packages/
 Package.resolved
 *.xcworkspace

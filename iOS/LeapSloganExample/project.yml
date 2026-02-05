@@ -17,8 +17,8 @@ settings:
 
 packages:
   LeapSDK:
-    url: https://github.com/liquid4all/leap-ios
-    from: 0.7.0
+    url: https://github.com/Liquid4All/leap-ios
+    from: 0.9.2
 
 targets:
   LeapSloganExample:
@@ -34,7 +34,7 @@ targets:
         product: LeapSDK
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapSloganExample
+        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.LeapSloganExample
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES

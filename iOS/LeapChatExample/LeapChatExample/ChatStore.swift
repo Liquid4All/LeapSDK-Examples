@@ -20,43 +20,40 @@ class ChatStore {
     isModelLoading = true
 
     do {
-      // First, verify the SDK is accessible
-      print("LeapSDK version check...")
       messages.append(
         MessageBubble(
-          content: "🔍 Checking LeapSDK integration...",
+          content: "🔍 Initializing LeapSDK...",
           isUser: false))
 
-      guard
-        let modelURL = Bundle.main.url(
-          forResource: "LFM2-8B-A1B-Q4_0", withExtension: "gguf")
-      else {
-        messages.append(
-          MessageBubble(
-            content: "❗️ Could not find LFM2-VL-1.6B-Q8_0.gguf in the bundle.",
-            isUser: false))
-        isModelLoading = false
-        return
+      messages.append(
+        MessageBubble(
+          content: "📦 Downloading LFM2-VL-450M model (compact vision support)...",
+          isUser: false))
+
+      // Use manifest downloading for LFM2-VL-450M with Q8_0 (smaller model, faster download)
+      let modelRunner = try await Leap.load(
+        model: "LFM2-VL-450M",
+        quantization: "Q8_0",
+        options: LiquidInferenceEngineManifestOptions(
+          contextSize: 4096  // Reduced from default for mobile memory constraints
+        )
+      ) { [weak self] progress, speed in
+        Task { @MainActor in
+          if progress < 1.0 {
+            let progressPercent = Int(progress * 100)
+            self?.messages.append(
+              MessageBubble(
+                content: "⏳ Downloading: \(progressPercent)%",
+                isUser: false))
+          } else {
+            self?.messages.append(
+              MessageBubble(
+                content: "🧠 Loading model into memory...",
+                isUser: false))
+          }
+        }
       }
 
-      print("Model URL: \(modelURL)")
-      messages.append(
-        MessageBubble(
-          content: "📁 Found model at: \(modelURL.lastPathComponent)",
-          isUser: false))
-
-      // The SDK will automatically look for mmproj-*.gguf files
-      messages.append(
-        MessageBubble(
-          content: "🔍 Checking for vision support files...",
-          isUser: false))
-
-      let modelRunner = try await Leap.load(
-        url: modelURL,
-        options: LiquidInferenceEngineOptions(
-          bundlePath: modelURL.path(),
-          contextSize: 1024,
-        ))
       self.modelRunner = modelRunner
       conversation = Conversation(modelRunner: modelRunner, history: [])
       messages.append(
