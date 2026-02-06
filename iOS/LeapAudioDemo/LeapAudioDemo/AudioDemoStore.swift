@@ -19,6 +19,9 @@ struct AudioDemoMessage: Identifiable, Equatable {
 @Observable
 @MainActor
 final class AudioDemoStore {
+  private static let modelName = "LFM2.5-Audio-1.5B"
+  private static let quantization = "Q4_0"
+
   var inputText: String = ""
   var messages: [AudioDemoMessage] = []
   var status: String?
@@ -40,21 +43,29 @@ final class AudioDemoStore {
   func setupModel() async {
     guard modelRunner == nil else { return }
     isModelLoading = true
-    status = "Loading model bundle..."
-
-    guard let modelURL = findModelURL() else {
-      status = "No GGUF model found in bundle. Add an audio-capable model first."
-      isModelLoading = false
-      return
-    }
+    status = "Loading model..."
 
     do {
-      let options = LiquidInferenceEngineOptions(
-        bundlePath: modelURL.path(),
-        contextSize: 1024,
-        nGpuLayers: 0
-      )
-      let runner = try await Leap.load(url: modelURL, options: options)
+      status = "Downloading \(Self.modelName) model..."
+
+      // Use manifest downloading for LFM2.5-Audio-1.5B (speech + text input/output)
+      let runner = try await Leap.load(
+        model: Self.modelName,
+        quantization: Self.quantization,
+        options: LiquidInferenceEngineManifestOptions(
+          contextSize: 1024,
+          nGpuLayers: 0
+        )
+      ) { [weak self] progress, speed in
+        Task { @MainActor in
+          if progress < 1.0 {
+            self?.status = "Downloading: \(Int(progress * 100))%"
+          } else {
+            self?.status = "Loading model into memory..."
+          }
+        }
+      }
+
       modelRunner = runner
       conversation = Conversation(
         modelRunner: runner,
@@ -64,7 +75,7 @@ final class AudioDemoStore {
       messages.append(
         AudioDemoMessage(
           role: .assistant,
-          text: "Model loaded: \(modelURL.lastPathComponent)",
+          text: "Model loaded: \(Self.modelName) (\(Self.quantization))",
           audioData: nil
         )
       )

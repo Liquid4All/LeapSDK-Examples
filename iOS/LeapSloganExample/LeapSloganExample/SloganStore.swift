@@ -30,16 +30,21 @@ class SloganStore {
     modelStatusColor = .orange
 
     do {
-      guard
-        let modelURL = Bundle.main.url(
-          forResource: "LFM2-1.2B-8da4w",
-          withExtension: "bundle"
-        )
-      else {
-        throw LeapError.modelLoadingFailure("Could not find model bundle in the app bundle", nil)
+      // Use manifest downloading for LFM2.5-1.2B-Instruct (best for instruction following)
+      modelRunner = try await Leap.load(
+        model: "LFM2.5-1.2B-Instruct",
+        quantization: "Q4_0"
+      ) { [weak self] progress, speed in
+        Task { @MainActor in
+          if progress < 1.0 {
+            self?.generatedText = "Downloading model: \(Int(progress * 100))%"
+            self?.modelStatus = "● Model: Downloading \(Int(progress * 100))%"
+          } else {
+            self?.generatedText = "Loading model into memory..."
+            self?.modelStatus = "● Model: Loading..."
+          }
+        }
       }
-
-      modelRunner = try await Leap.load(url: modelURL)
 
       // Initialize conversation for regular generation
       let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
@@ -132,9 +137,9 @@ class SloganStore {
           case .complete:
             break
           case .reasoningChunk(_):
-            break  // Not used in constrained generation
+            break
           case .functionCall(_):
-            break  // Function calls not used in this example
+            break
           }
         }
 
@@ -196,12 +201,11 @@ class SloganStore {
               isThinking = false
               generationTask = nil
             case .reasoningChunk(_):
-              // Set thinking state when we receive reasoning chunks
               if !isThinking {
                 isThinking = true
               }
             case .functionCall(_):
-              break  // Function calls not used in this example
+              break
             }
           }
         } catch {

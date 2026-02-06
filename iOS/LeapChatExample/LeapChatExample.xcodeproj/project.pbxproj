@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -207,9 +207,9 @@
 			mainGroup = DD2B810010CA7F8A20F49DAD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B43CA0374E95637CE0CF935D /* XCRemoteSwiftPackageReference "leap-ios" */,
+				4733CF7AEB85A88D78E69E4E /* XCRemoteSwiftPackageReference "leap-ios" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -327,7 +327,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapChatExample;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapChatExample;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.9;
@@ -404,7 +404,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapChatExample;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapChatExample;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.9;
@@ -555,12 +555,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B43CA0374E95637CE0CF935D /* XCRemoteSwiftPackageReference "leap-ios" */ = {
+		4733CF7AEB85A88D78E69E4E /* XCRemoteSwiftPackageReference "leap-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/liquid4all/leap-ios";
+			repositoryURL = "https://github.com/Liquid4All/leap-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.7.0;
+				minimumVersion = 0.9.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -568,7 +568,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		ED5F88F2A83CAD024F54D0E3 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B43CA0374E95637CE0CF935D /* XCRemoteSwiftPackageReference "leap-ios" */;
+			package = 4733CF7AEB85A88D78E69E4E /* XCRemoteSwiftPackageReference "leap-ios" */;
 			productName = LeapSDK;
 		};
 /* End XCSwiftPackageProductDependency section */

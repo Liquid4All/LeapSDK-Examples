@@ -1,6 +1,7 @@
 import Foundation
 import LeapSDK
 
+// SloganResponse structure for constrained generation using Swift macros
 @Generatable("Generate creative marketing slogans for a business")
 struct SloganResponse: Codable {
   @Guide("The name or type of the business")

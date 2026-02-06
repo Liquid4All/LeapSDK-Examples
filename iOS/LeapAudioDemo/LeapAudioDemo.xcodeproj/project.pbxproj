@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -106,8 +106,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = C956CEDA372EC2837C338AA5 /* Build configuration list for PBXProject "LeapAudioDemo" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -120,9 +118,9 @@
 			mainGroup = 08D81D3247D5CA1D8D72FF08;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */,
+				E15415A048F59C0A6F2DFD73 /* XCRemoteSwiftPackageReference "leap-ios" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -359,12 +357,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */ = {
+		E15415A048F59C0A6F2DFD73 /* XCRemoteSwiftPackageReference "leap-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/liquid4all/leap-ios";
+			repositoryURL = "https://github.com/Liquid4All/leap-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.7.0;
+				minimumVersion = 0.9.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -372,7 +370,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		1B537F7C0CA9A53E4676FC92 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EEB06B02FCFD643A3391DC2C /* XCRemoteSwiftPackageReference "leap-ios" */;
+			package = E15415A048F59C0A6F2DFD73 /* XCRemoteSwiftPackageReference "leap-ios" */;
 			productName = LeapSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
