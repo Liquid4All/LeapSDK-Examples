@@ -17,6 +17,7 @@ Swift Package Manager integration with XcodeGen project generation.
 
 - **SloganApp**: Basic slogan generator using Jetpack Compose
 - **LeapChat**: Full-featured chat application with modern Android UI
+- **LeapAudioDemo**: Audio input/output demo with streaming playback and interactive controls
 - **ShareAI**: Web page summary generator
 - **RecipeGenerator**: Recipe generation with constrained JSON output
 - **VLMExample**: Vision language model demo for image understanding

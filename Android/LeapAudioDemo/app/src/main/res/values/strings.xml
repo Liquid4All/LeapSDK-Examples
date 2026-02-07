@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Leap Audio Demo</string>
+    <string name="load_model">Load Model</string>
+    <string name="retry">Retry</string>
+    <string name="send">Send</string>
+    <string name="recording">Recording</string>
+    <string name="record">Record</string>
+    <string name="cancel">Cancel</string>
+    <string name="type_message">Type a message</string>
+    <string name="play_audio">Play Audio</string>
+    <string name="stop_audio">Stop Audio</string>
+
+    <!-- Content Descriptions for Accessibility -->
+    <string name="cd_start_recording">Start recording audio message</string>
+    <string name="cd_stop_recording">Stop recording and send message</string>
+    <string name="cd_send_message">Send text message</string>
+    <string name="cd_play_audio">Play audio response</string>
+    <string name="cd_stop_audio">Stop playing audio response</string>
+    <string name="cd_recording_in_progress">Recording in progress</string>
+
+    <!-- Status Messages -->
+    <string name="status_downloading_model">Downloading %s model…</string>
+    <string name="status_starting_download">Starting download…</string>
+    <string name="status_downloading_progress">Downloading: %d%%</string>
+    <string name="status_download_complete">Download complete!</string>
+    <string name="status_loading_model">Loading model…</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_recording">Recording…</string>
+    <string name="status_awaiting_response">Awaiting response…</string>
+    <string name="status_thinking">Thinking…</string>
+    <string name="status_streaming_audio">Streaming audio…</string>
+    <string name="status_response_complete">Response complete.</string>
+    <string name="status_response_complete_with_audio">Response complete with audio.</string>
+
+    <!-- Messages -->
+    <string name="model_loaded">Model loaded: %1$s (%2$s)</string>
+    <string name="audio_prompt_format">Audio prompt (%1$d samples @ %2$d Hz)</string>
+    <string name="audio_response_placeholder">(audio response)</string>
+    <string name="streaming_placeholder">…</string>
+
+    <!-- Error Messages -->
+    <string name="error_storage_space">Not enough storage space. Free up space and try again.</string>
+    <string name="error_network">Network error. Check your connection and try again.</string>
+    <string name="error_load_model">Failed to load model: %s</string>
+    <string name="error_audio_empty">Audio capture was empty.</string>
+    <string name="error_recording_failed">Failed to start recording. Check microphone permissions.</string>
+    <string name="error_model_not_ready">Model not ready yet.</string>
+    <string name="error_conversation_create">Failed to create conversation: %s</string>
+    <string name="error_conversation_not_initialized">Conversation not initialized.</string>
+    <string name="error_generation_failed">Generation failed: %s</string>
+
+    <!-- Permission Messages -->
+    <string name="permission_microphone_required">Microphone permission is required for audio recording. Please grant permission in Settings.</string>
+    <string name="permission_some_denied">Some permissions were denied. The app may not function properly.</string>
+
+    <!-- Notifications -->
+    <string name="notification_downloading_model">Downloading Audio Model</string>
+    <string name="notification_model_ready">Model Ready!</string>
+
+    <!-- System Prompts (internal, not typically user-visible) -->
+    <string name="system_prompt_audio">Respond with interleaved text and audio.</string>
+</resources>
