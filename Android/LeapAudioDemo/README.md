@@ -7,6 +7,8 @@ An Android example app demonstrating audio input and output capabilities with th
 - **Audio Input**: Record audio prompts using the device microphone (max 60 seconds)
 - **Text Input**: Send text prompts to the model
 - **Multimodal Output**: Receive responses with both text and audio
+- **Interactive Playback Controls**: Play/Stop toggle buttons for audio messages
+- **Stop During Generation**: Ability to stop audio streaming while it's being generated
 - **Single-turn Conversations**: Each message is independent (audio model limitation)
 - **Model Downloading**: Automatic model download with progress tracking and retry on failure
 - **Streaming**: Real-time streaming of text and audio responses
@@ -63,9 +65,12 @@ The model supports both speech and text input/output, enabling natural conversat
    - Speak your message (max 60 seconds)
    - Tap the stop icon to finish recording and send automatically
 
-4. **Play Audio**:
-   - Audio responses play automatically during generation
-   - Tap "Play Audio" on any message to replay it
+4. **Play/Stop Audio**:
+   - Audio responses stream automatically during generation
+   - While audio is streaming, tap "Stop Audio" to stop playback
+   - After generation completes, tap "Play Audio" to replay any message
+   - While audio is playing, the button changes to "Stop Audio" for instant control
+   - Tap "Stop Audio" to stop playback at any time
 
 5. **Conversation**:
    - Each message is handled independently
