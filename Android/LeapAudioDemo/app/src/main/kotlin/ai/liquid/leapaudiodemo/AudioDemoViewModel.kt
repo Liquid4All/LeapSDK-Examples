@@ -24,44 +24,6 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-data class AudioDemoMessage(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val role: ChatMessage.Role,
-    val text: String,
-    val audioData: FloatArray? = null,
-    val sampleRate: Int = 0
-) {
-    val isUser: Boolean get() = role == ChatMessage.Role.USER
-}
-
-data class AudioDemoState(
-    val messages: List<AudioDemoMessage> = emptyList(),
-    val inputText: String = "",
-    val status: String? = null,
-    val streamingText: String = "",
-    val isModelLoading: Boolean = false,
-    val isGenerating: Boolean = false,
-    val isRecording: Boolean = false,
-    val isModelLoaded: Boolean = false,
-    val loadError: String? = null,
-    val canRetryLoad: Boolean = false,
-    val playingMessageId: String? = null,
-    val isStreamingAudio: Boolean = false
-)
-
-sealed interface AudioDemoEvent {
-    data object LoadModel : AudioDemoEvent
-    data object RetryLoadModel : AudioDemoEvent
-    data class UpdateInputText(val text: String) : AudioDemoEvent
-    data object SendTextPrompt : AudioDemoEvent
-    data class SendAudioPrompt(val samples: FloatArray, val sampleRate: Int) : AudioDemoEvent
-    data object ToggleRecording : AudioDemoEvent
-    data object RecordingFailed : AudioDemoEvent
-    data class PlayAudio(val messageId: String, val audioData: FloatArray, val sampleRate: Int) : AudioDemoEvent
-    data object StopAudioPlayback : AudioDemoEvent
-    data object StopGeneration : AudioDemoEvent
-}
-
 class AudioDemoViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "AudioDemoViewModel"
@@ -512,4 +474,43 @@ class AudioDemoViewModel(application: Application) : AndroidViewModel(applicatio
             Log.e(TAG, "Error unloading model", e)
         }
     }
+}
+
+// Supporting data classes and sealed interface moved to bottom per AGENTS.md guidelines
+data class AudioDemoMessage(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val role: ChatMessage.Role,
+    val text: String,
+    val audioData: FloatArray? = null,
+    val sampleRate: Int = 0
+) {
+    val isUser: Boolean get() = role == ChatMessage.Role.USER
+}
+
+data class AudioDemoState(
+    val messages: List<AudioDemoMessage> = emptyList(),
+    val inputText: String = "",
+    val status: String? = null,
+    val streamingText: String = "",
+    val isModelLoading: Boolean = false,
+    val isGenerating: Boolean = false,
+    val isRecording: Boolean = false,
+    val isModelLoaded: Boolean = false,
+    val loadError: String? = null,
+    val canRetryLoad: Boolean = false,
+    val playingMessageId: String? = null,
+    val isStreamingAudio: Boolean = false
+)
+
+sealed interface AudioDemoEvent {
+    data object LoadModel : AudioDemoEvent
+    data object RetryLoadModel : AudioDemoEvent
+    data class UpdateInputText(val text: String) : AudioDemoEvent
+    data object SendTextPrompt : AudioDemoEvent
+    data class SendAudioPrompt(val samples: FloatArray, val sampleRate: Int) : AudioDemoEvent
+    data object ToggleRecording : AudioDemoEvent
+    data object RecordingFailed : AudioDemoEvent
+    data class PlayAudio(val messageId: String, val audioData: FloatArray, val sampleRate: Int) : AudioDemoEvent
+    data object StopAudioPlayback : AudioDemoEvent
+    data object StopGeneration : AudioDemoEvent
 }
