@@ -81,7 +81,7 @@ constructor(
         },
         onStreamingCompleted = {
           // Streaming playback finished draining buffer - clean up resources
-          _state.update { it.copy(isStreamingPlaybackActive = false) }
+          _state.update { it.copy(isStreamingPlaybackActive = false, playingMessageId = null) }
           audioPlayer.stopStreaming()
         },
       )
@@ -94,6 +94,35 @@ constructor(
   // Helper to get string resources
   private fun getString(resId: Int, vararg formatArgs: Any): String {
     return strings.getString(resId, *formatArgs)
+  }
+
+  init {
+    // Check if model is already cached on disk
+    checkModelCacheStatus()
+  }
+
+  private fun checkModelCacheStatus() {
+    viewModelScope.launch {
+      try {
+        if (downloader == null) {
+          downloader =
+            LeapModelDownloader(
+              getApplication(),
+              notificationConfig =
+                LeapModelDownloaderNotificationConfig.build {
+                  notificationTitleDownloading = getString(R.string.notification_downloading_model)
+                  notificationTitleDownloaded = getString(R.string.notification_model_ready)
+                },
+            )
+        }
+        val status = downloader?.queryStatus(MODEL_NAME, QUANTIZATION)
+        _state.update {
+          it.copy(isModelCached = status is LeapModelDownloader.ModelDownloadStatus.Downloaded)
+        }
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed to check model cache status", e)
+      }
+    }
   }
 
   fun onEvent(event: AudioDemoEvent) {
@@ -128,6 +157,7 @@ constructor(
           it.copy(
             modelState = ModelState.NotLoaded,
             status = null,
+            downloadProgress = null, // Reset progress
           )
         }
         _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_download_cancelled)))
@@ -140,6 +170,10 @@ constructor(
   private fun deleteModel() {
     viewModelScope.launch {
       try {
+        // Unload the model first if it's loaded
+        modelRunner?.unload()
+        modelRunner = null
+
         val modelFolder = downloader?.getModelResourceFolder(MODEL_NAME, QUANTIZATION)
         if (modelFolder?.exists() == true) {
           modelFolder.deleteRecursively()
@@ -147,6 +181,9 @@ constructor(
             it.copy(
               modelState = ModelState.NotLoaded,
               status = null,
+              messages = emptyList(),
+              downloadProgress = null, // Reset progress
+              isModelCached = false, // Model no longer cached
             )
           }
           _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_model_deleted)))
@@ -171,6 +208,7 @@ constructor(
         it.copy(
           modelState = ModelState.Loading,
           status = getString(R.string.status_downloading_model, MODEL_NAME),
+          downloadProgress = null, // Indeterminate until we get progress updates
         )
       }
 
@@ -205,8 +243,15 @@ constructor(
                     if (progress.totalSizeInBytes > 0) {
                       (progress.downloadedSizeInBytes * 100.0 / progress.totalSizeInBytes).toInt()
                     } else 0
+                  val progressFloat =
+                    if (progress.totalSizeInBytes > 0) {
+                      (progress.downloadedSizeInBytes.toFloat() / progress.totalSizeInBytes.toFloat())
+                    } else 0f
                   _state.update {
-                    it.copy(status = getString(R.string.status_downloading_progress, percentage))
+                    it.copy(
+                      status = getString(R.string.status_downloading_progress, percentage),
+                      downloadProgress = progressFloat
+                    )
                   }
                 }
               }
@@ -236,7 +281,12 @@ constructor(
           // Cancel the progress collection job
           progressJob.cancel()
           progressJob.join()
-          _state.update { it.copy(status = getString(R.string.status_download_complete)) }
+          _state.update {
+            it.copy(
+              status = getString(R.string.status_download_complete),
+              isModelCached = true, // Model is now cached
+            )
+          }
         }
 
         // Load the model
@@ -248,15 +298,10 @@ constructor(
         conversation = modelRunner!!.createConversation(getString(R.string.system_prompt_audio))
 
         _state.update {
-          val updatedMessages = (it.messages +
-            AudioDemoMessage(
-              role = ChatMessage.Role.ASSISTANT,
-              text = getString(R.string.model_loaded, MODEL_NAME, QUANTIZATION),
-            )).takeLast(MAX_MESSAGES)
           it.copy(
             modelState = ModelState.Ready,
-            status = getString(R.string.status_ready),
-            messages = updatedMessages,
+            status = getString(R.string.model_loaded, MODEL_NAME, QUANTIZATION),
+            downloadProgress = null, // Reset progress
           )
         }
       } catch (e: Exception) {
@@ -271,7 +316,11 @@ constructor(
           }
 
         _state.update {
-          it.copy(modelState = ModelState.Error(errorMessage, canRetry = true), status = null)
+          it.copy(
+            modelState = ModelState.Error(errorMessage, canRetry = true),
+            status = null,
+            downloadProgress = null, // Reset progress on error
+          )
         }
         Log.e(TAG, "Model loading failed", e)
       }
@@ -674,6 +723,8 @@ data class AudioDemoState(
   val playingMessageId: String? = null,
   val isStreamingPlaybackActive: Boolean = false,
   val recordingDurationSeconds: Int = 0,
+  val downloadProgress: Float? = null, // 0.0 to 1.0, null = indeterminate
+  val isModelCached: Boolean = false, // Whether model files exist on disk
 )
 
 sealed interface AudioDemoEvent {

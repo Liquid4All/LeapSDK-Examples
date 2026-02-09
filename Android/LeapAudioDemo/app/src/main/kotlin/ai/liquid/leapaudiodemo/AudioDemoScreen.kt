@@ -30,12 +30,18 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -204,111 +210,152 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
     },
   ) { paddingValues ->
     Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-      // Status bar with live region for accessibility announcements
-      if (state.status != null) {
-        Surface(
-          modifier = Modifier.fillMaxWidth(),
-          color = MaterialTheme.colorScheme.secondaryContainer,
-          tonalElevation = 2.dp,
+      // Status bar - always visible
+      Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        tonalElevation = 2.dp,
+      ) {
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically,
         ) {
+          // Status text
+          val statusText = when (state.modelState) {
+            is ModelState.NotLoaded -> stringResource(R.string.load_model)
+            else -> state.status ?: stringResource(R.string.load_model)
+          }
+
           Text(
-            text = state.status ?: "",
+            text = statusText,
             modifier = Modifier
-              .padding(8.dp)
               .semantics {
                 // Announce status changes to screen readers
                 liveRegion = LiveRegionMode.Polite
               },
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.MiddleEllipsis,
           )
+
+          // Show progress indicator when loading model
+          if (state.modelState is ModelState.Loading) {
+            Spacer(modifier = Modifier.width(12.dp))
+            if (state.downloadProgress != null) {
+              // Determinate progress
+              LinearProgressIndicator(
+                progress = { state.downloadProgress },
+                modifier = Modifier
+                  .weight(1f)
+                  .semantics {
+                    contentDescription = statusLoadingModel
+                  },
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            } else {
+              // Indeterminate progress
+              LinearProgressIndicator(
+                modifier = Modifier
+                  .weight(1f)
+                  .semantics {
+                    contentDescription = statusLoadingModel
+                  },
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            IconButton(
+              onClick = { onEvent(AudioDemoEvent.CancelDownload) },
+              modifier = Modifier.size(40.dp),
+            ) {
+              Icon(
+                imageVector = Icons.Outlined.Cancel,
+                contentDescription = stringResource(R.string.cancel_download),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            }
+          }
+
+          // Show load icon when no model is loaded
+          if (state.modelState is ModelState.NotLoaded) {
+            IconButton(
+              onClick = { onEvent(AudioDemoEvent.LoadModel) },
+              modifier = Modifier.size(40.dp),
+            ) {
+              Icon(
+                imageVector = if (state.isModelCached) {
+                  Icons.Outlined.Folder
+                } else {
+                  Icons.Outlined.CloudDownload
+                },
+                contentDescription = if (state.isModelCached) {
+                  stringResource(R.string.load_model)
+                } else {
+                  stringResource(R.string.load_model) // Could be "Download and load model"
+                },
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            }
+          }
+
+          // Show stop icon when generating
+          if (state.generationState !is GenerationState.Idle) {
+            IconButton(
+              onClick = { onEvent(AudioDemoEvent.StopGeneration) },
+              modifier = Modifier.size(40.dp),
+            ) {
+              Icon(
+                imageVector = Icons.Outlined.Stop,
+                contentDescription = stringResource(R.string.cd_stop_generation),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            }
+          }
+
+          // Show delete icon when model is loaded and not generating
+          if (state.modelState is ModelState.Ready && state.generationState is GenerationState.Idle) {
+            IconButton(
+              onClick = { onEvent(AudioDemoEvent.DeleteModel) },
+              modifier = Modifier.size(40.dp),
+            ) {
+              Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = stringResource(R.string.delete_model),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+              )
+            }
+          }
         }
       }
 
-      // Load model button or error
+      // Show error message if model failed to load
       when (state.modelState) {
-        is ModelState.NotLoaded,
         is ModelState.Error -> {
           Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
           ) {
-            if (state.modelState is ModelState.Error) {
-              Text(
-                text = state.modelState.message,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 16.dp),
-              )
-            }
+            Text(
+              text = state.modelState.message,
+              color = MaterialTheme.colorScheme.error,
+              style = MaterialTheme.typography.bodyMedium,
+              modifier = Modifier.padding(horizontal = 16.dp),
+            )
 
             Button(
-              onClick = {
-                if (state.modelState is ModelState.Error && state.modelState.canRetry) {
-                  onEvent(AudioDemoEvent.RetryLoadModel)
-                } else {
-                  onEvent(AudioDemoEvent.LoadModel)
-                }
-              },
-              enabled = state.modelState !is ModelState.Loading,
+              onClick = { onEvent(AudioDemoEvent.RetryLoadModel) },
             ) {
-              Text(
-                if (state.modelState is ModelState.Error && state.modelState.canRetry) {
-                  stringResource(R.string.retry)
-                } else {
-                  stringResource(R.string.load_model)
-                }
-              )
-            }
-          }
-        }
-        is ModelState.Loading -> {
-          // Show cancel button during download
-          Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
-            Button(
-              onClick = { onEvent(AudioDemoEvent.CancelDownload) }
-            ) {
-              Text(stringResource(R.string.cancel_download))
-            }
-          }
-        }
-        is ModelState.Ready -> {
-          // Show delete button when model is loaded
-          Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
-            Button(
-              onClick = { onEvent(AudioDemoEvent.DeleteModel) },
-              colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-              ),
-            ) {
-              Text(stringResource(R.string.delete_model))
+              Text(stringResource(R.string.retry))
             }
           }
         }
         else -> {}
       }
 
-      if (state.modelState is ModelState.Loading) {
-        Box(
-          modifier = Modifier.fillMaxWidth().padding(16.dp),
-          contentAlignment = Alignment.Center,
-        ) {
-          CircularProgressIndicator(
-            modifier = Modifier.semantics {
-              contentDescription = state.status ?: statusLoadingModel
-            }
-          )
-        }
-      }
 
       // Messages list
       LazyColumn(
@@ -562,8 +609,7 @@ fun InputBar(
       Row(
         modifier =
           Modifier.fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .padding(bottom = 8.dp),
+            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
