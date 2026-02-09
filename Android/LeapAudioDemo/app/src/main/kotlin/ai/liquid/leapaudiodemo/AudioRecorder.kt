@@ -92,21 +92,29 @@ class AudioRecorder : AudioRecording {
         val buffer = FloatArray(bufferSize / 4) // 4 bytes per float
         while (isActive) {
           val read = audioRecord?.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING) ?: 0
-          if (read > 0) {
-            samplesMutex.withLock {
-              val samplesToAdd = minOf(read, MAX_SAMPLES - recordedSamples.size)
-              if (samplesToAdd > 0) {
-                // Use array copy instead of take() for efficiency
-                for (i in 0 until samplesToAdd) {
-                  recordedSamples.add(buffer[i])
+          when {
+            read > 0 -> {
+              samplesMutex.withLock {
+                val samplesToAdd = minOf(read, MAX_SAMPLES - recordedSamples.size)
+                if (samplesToAdd > 0) {
+                  // Use addAll() to avoid O(n) buffer expansion from individual add() calls
+                  recordedSamples.addAll(buffer.slice(0 until samplesToAdd))
+                }
+                // Check if we hit the max limit
+                if (recordedSamples.size >= MAX_SAMPLES) {
+                  // Break out of while loop - will auto-stop below
+                  return@launch
                 }
               }
-              // Check if we hit the max limit
-              if (recordedSamples.size >= MAX_SAMPLES) {
-                // Break out of while loop - will auto-stop below
-                return@launch
-              }
             }
+            read < 0 -> {
+              // AudioRecord.read() returned error code
+              // Negative values indicate errors: ERROR_INVALID_OPERATION (-3),
+              // ERROR_BAD_VALUE (-2), ERROR_DEAD_OBJECT (-6), ERROR (-1)
+              Log.e(TAG, "AudioRecord read error: $read")
+              return@launch
+            }
+            // read == 0: No samples available, continue loop
           }
         }
       }.also { job ->

@@ -54,6 +54,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -97,22 +98,26 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
   // String resources for accessibility
   val statusLoadingModel = stringResource(R.string.status_loading_model)
 
+  // Track previous recording state to detect transitions
+  var previousRecordingState by remember { mutableStateOf<RecordingState>(state.recordingState) }
+
   // Announce recording state changes for accessibility
   LaunchedEffect(state.recordingState) {
     val accessibilityManager = context.getSystemService<AccessibilityManager>()
     if (accessibilityManager?.isEnabled == true) {
-      val announcement = when (state.recordingState) {
-        is RecordingState.Recording -> context.getString(R.string.status_recording)
-        is RecordingState.Idle -> if (state.recordingState == RecordingState.Idle) {
-          // Only announce when transitioning from recording to idle
+      val announcement = when {
+        state.recordingState is RecordingState.Recording ->
+          context.getString(R.string.status_recording)
+        state.recordingState is RecordingState.Idle &&
+          previousRecordingState is RecordingState.Recording ->
           context.getString(R.string.a11y_recording_stopped)
-        } else null
         else -> null
       }
       announcement?.let {
         accessibilityManager.announceForAccessibility(context, it)
       }
     }
+    previousRecordingState = state.recordingState
   }
 
   // Derived values to prevent recomposition when other state changes
@@ -545,6 +550,9 @@ fun InputBar(
 ) {
   // String resources for accessibility
   val cdRecordingInProgress = stringResource(R.string.cd_recording_in_progress)
+
+  // Reasonable character limit for LLM prompts (prevents UI issues and oversized requests)
+  val maxInputLength = 5000
   Surface(
     modifier = Modifier.fillMaxWidth(),
     color = MaterialTheme.colorScheme.surface,
@@ -615,7 +623,12 @@ fun InputBar(
       ) {
         OutlinedTextField(
           value = inputText,
-          onValueChange = onInputTextChange,
+          onValueChange = { newText ->
+            // Enforce character limit to prevent UI issues and oversized prompts
+            if (newText.length <= maxInputLength) {
+              onInputTextChange(newText)
+            }
+          },
           modifier = Modifier.weight(1f),
           placeholder = { Text(stringResource(R.string.type_message)) },
           enabled = isEnabled && !isRecording,
@@ -630,6 +643,15 @@ fun InputBar(
               disabledIndicatorColor = Color.Transparent,
             ),
           maxLines = 4,
+          supportingText = {
+            // Show character counter when approaching limit (90%)
+            if (inputText.length > maxInputLength * 0.9) {
+              Text(
+                text = "${inputText.length}/$maxInputLength",
+                style = MaterialTheme.typography.bodySmall,
+              )
+            }
+          },
         )
         FilledIconButton(
           onClick = onSendClick,

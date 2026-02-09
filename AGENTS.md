@@ -266,8 +266,15 @@ override fun onCleared() {
   // Clean up resources with error handling
   audioRecorder.release()
 
-  // Model cleanup - fire-and-forget is acceptable
-  // (process death will clean up anyway)
+  // Model cleanup - fire-and-forget is INTENTIONAL to avoid ANR
+  // IMPORTANT: Async unload is the CORRECT approach here because:
+  // 1. Model unloading can take 100-500ms+ (blocks native resources)
+  // 2. onCleared() is called on the main thread
+  // 3. Blocking the main thread risks ANR (Application Not Responding)
+  // 4. viewModelScope is already cancelled at this point (can't use it)
+  // 5. Process death will clean up native model resources anyway
+  // 6. Fire-and-forget async cleanup is recommended for long-running shutdown operations
+  // DO NOT change this to blocking or viewModelScope - it will cause ANRs!
   CoroutineScope(Dispatchers.IO).launch {
     try {
       modelRunner?.unload()

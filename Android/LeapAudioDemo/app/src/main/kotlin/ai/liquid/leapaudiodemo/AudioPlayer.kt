@@ -124,6 +124,11 @@ class AudioPlayer(
    * @param sampleRate Sample rate in Hz for playback (typically 24000)
    */
   override fun startStreaming(sampleRate: Int) {
+    // Validate sample rate is within acceptable range for AudioTrack
+    require(sampleRate in 8000..192000) {
+      "Sample rate must be between 8000 and 192000 Hz, got: $sampleRate"
+    }
+
     // Clean up any existing playback synchronously before creating new resources
     // Cancel jobs first (non-blocking)
     playbackJob?.cancel()
@@ -211,11 +216,15 @@ class AudioPlayer(
               track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
             }
             Log.d(TAG, "Audio queue consumption completed")
-            // Notify that streaming playback has completed
-            onStreamingCompleted?.invoke()
           } catch (e: Exception) {
             // AudioTrack might have been released - exit gracefully
             Log.e(TAG, "Error during audio playback", e)
+          } finally {
+            // Always notify completion, even if cancelled or error occurred
+            // Only invoke if coroutine is still active to avoid race conditions
+            if (isActive) {
+              onStreamingCompleted?.invoke()
+            }
           }
         } else {
           Log.e(TAG, "Queue or track is null: queue=$queue, track=$track")
@@ -319,6 +328,14 @@ class AudioPlayer(
    * @param sampleRate Sample rate in Hz
    */
   override fun play(samples: FloatArray, sampleRate: Int) {
+    // Validate parameters
+    require(sampleRate in 8000..192000) {
+      "Sample rate must be between 8000 and 192000 Hz, got: $sampleRate"
+    }
+    require(samples.isNotEmpty()) {
+      "Samples array cannot be empty"
+    }
+
     // Clean up any existing playback synchronously before creating new resources
     playbackJob?.cancel()
     playbackJob = null
@@ -336,6 +353,14 @@ class AudioPlayer(
     }
     audioTrack = null
     abandonAudioFocus()
+
+    // Request audio focus BEFORE allocating resources
+    if (!requestAudioFocus()) {
+      // Focus request failed - don't allocate resources
+      Log.e(TAG, "Failed to request audio focus")
+      onPlaybackError?.invoke("Cannot play audio. Another app is using audio.")
+      return
+    }
 
     val minBufferSize =
       AudioTrack.getMinBufferSize(
@@ -362,14 +387,6 @@ class AudioPlayer(
         .setBufferSizeInBytes(maxOf(minBufferSize, samples.size * 4))
         .setTransferMode(AudioTrack.MODE_STATIC)
         .build()
-
-    // Request audio focus before playing
-    if (!requestAudioFocus()) {
-      // Focus request failed - clean up and notify user
-      reset()
-      onPlaybackError?.invoke("Cannot play audio. Another app is using audio.")
-      return
-    }
 
     val track = audioTrack
     if (track != null) {

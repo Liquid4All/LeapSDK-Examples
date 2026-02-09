@@ -239,14 +239,20 @@ constructor(
               downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION).collect {
                 progress ->
                 if (progress != null) {
-                  val percentage =
-                    if (progress.totalSizeInBytes > 0) {
-                      (progress.downloadedSizeInBytes * 100.0 / progress.totalSizeInBytes).toInt()
-                    } else 0
-                  val progressFloat =
-                    if (progress.totalSizeInBytes > 0) {
-                      (progress.downloadedSizeInBytes.toFloat() / progress.totalSizeInBytes.toFloat())
-                    } else 0f
+                  // Validate and bound progress values to prevent division by zero and overflow
+                  val percentage = when {
+                    progress.totalSizeInBytes <= 0 -> 0
+                    progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 100
+                    else -> ((progress.downloadedSizeInBytes * 100.0) / progress.totalSizeInBytes)
+                      .coerceIn(0.0, 100.0)
+                      .toInt()
+                  }
+                  val progressFloat = when {
+                    progress.totalSizeInBytes <= 0 -> 0f
+                    progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 1f
+                    else -> (progress.downloadedSizeInBytes.toFloat() / progress.totalSizeInBytes.toFloat())
+                      .coerceIn(0f, 1f)
+                  }
                   _state.update {
                     it.copy(
                       status = getString(R.string.status_downloading_progress, percentage),
@@ -339,8 +345,13 @@ constructor(
       ChatMessage(role = ChatMessage.Role.USER, content = listOf(ChatMessageContent.Text(trimmed)))
 
     _state.update {
-      val updatedMessages = (it.messages + AudioDemoMessage(role = ChatMessage.Role.USER, text = trimmed))
-        .takeLast(MAX_MESSAGES)
+      val newMessage = AudioDemoMessage(role = ChatMessage.Role.USER, text = trimmed)
+      // Enforce bounds check before appending to prevent race conditions
+      val updatedMessages = if (it.messages.size < MAX_MESSAGES) {
+        it.messages + newMessage
+      } else {
+        (it.messages.drop(1) + newMessage)
+      }
       it.copy(
         inputText = "",
         messages = updatedMessages,
@@ -363,13 +374,18 @@ constructor(
     val display = getString(R.string.audio_prompt_format, samples.size, sampleRate)
 
     _state.update {
-      val updatedMessages = (it.messages +
-        AudioDemoMessage(
-          role = ChatMessage.Role.USER,
-          text = display,
-          audioData = samples,
-          sampleRate = sampleRate,
-        )).takeLast(MAX_MESSAGES)
+      val newMessage = AudioDemoMessage(
+        role = ChatMessage.Role.USER,
+        text = display,
+        audioData = samples,
+        sampleRate = sampleRate,
+      )
+      // Enforce bounds check before appending to prevent race conditions
+      val updatedMessages = if (it.messages.size < MAX_MESSAGES) {
+        it.messages + newMessage
+      } else {
+        (it.messages.drop(1) + newMessage)
+      }
       it.copy(messages = updatedMessages)
     }
     streamResponse(message)
