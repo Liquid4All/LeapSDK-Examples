@@ -617,8 +617,8 @@ fun InputBar(
       Row(
         modifier =
           Modifier.fillMaxWidth()
-            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 16.dp),
-        verticalAlignment = Alignment.Bottom,
+            .padding(16.dp),
+        verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         OutlinedTextField(
