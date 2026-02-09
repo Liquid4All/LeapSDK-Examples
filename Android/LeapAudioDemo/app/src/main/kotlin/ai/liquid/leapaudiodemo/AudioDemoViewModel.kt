@@ -374,7 +374,7 @@ constructor(
 
   private fun sendAudioPrompt(samples: FloatArray, sampleRate: Int) {
     if (samples.isEmpty()) {
-      _state.update { it.copy(status = getString(R.string.error_audio_empty)) }
+      // Don't update status - keep model loaded visible
       return
     }
 
@@ -410,7 +410,7 @@ constructor(
         it.copy(
           recordingState = RecordingState.Recording,
           recordingDurationSeconds = MAX_RECORDING_SECONDS,
-          status = getString(R.string.status_recording),
+          // Keep model loaded status - don't show recording status
         )
       }
       // Start countdown timer
@@ -481,7 +481,7 @@ constructor(
       _state.update {
         it.copy(
           generationState = GenerationState.Idle,
-          status = getString(R.string.status_ready),
+          // Keep model loaded status visible
           isStreamingPlaybackActive = false,
           playingMessageId = null,
         )
@@ -493,7 +493,7 @@ constructor(
     val currentModelRunner =
       modelRunner
         ?: run {
-          _state.update { it.copy(status = getString(R.string.error_model_not_ready)) }
+          // Don't update status - keep model loaded visible
           return
         }
 
@@ -508,8 +508,7 @@ constructor(
         } catch (e: Exception) {
           _state.update {
             it.copy(
-              status =
-                getString(R.string.error_conversation_create, e.message ?: "Unknown error"),
+              // Don't update status - keep model loaded visible
               generationState = GenerationState.Idle,
             )
           }
@@ -518,7 +517,7 @@ constructor(
         _state.update {
           it.copy(
             generationState = GenerationState.GeneratingText(""),
-            status = getString(R.string.status_awaiting_response),
+            // Keep model loaded status - don't show generation progress
           )
         }
 
@@ -547,7 +546,7 @@ constructor(
                 }
               }
               is MessageResponse.ReasoningChunk -> {
-                _state.update { it.copy(status = getString(R.string.status_thinking)) }
+                // Keep model loaded status - don't show thinking status
               }
               is MessageResponse.AudioSample -> {
                 // Add samples directly without boxing to avoid GC pressure
@@ -572,7 +571,7 @@ constructor(
                 if (!written) {
                   Log.w(TAG, "Audio buffer full, dropping ${event.samples.size} samples")
                 }
-                _state.update { it.copy(status = getString(R.string.status_streaming_audio)) }
+                // Keep model loaded status - don't show streaming status
               }
               is MessageResponse.Complete -> {
                 // Finish audio streaming gracefully - let buffered audio play out
@@ -602,12 +601,7 @@ constructor(
                   it.copy(
                     messages = updatedMessages,
                     generationState = GenerationState.Idle,
-                    status =
-                      if (audioData != null) {
-                        getString(R.string.status_response_complete_with_audio)
-                      } else {
-                        getString(R.string.status_response_complete)
-                      },
+                    // Keep model loaded status visible - don't overwrite with completion message
                     // If we're draining streaming audio buffer, mark it as playing
                     isStreamingPlaybackActive = shouldKeepStreamingActive,
                     playingMessageId = if (shouldKeepStreamingActive) newMessage.id else null,
@@ -626,7 +620,7 @@ constructor(
           _state.update {
             it.copy(
               generationState = GenerationState.Idle,
-              status = getString(R.string.error_generation_failed, e.message ?: "Unknown error"),
+              // Don't update status - keep model loaded visible
               playingMessageId = null,
             )
           }
