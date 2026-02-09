@@ -140,14 +140,17 @@ constructor(
   private fun deleteModel() {
     viewModelScope.launch {
       try {
-        downloader?.deleteModelResources(MODEL_NAME, QUANTIZATION)
-        _state.update {
-          it.copy(
-            modelState = ModelState.NotLoaded,
-            status = null,
-          )
+        val modelFolder = downloader?.getModelResourceFolder(MODEL_NAME, QUANTIZATION)
+        if (modelFolder?.exists() == true) {
+          modelFolder.deleteRecursively()
+          _state.update {
+            it.copy(
+              modelState = ModelState.NotLoaded,
+              status = null,
+            )
+          }
+          _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_model_deleted)))
         }
-        _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_model_deleted)))
       } catch (e: Exception) {
         Log.e(TAG, "Failed to delete model", e)
         _sideEffect.emit(

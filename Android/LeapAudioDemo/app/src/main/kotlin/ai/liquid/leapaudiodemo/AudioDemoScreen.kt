@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,9 +54,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -84,6 +87,9 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
   val listState = rememberLazyListState()
   val haptic = LocalHapticFeedback.current
   val context = LocalContext.current
+
+  // String resources for accessibility
+  val statusLoadingModel = stringResource(R.string.status_loading_model)
 
   // Announce recording state changes for accessibility
   LaunchedEffect(state.recordingState) {
@@ -132,7 +138,13 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text(stringResource(R.string.app_name)) },
+        title = {
+          Image(
+            painter = painterResource(id = R.drawable.leap_logo),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.height(24.dp)
+          )
+        },
         colors =
           TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
       )
@@ -186,6 +198,7 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
         onInputTextChange = { onEvent(AudioDemoEvent.UpdateInputText(it)) },
         onSendClick = { onEvent(AudioDemoEvent.SendTextPrompt) },
         isRecording = state.recordingState is RecordingState.Recording,
+        recordingDurationSeconds = state.recordingDurationSeconds,
         isEnabled = isInputEnabled,
       )
     },
@@ -291,7 +304,7 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
         ) {
           CircularProgressIndicator(
             modifier = Modifier.semantics {
-              contentDescription = state.status ?: stringResource(R.string.status_loading_model)
+              contentDescription = state.status ?: statusLoadingModel
             }
           )
         }
@@ -352,6 +365,10 @@ fun MessageBubble(
   onPlayAudio: (FloatArray, Int) -> Unit,
   onStopAudio: () -> Unit = {},
 ) {
+  // String resources for accessibility
+  val statusStreamingAudio = stringResource(R.string.status_streaming_audio)
+  val statusAwaitingResponse = stringResource(R.string.status_awaiting_response)
+
   Row(
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start,
@@ -458,9 +475,9 @@ fun MessageBubble(
         LinearProgressIndicator(
           modifier = Modifier.fillMaxWidth().semantics {
             contentDescription = if (isStreamingAudio) {
-              stringResource(R.string.status_streaming_audio)
+              statusStreamingAudio
             } else {
-              stringResource(R.string.status_awaiting_response)
+              statusAwaitingResponse
             }
           }
         )
@@ -476,8 +493,11 @@ fun InputBar(
   onInputTextChange: (String) -> Unit,
   onSendClick: () -> Unit,
   isRecording: Boolean,
+  recordingDurationSeconds: Int,
   isEnabled: Boolean,
 ) {
+  // String resources for accessibility
+  val cdRecordingInProgress = stringResource(R.string.cd_recording_in_progress)
   Surface(
     modifier = Modifier.fillMaxWidth(),
     color = MaterialTheme.colorScheme.surface,
@@ -507,7 +527,7 @@ fun InputBar(
       ) {
         Icon(
           imageVector = Icons.Default.Mic,
-          contentDescription = stringResource(R.string.cd_recording_in_progress),
+          contentDescription = cdRecordingInProgress,
           tint = MaterialTheme.colorScheme.error,
           modifier = Modifier.size(28.dp), // Slightly larger for prominence
         )
@@ -519,10 +539,10 @@ fun InputBar(
             style = MaterialTheme.typography.titleLarge, // Larger text
           )
           // Show countdown timer
-          if (state.recordingDurationSeconds > 0) {
+          if (recordingDurationSeconds > 0) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-              text = stringResource(R.string.status_recording_time, state.recordingDurationSeconds),
+              text = stringResource(R.string.status_recording_time, recordingDurationSeconds),
               color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
               style = MaterialTheme.typography.bodyMedium,
             )
@@ -531,7 +551,7 @@ fun InputBar(
         Spacer(modifier = Modifier.width(12.dp))
         CircularProgressIndicator(
           modifier = Modifier.size(24.dp).semantics {
-            contentDescription = stringResource(R.string.cd_recording_in_progress)
+            contentDescription = cdRecordingInProgress
           },
           color = MaterialTheme.colorScheme.error,
           strokeWidth = 2.dp,
