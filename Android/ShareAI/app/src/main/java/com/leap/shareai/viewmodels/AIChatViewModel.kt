@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 
 class AIChatViewModel : ViewModel() {
@@ -196,6 +198,20 @@ class AIChatViewModel : ViewModel() {
     fun cancelGeneration() {
         generationJob?.cancel()
         Log.d(TAG, "Generation canceled")
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        // Unload model asynchronously to avoid ANR
+        // Do NOT use runBlocking here - it blocks the main thread
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                modelRunner?.unload()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error unloading model", e)
+            }
+        }
     }
 }
 

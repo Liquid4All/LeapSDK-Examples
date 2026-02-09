@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.jsonObject
 
@@ -160,6 +162,20 @@ class MainActivityViewModel: ViewModel() {
             } catch (e: Exception) {
                 Log.e("RecipeGenerator", "Error generating recipe", e)
                 status = "Error: ${e.message}\n\nGenerated text:\n${buffer.toString()}"
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        // Unload model asynchronously to avoid ANR
+        // Do NOT use runBlocking here - it blocks the main thread
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                modelRunner?.unload()
+            } catch (e: Exception) {
+                Log.e("RecipeGenerator", "Error unloading model", e)
             }
         }
     }

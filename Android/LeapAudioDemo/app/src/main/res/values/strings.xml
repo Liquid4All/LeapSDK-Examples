@@ -3,6 +3,8 @@
     <string name="app_name">Leap Audio Demo</string>
     <string name="load_model">Load Model</string>
     <string name="retry">Retry</string>
+    <string name="cancel_download">Cancel Download</string>
+    <string name="delete_model">Delete Model</string>
     <string name="send">Send</string>
     <string name="recording">Recording</string>
     <string name="record">Record</string>
@@ -10,6 +12,7 @@
     <string name="type_message">Type a message</string>
     <string name="play_audio">Play Audio</string>
     <string name="stop_audio">Stop Audio</string>
+    <string name="stop_generation">Stop</string>
 
     <!-- Content Descriptions for Accessibility -->
     <string name="cd_start_recording">Start recording audio message</string>
@@ -17,7 +20,11 @@
     <string name="cd_send_message">Send text message</string>
     <string name="cd_play_audio">Play audio response</string>
     <string name="cd_stop_audio">Stop playing audio response</string>
+    <string name="cd_stop_generation">Stop generation</string>
     <string name="cd_recording_in_progress">Recording in progress</string>
+
+    <!-- Accessibility Announcements -->
+    <string name="a11y_recording_stopped">Recording stopped</string>
 
     <!-- Status Messages -->
     <string name="status_downloading_model">Downloading %s model…</string>
@@ -27,6 +34,7 @@
     <string name="status_loading_model">Loading model…</string>
     <string name="status_ready">Ready</string>
     <string name="status_recording">Recording…</string>
+    <string name="status_recording_time">%ds remaining</string>
     <string name="status_awaiting_response">Awaiting response…</string>
     <string name="status_thinking">Thinking…</string>
     <string name="status_streaming_audio">Streaming audio…</string>
@@ -43,6 +51,9 @@
     <string name="error_storage_space">Not enough storage space. Free up space and try again.</string>
     <string name="error_network">Network error. Check your connection and try again.</string>
     <string name="error_load_model">Failed to load model: %s</string>
+    <string name="error_delete_model">Failed to delete model: %s</string>
+    <string name="success_download_cancelled">Download cancelled</string>
+    <string name="success_model_deleted">Model deleted successfully</string>
     <string name="error_audio_empty">Audio capture was empty.</string>
     <string name="error_recording_failed">Failed to start recording. Check microphone permissions.</string>
     <string name="error_model_not_ready">Model not ready yet.</string>
