@@ -112,7 +112,7 @@ class FakeAudioPlayback(
     isStreaming = false
   }
 
-  override fun reset() {
+  override suspend fun reset() {
     resetCallCount++
     isPlaying = false
     isStreaming = false
@@ -124,7 +124,8 @@ class FakeAudioPlayback(
 
   override fun release() {
     releaseCallCount++
-    reset()
+    // In test fake, we can call suspend function synchronously since no real async work
+    kotlinx.coroutines.runBlocking { reset() }
   }
 
   /**

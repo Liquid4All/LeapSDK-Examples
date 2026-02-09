@@ -80,9 +80,9 @@ constructor(
           viewModelScope.launch { _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(errorMessage)) }
         },
         onStreamingCompleted = {
-          // Streaming playback finished draining buffer - clean up resources
+          // Streaming playback finished draining buffer - update state only
+          // No need to call stopStreaming() since the stream has already completed
           _state.update { it.copy(isStreamingPlaybackActive = false, playingMessageId = null) }
-          audioPlayer.stopStreaming()
         },
       )
   private val audioRecorder: AudioRecording = audioRecording ?: AudioRecorder()
@@ -129,6 +129,7 @@ constructor(
     when (event) {
       is AudioDemoEvent.LoadModel -> loadModel()
       is AudioDemoEvent.RetryLoadModel -> retryLoadModel()
+      is AudioDemoEvent.CancelModelLoad -> cancelModelLoad()
       is AudioDemoEvent.CancelDownload -> cancelDownload()
       is AudioDemoEvent.DeleteModel -> deleteModel()
       is AudioDemoEvent.UpdateInputText -> updateInputText(event.text)
@@ -147,6 +148,17 @@ constructor(
     // Clear error state and status message before retrying
     _state.update { it.copy(modelState = ModelState.NotLoaded, status = null) }
     loadModel()
+  }
+
+  private fun cancelModelLoad() {
+    // Cancel model loading without retrying - used when permissions are denied
+    _state.update {
+      it.copy(
+        modelState = ModelState.NotLoaded,
+        status = null,
+        downloadProgress = null,
+      )
+    }
   }
 
   private fun cancelDownload() {
@@ -168,9 +180,9 @@ constructor(
   }
 
   private fun deleteModel() {
-    viewModelScope.launch {
+    viewModelScope.launch(Dispatchers.IO) {
       try {
-        // Unload the model first if it's loaded
+        // Unload the model first if it's loaded (on IO dispatcher since it's slow)
         modelRunner?.unload()
         modelRunner = null
 
@@ -510,7 +522,7 @@ constructor(
           )
         }
 
-        audioPlayer.reset()
+        // No need to reset here - startStreaming() performs synchronous cleanup
         val textBuilder = StringBuilder()
         // Pre-allocate audio buffer for ~30 seconds of audio at 24kHz sample rate
         // (24,000 samples/sec × 30 sec = 720,000 samples ≈ 2.88 MB)
@@ -538,8 +550,10 @@ constructor(
                 _state.update { it.copy(status = getString(R.string.status_thinking)) }
               }
               is MessageResponse.AudioSample -> {
-                // Add samples in batch for efficiency
-                audioSamplesList.addAll(event.samples.toList())
+                // Add samples directly without boxing to avoid GC pressure
+                for (sample in event.samples) {
+                  audioSamplesList.add(sample)
+                }
                 audioSampleRate = event.sampleRate
 
                 // Start streaming on first audio sample
@@ -631,8 +645,9 @@ constructor(
       Log.e(TAG, "Error releasing audio player", e)
     }
 
-    // Cancel any ongoing recording
-    viewModelScope.launch {
+    // Cancel any ongoing recording using non-cancelled scope
+    // viewModelScope is already cancelled at this point, so we need a dedicated scope
+    CoroutineScope(Dispatchers.IO).launch {
       try {
         audioRecorder.cancel()
       } catch (e: Exception) {
@@ -747,6 +762,8 @@ sealed interface AudioDemoEvent {
   data object LoadModel : AudioDemoEvent
 
   data object RetryLoadModel : AudioDemoEvent
+
+  data object CancelModelLoad : AudioDemoEvent
 
   data object CancelDownload : AudioDemoEvent
 

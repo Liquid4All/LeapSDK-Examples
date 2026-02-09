@@ -65,12 +65,12 @@ interface AudioPlayback {
   fun stop()
 
   /**
-   * Resets the audio player to initial state.
+   * Resets the audio player to initial state synchronously.
    *
-   * Stops playback, cancels jobs, closes channels, and releases AudioTrack. Call before starting
-   * new playback session.
+   * Stops playback, cancels jobs, closes channels, and releases AudioTrack. Must be awaited before
+   * starting new playback to prevent race conditions.
    */
-  fun reset()
+  suspend fun reset()
 
   /**
    * Releases all audio resources.

@@ -97,8 +97,10 @@ class AudioRecorder : AudioRecording {
               samplesMutex.withLock {
                 val samplesToAdd = minOf(read, MAX_SAMPLES - recordedSamples.size)
                 if (samplesToAdd > 0) {
-                  // Use addAll() to avoid O(n) buffer expansion from individual add() calls
-                  recordedSamples.addAll(buffer.slice(0 until samplesToAdd))
+                  // Copy samples directly to avoid intermediate collection allocation and boxing
+                  for (i in 0 until samplesToAdd) {
+                    recordedSamples.add(buffer[i])
+                  }
                 }
                 // Check if we hit the max limit
                 if (recordedSamples.size >= MAX_SAMPLES) {

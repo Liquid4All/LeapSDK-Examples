@@ -397,7 +397,15 @@ class AudioPlayer(
       track.notificationMarkerPosition = samples.size
       track.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
         override fun onMarkerReached(track: AudioTrack?) {
-          // Playback completed naturally
+          // Playback completed naturally - clean up resources
+          try {
+            track?.stop()
+            track?.release()
+          } catch (e: Exception) {
+            Log.e(TAG, "Error releasing AudioTrack on completion", e)
+          }
+          audioTrack = null
+          abandonAudioFocus()
           onPlaybackCompleted?.invoke()
         }
 
@@ -458,59 +466,65 @@ class AudioPlayer(
   }
 
   /**
-   * Resets the audio player state.
+   * Resets the audio player state synchronously.
    *
-   * Cancels streaming, closes channels, and releases AudioTrack resources. Called internally before
-   * starting new playback.
+   * Cancels streaming, closes channels, and releases AudioTrack resources. Must be called before
+   * starting new playback to prevent race conditions.
    */
-  override fun reset() {
-    coroutineScope.launch {
-      try {
-        // Timeout prevents indefinite hang if mutex is stuck
-        withTimeout(5000) {
-          cleanupMutex.withLock {
-            playbackJob?.cancel()
-            playbackJob = null
-            streamingJob?.cancel()
-            streamingJob?.join()
-            streamingJob = null
-            audioQueue?.close()
-            audioQueue = null
-            audioTrack?.apply {
-              stop()
-              release()
-            }
-            audioTrack = null
-            abandonAudioFocus()
+  override suspend fun reset() {
+    try {
+      // Timeout prevents indefinite hang if mutex is stuck
+      withTimeout(5000) {
+        cleanupMutex.withLock {
+          playbackJob?.cancel()
+          playbackJob = null
+          streamingJob?.cancel()
+          streamingJob?.join()
+          streamingJob = null
+          audioQueue?.close()
+          audioQueue = null
+          audioTrack?.apply {
+            stop()
+            release()
           }
+          audioTrack = null
+          abandonAudioFocus()
         }
-      } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-        Log.e(TAG, "Timeout while resetting - forcing cleanup", e)
-        // Force cleanup without mutex to prevent permanent stuck state
-        playbackJob?.cancel()
-        streamingJob?.cancel()
-        audioQueue?.close()
-        try {
-          audioTrack?.stop()
-          audioTrack?.release()
-        } catch (ex: Exception) {
-          Log.e(TAG, "Error during force cleanup", ex)
-        }
-        playbackJob = null
-        streamingJob = null
-        audioQueue = null
-        audioTrack = null
-        abandonAudioFocus()
       }
+    } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+      Log.e(TAG, "Timeout while resetting - forcing cleanup", e)
+      // Force cleanup without mutex to prevent permanent stuck state
+      playbackJob?.cancel()
+      streamingJob?.cancel()
+      audioQueue?.close()
+      try {
+        audioTrack?.stop()
+        audioTrack?.release()
+      } catch (ex: Exception) {
+        Log.e(TAG, "Error during force cleanup", ex)
+      }
+      playbackJob = null
+      streamingJob = null
+      audioQueue = null
+      audioTrack = null
+      abandonAudioFocus()
     }
   }
 
   /**
    * Releases all audio player resources.
    *
-   * Should be called when the player is no longer needed, typically in ViewModel onCleared().
+   * Launches cleanup asynchronously to avoid blocking the caller (typically ViewModel.onCleared()).
+   * Similar to model unloading, we use fire-and-forget async cleanup to prevent ANR if release
+   * takes too long.
    */
   override fun release() {
-    reset()
+    coroutineScope.launch {
+      try {
+        reset()
+      } catch (e: Exception) {
+        Log.e(TAG, "Error during release", e)
+      }
+    }
   }
 }

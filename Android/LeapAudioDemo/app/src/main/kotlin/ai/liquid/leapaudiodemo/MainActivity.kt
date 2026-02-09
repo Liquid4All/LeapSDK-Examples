@@ -60,9 +60,9 @@ fun AudioDemoApp(viewModel: AudioDemoViewModel) {
             else -> permissionSomeDenied
           }
         permissionsGranted = false
-        // Cancel model loading if permissions denied
+        // Cancel model loading if permissions denied (without retrying)
         if (state.modelState is ModelState.Loading) {
-          viewModel.onEvent(AudioDemoEvent.RetryLoadModel) // This will reset to NotLoaded
+          viewModel.onEvent(AudioDemoEvent.CancelModelLoad)
         }
       } else {
         permissionsGranted = true
