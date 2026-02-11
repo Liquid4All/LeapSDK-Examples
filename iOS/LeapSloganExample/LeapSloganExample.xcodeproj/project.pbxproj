@@ -17,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		346EFFE82C4454FBAB76AB89 /* iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = iOS; path = ..; sourceTree = SOURCE_ROOT; };
 		885630536C0AA36026D99108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E2DEE461B73E28FE4304817 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloganGeneratable.swift; sourceTree = "<group>"; };
@@ -55,8 +56,17 @@
 			isa = PBXGroup;
 			children = (
 				0C7550012B5BF0AB9ABF702E /* LeapSloganExample */,
+				3AECBFEE5E83FE00BE04BD41 /* Packages */,
 				FA867585A59545FF1625C118 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		3AECBFEE5E83FE00BE04BD41 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				346EFFE82C4454FBAB76AB89 /* iOS */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		A1AB7E54FBF734774F7E384E /* Preview Content */ = {
@@ -118,7 +128,7 @@
 			mainGroup = 14A66CD5DDEA138765EBEC89;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */,
+				BC87A3BA6DD30F34C2ABDF60 /* XCLocalSwiftPackageReference ".." */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -356,21 +366,16 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Liquid4All/leap-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.2;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		BC87A3BA6DD30F34C2ABDF60 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		000309645F503650732E41D9 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 90F9525EDF828A02E5D5E280 /* XCRemoteSwiftPackageReference "leap-ios" */;
 			productName = LeapSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
