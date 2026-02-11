@@ -99,7 +99,7 @@ class ChatStore {
 
     // Add text if present
     if !trimmed.isEmpty {
-      messageContent.append(.text(trimmed))
+      messageContent.append(ChatMessageContent.text(trimmed))
     }
 
     let userMessage = ChatMessage(role: .user, content: messageContent)
@@ -116,7 +116,7 @@ class ChatStore {
     isLoading = true
     currentAssistantMessage = ""
 
-    let stream = conversation!.generateResponse(message: userMessage)
+    let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
     do {
       for try await resp in stream {
         print(resp)

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.LeapAudioDemo" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.LeapAudioDemo" parent="android:Theme.Material.NoActionBar">
+        <!-- Splash screen background color -->
+        <item name="android:windowBackground">@color/dark_background</item>
+        <!-- For Android 12+ splash screen -->
+        <item name="android:windowSplashScreenBackground">@color/dark_background</item>
+    </style>
 </resources>

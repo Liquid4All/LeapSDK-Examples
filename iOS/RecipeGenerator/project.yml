@@ -3,8 +3,7 @@ options:
   bundleIdPrefix: ai.liquid
 packages:
   LeapSDK:
-    url: https://github.com/Liquid4All/leap-ios
-    from: 0.9.2
+    path: ..
 targets:
   RecipeGenerator:
     type: application
