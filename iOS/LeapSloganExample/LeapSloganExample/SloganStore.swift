@@ -1,4 +1,5 @@
 import LeapSDK
+import LeapSDKMacros
 import SwiftUI
 
 // System prompt and user prompt constants
@@ -17,8 +18,8 @@ class SloganStore {
   var modelStatus: String = ""
   var modelStatusColor: Color = .red
 
-  private var modelRunner: ModelRunner?
-  private var conversation: Conversation?
+  private var modelRunner: (any ModelRunner)?
+  private var conversation: (any Conversation)?
   private var generationTask: Task<Void, Never>?
 
   @MainActor
@@ -31,14 +32,16 @@ class SloganStore {
 
     do {
       // Use manifest downloading for LFM2.5-1.2B-Instruct (best for instruction following)
-      modelRunner = try await Leap.load(
+      modelRunner = try await Leap.shared.load(
         model: "LFM2.5-1.2B-Instruct",
-        quantization: "Q4_0"
+        quantization: "Q4_0",
+        options: nil
       ) { [weak self] progress, speed in
         Task { @MainActor in
-          if progress < 1.0 {
-            self?.generatedText = "Downloading model: \(Int(progress * 100))%"
-            self?.modelStatus = "● Model: Downloading \(Int(progress * 100))%"
+          let progressValue = progress.doubleValue
+          if progressValue < 1.0 {
+            self?.generatedText = "Downloading model: \(Int(progressValue * 100))%"
+            self?.modelStatus = "● Model: Downloading \(Int(progressValue * 100))%"
           } else {
             self?.generatedText = "Loading model into memory..."
             self?.modelStatus = "● Model: Loading..."
@@ -47,7 +50,7 @@ class SloganStore {
       }
 
       // Initialize conversation for regular generation
-      let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
+      let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
       conversation = Conversation(
         modelRunner: modelRunner!,
         history: [systemMessage]
@@ -111,34 +114,28 @@ class SloganStore {
         generatedText = "Generating structured slogans...\n\n"
 
         // Create conversation with constrained generation options
-        let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
+        let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
         let constrainedConversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
         )
 
         // Set up generation options with structured output
-        var options = GenerationOptions()
-        try options.setResponseFormat(type: SloganResponse.self)
+        let options = GenerationOptions()
+        options.setResponseFormat(type: SloganResponse.self)
 
-        let userMessage = ChatMessage(
-          role: .user, content: [.text(String(format: USER_PROMPT_TEMPLATE, topic))])
+        let userMessage: ChatMessage = .init(
+          role: .user, content: .text(String(format: USER_PROMPT_TEMPLATE, topic)))
         let stream = constrainedConversation.generateResponse(
           message: userMessage, generationOptions: options)
 
         var jsonResponse = ""
         for try await response in stream {
           if Task.isCancelled { break }
-          switch response {
-          case .chunk(let text):
-            jsonResponse.append(text)
-          case .audioSample:
-            break
-          case .complete:
-            break
-          case .reasoningChunk(_):
-            break
-          case .functionCall(_):
+          switch onEnum(of: response) {
+          case .chunk(let chunk):
+            jsonResponse.append(chunk.text)
+          case .audioSample, .complete, .reasoningChunk, .functionCalls:
             break
           }
         }
@@ -169,16 +166,16 @@ class SloganStore {
         print("Falling back to regular conversation...")
 
         // Reset conversation for each generation to avoid context length issues
-        let systemMessage = ChatMessage(role: .system, content: [.text(SYSTEM_PROMPT)])
+        let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
         conversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
         )
 
         let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
-        let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
+        let userMessage = ChatMessage(role: .user, content: .text(prompt))
 
-        let stream = conversation!.generateResponse(message: userMessage)
+        let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
 
         generatedText = "Generating (fallback mode)...\n\n"
 
@@ -186,13 +183,13 @@ class SloganStore {
           for try await response in stream {
             if Task.isCancelled { break }
 
-            switch response {
-            case .chunk(let text):
+            switch onEnum(of: response) {
+            case .chunk(let chunk):
               isThinking = false
               if generatedText.hasPrefix("Generating (fallback mode)...") {
-                generatedText = text
+                generatedText = chunk.text
               } else {
-                generatedText.append(text)
+                generatedText.append(chunk.text)
               }
             case .audioSample:
               break
@@ -200,11 +197,11 @@ class SloganStore {
               isGenerating = false
               isThinking = false
               generationTask = nil
-            case .reasoningChunk(_):
+            case .reasoningChunk:
               if !isThinking {
                 isThinking = true
               }
-            case .functionCall(_):
+            case .functionCalls:
               break
             }
           }

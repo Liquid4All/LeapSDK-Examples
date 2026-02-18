@@ -16,6 +16,8 @@ targets:
     dependencies:
       - package: LeapSDK
         product: LeapSDK
+      - package: LeapSDK
+        product: LeapSDKMacros
     settings:
       base:
 

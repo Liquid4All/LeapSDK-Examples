@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		10DB570B168681880F23810A /* LeapSDKMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 1635A4902A05CB052BEA6123 /* LeapSDKMacros */; };
 		4DEEB90F6D2D2F0DE4802B71 /* SloganStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1807EB4474C6CFE6F741978 /* SloganStore.swift */; };
 		933BF833B0A8BD90473D1822 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 885630536C0AA36026D99108 /* Assets.xcassets */; };
 		94ACD34F87EA3BEAE115CA93 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2DEE461B73E28FE4304817 /* ContentView.swift */; };
@@ -33,6 +34,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE82A54940A70C970D4D73E9 /* LeapSDK in Frameworks */,
+				10DB570B168681880F23810A /* LeapSDKMacros in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +105,7 @@
 			name = LeapSloganExample;
 			packageProductDependencies = (
 				000309645F503650732E41D9 /* LeapSDK */,
+				1635A4902A05CB052BEA6123 /* LeapSDKMacros */,
 			);
 			productName = LeapSloganExample;
 			productReference = BCF872115CBFB31559F15F9C /* LeapSloganExample.app */;
@@ -377,6 +380,10 @@
 		000309645F503650732E41D9 /* LeapSDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LeapSDK;
+		};
+		1635A4902A05CB052BEA6123 /* LeapSDKMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LeapSDKMacros;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

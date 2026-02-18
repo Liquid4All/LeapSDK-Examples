@@ -11,8 +11,8 @@ class ChatStore {
   var currentAssistantMessage = ""
   var attachedImage: UIImage?
 
-  var conversation: Conversation?
-  var modelRunner: ModelRunner?
+  var conversation: (any Conversation)?
+  var modelRunner: (any ModelRunner)?
 
   @MainActor
   func setupModel() async {
@@ -22,33 +22,32 @@ class ChatStore {
     do {
       messages.append(
         MessageBubble(
-          content: "🔍 Initializing LeapSDK...",
+          content: "Initializing LeapSDK...",
           isUser: false))
 
       messages.append(
         MessageBubble(
-          content: "📦 Downloading LFM2-VL-450M model (compact vision support)...",
+          content: "Downloading LFM2-VL-450M model (compact vision support)...",
           isUser: false))
 
       // Use manifest downloading for LFM2-VL-450M with Q8_0 (smaller model, faster download)
-      let modelRunner = try await Leap.load(
+      let modelRunner = try await Leap.shared.load(
         model: "LFM2-VL-450M",
         quantization: "Q8_0",
-        options: LiquidInferenceEngineManifestOptions(
-          contextSize: 4096  // Reduced from default for mobile memory constraints
-        )
+        options: LiquidInferenceEngineManifestOptions(contextSize: 4096)  // Reduced from default for mobile memory constraints
       ) { [weak self] progress, speed in
         Task { @MainActor in
-          if progress < 1.0 {
-            let progressPercent = Int(progress * 100)
+          let progressValue = progress.doubleValue
+          if progressValue < 1.0 {
+            let progressPercent = Int(progressValue * 100)
             self?.messages.append(
               MessageBubble(
-                content: "⏳ Downloading: \(progressPercent)%",
+                content: "Downloading: \(progressPercent)%",
                 isUser: false))
           } else {
             self?.messages.append(
               MessageBubble(
-                content: "🧠 Loading model into memory...",
+                content: "Loading model into memory...",
                 isUser: false))
           }
         }
@@ -58,18 +57,18 @@ class ChatStore {
       conversation = Conversation(modelRunner: modelRunner, history: [])
       messages.append(
         MessageBubble(
-          content: "✅ Model loaded successfully! You can start chatting.",
+          content: "Model loaded successfully! You can start chatting.",
           isUser: false))
     } catch {
       print("Error loading model: \(error)")
-      let errorMessage = "🚨 Failed to load model: \(error.localizedDescription)"
+      let errorMessage = "Failed to load model: \(error.localizedDescription)"
       messages.append(MessageBubble(content: errorMessage, isUser: false))
 
       // Check if it's a LeapError
       if let leapError = error as? LeapError {
         print("LeapError details: \(leapError)")
         messages.append(
-          MessageBubble(content: "📋 Error type: \(String(describing: leapError))", isUser: false))
+          MessageBubble(content: "Error type: \(String(describing: leapError))", isUser: false))
       }
     }
 
@@ -102,7 +101,7 @@ class ChatStore {
       messageContent.append(ChatMessageContent.text(trimmed))
     }
 
-    let userMessage = ChatMessage(role: .user, content: messageContent)
+    let userMessage = ChatMessage_withArray(role: .user, content: messageContent)
 
     // Create display content for the message bubble
     var displayContent = trimmed
@@ -119,19 +118,20 @@ class ChatStore {
     let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
     do {
       for try await resp in stream {
-        print(resp)
-        switch resp {
-        case .reasoningChunk(let str): break
-        case .chunk(let str):
-          currentAssistantMessage.append(str)
+        switch onEnum(of: resp) {
+        case .reasoningChunk: break
+        case .chunk(let chunk):
+          currentAssistantMessage.append(chunk.text)
         case .audioSample:
           break
         case .complete(let completion):
-          let finalText = completion.message.content.compactMap { content -> String? in
-            if case .text(let text) = content {
-              return text
+          let finalText = completion.fullMessage.content.compactMap { content -> String? in
+            switch onEnum(of: content) {
+            case .text(let textContent):
+              return textContent.text
+            case .audio, .image:
+              return nil
             }
-            return nil
           }.joined()
           if !finalText.isEmpty {
             currentAssistantMessage = finalText
@@ -141,8 +141,8 @@ class ChatStore {
           }
           currentAssistantMessage = ""
           isLoading = false
-        case .functionCall(_):
-          break  // Function calls not used in this example
+        case .functionCalls:
+          break
         }
       }
     } catch {
