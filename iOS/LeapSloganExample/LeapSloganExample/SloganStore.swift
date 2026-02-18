@@ -35,22 +35,21 @@ class SloganStore {
       modelRunner = try await Leap.shared.load(
         model: "LFM2.5-1.2B-Instruct",
         quantization: "Q4_0",
-        options: nil
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          let progressValue = progress.doubleValue
-          if progressValue < 1.0 {
-            self?.generatedText = "Downloading model: \(Int(progressValue * 100))%"
-            self?.modelStatus = "● Model: Downloading \(Int(progressValue * 100))%"
-          } else {
-            self?.generatedText = "Loading model into memory..."
-            self?.modelStatus = "● Model: Loading..."
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            if progress < 1.0 {
+              self?.generatedText = "Downloading model: \(Int(progress * 100))%"
+              self?.modelStatus = "● Model: Downloading \(Int(progress * 100))%"
+            } else {
+              self?.generatedText = "Loading model into memory..."
+              self?.modelStatus = "● Model: Loading..."
+            }
           }
         }
-      }
+      )
 
       // Initialize conversation for regular generation
-      let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
+      let systemMessage = ChatMessage(role: .system, content: .text(SYSTEM_PROMPT))
       conversation = Conversation(
         modelRunner: modelRunner!,
         history: [systemMessage]
@@ -114,7 +113,7 @@ class SloganStore {
         generatedText = "Generating structured slogans...\n\n"
 
         // Create conversation with constrained generation options
-        let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
+        let systemMessage = ChatMessage(role: .system, content: .text(SYSTEM_PROMPT))
         let constrainedConversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
@@ -124,7 +123,7 @@ class SloganStore {
         let options = GenerationOptions()
         options.setResponseFormat(type: SloganResponse.self)
 
-        let userMessage: ChatMessage = .init(
+        let userMessage = ChatMessage(
           role: .user, content: .text(String(format: USER_PROMPT_TEMPLATE, topic)))
         let stream = constrainedConversation.generateResponse(
           message: userMessage, generationOptions: options)
@@ -166,7 +165,7 @@ class SloganStore {
         print("Falling back to regular conversation...")
 
         // Reset conversation for each generation to avoid context length issues
-        let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
+        let systemMessage = ChatMessage(role: .system, content: .text(SYSTEM_PROMPT))
         conversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
@@ -175,7 +174,7 @@ class SloganStore {
         let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
         let userMessage = ChatMessage(role: .user, content: .text(prompt))
 
-        let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
+        let stream = conversation!.generateResponse(message: userMessage)
 
         generatedText = "Generating (fallback mode)...\n\n"
 

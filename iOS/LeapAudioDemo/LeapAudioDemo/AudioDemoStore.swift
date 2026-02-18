@@ -52,23 +52,23 @@ final class AudioDemoStore {
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
-        options: LiquidInferenceEngineManifestOptions(contextSize: 1024, nGpuLayers: 0)
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          let progressValue = progress.doubleValue
-          if progressValue < 1.0 {
-            self?.status = "Downloading: \(Int(progressValue * 100))%"
-          } else {
-            self?.status = "Loading model into memory..."
+        options: LiquidInferenceEngineManifestOptions(contextSize: 1024, nGpuLayers: 0),
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            if progress < 1.0 {
+              self?.status = "Downloading: \(Int(progress * 100))%"
+            } else {
+              self?.status = "Loading model into memory..."
+            }
           }
         }
-      }
+      )
 
       modelRunner = runner
       conversation = Conversation(
         modelRunner: runner,
         history: [
-          ChatMessage.init(role: .system, content: .text("Respond with interleaved text and audio."))
+          ChatMessage(role: .system, content: .text("Respond with interleaved text and audio."))
         ])
       messages.append(
         AudioDemoMessage(
@@ -89,7 +89,7 @@ final class AudioDemoStore {
     let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
     inputText = ""
-    let message: ChatMessage = .init(role: .user, content: .text(trimmed))
+    let message = ChatMessage(role: .user, content: .text(trimmed))
     appendUserMessage(text: trimmed, audioData: nil)
     streamResponse(for: message)
   }
@@ -132,7 +132,7 @@ final class AudioDemoStore {
 
     let audioContent = ChatMessageContent.fromFloatSamples(
       samples, sampleRate: sampleRate)
-    let chatMessage: ChatMessage = .init(role: .user, content: audioContent)
+    let chatMessage = ChatMessage(role: .user, content: audioContent)
 
     var display = "Audio prompt (\(samples.count) samples @ \(sampleRate) Hz)"
     if samples.count < sampleRate / 4 {
@@ -161,7 +161,7 @@ final class AudioDemoStore {
     status = "Awaiting response..."
     isGenerating = true
 
-    let stream = conversation.generateResponse(message: message, generationOptions: nil)
+    let stream = conversation.generateResponse(message: message)
 
     streamingTask = Task { [weak self] in
       guard let self else { return }

@@ -31,27 +31,28 @@ class ChatStore {
           isUser: false))
 
       // Use manifest downloading for LFM2-VL-450M with Q8_0 (smaller model, faster download)
+      // Reduced from default for mobile memory constraints
       let modelRunner = try await Leap.shared.load(
         model: "LFM2-VL-450M",
         quantization: "Q8_0",
-        options: LiquidInferenceEngineManifestOptions(contextSize: 4096)  // Reduced from default for mobile memory constraints
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          let progressValue = progress.doubleValue
-          if progressValue < 1.0 {
-            let progressPercent = Int(progressValue * 100)
-            self?.messages.append(
-              MessageBubble(
-                content: "Downloading: \(progressPercent)%",
-                isUser: false))
-          } else {
-            self?.messages.append(
-              MessageBubble(
-                content: "Loading model into memory...",
-                isUser: false))
+        options: LiquidInferenceEngineManifestOptions(contextSize: 4096),
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            if progress < 1.0 {
+              let progressPercent = Int(progress * 100)
+              self?.messages.append(
+                MessageBubble(
+                  content: "Downloading: \(progressPercent)%",
+                  isUser: false))
+            } else {
+              self?.messages.append(
+                MessageBubble(
+                  content: "Loading model into memory...",
+                  isUser: false))
+            }
           }
         }
-      }
+      )
 
       self.modelRunner = modelRunner
       conversation = Conversation(modelRunner: modelRunner, history: [])
@@ -115,7 +116,7 @@ class ChatStore {
     isLoading = true
     currentAssistantMessage = ""
 
-    let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
+    let stream = conversation!.generateResponse(message: userMessage)
     do {
       for try await resp in stream {
         switch onEnum(of: resp) {

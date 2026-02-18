@@ -15,6 +15,7 @@ Update XCFrameworks from the leap-android-sdk KMP repo and finish the iOS refact
 - 2026-02-18 iOS/LeapSloganExample — Updated for KMP API: `GenerationOptions()` convenience init, `onEnum(of:)`, added `LeapSDKMacros` dep for constrained generation
 - 2026-02-18 iOS/RecipeGenerator — Updated for KMP API: `Leap.shared.load(options:)`, `GenerationOptions()`, `onEnum(of:)`, added `LeapSDKMacros` dep
 - 2026-02-18 leap-android-sdk ConvenienceExtensions.swift — Added SDK-level Swift convenience extensions (bundled via SKIE): `GenerationOptions()`, `LiquidInferenceEngineManifestOptions(contextSize:...)`, `ChatMessageContent.fromFloatSamples`, `KotlinByteArray.toData()`, `KotlinFloatArray.toFloatArray()`
+- 2026-02-18 All 4 example stores — Simplified after SDK fixes: removed `.init()` disambiguation, dropped explicit `generationOptions: nil` / `options: nil`, replaced `progress.doubleValue` with native `Double`
 
 ## Decisions
 - 2026-02-18 Put convenience wrappers in SDK (not examples) — so all consumers benefit from Swift-friendly APIs without depending on LeapSDKMacros
@@ -29,6 +30,17 @@ Update XCFrameworks from the leap-android-sdk KMP repo and finish the iOS refact
 - LiquidInferenceEngineManifestOptions convenience init not found until derived data cleared — Xcode caches stale module interfaces. Always clean DerivedData after replacing XCFrameworks.
 
 ## Commits
+- d9b73ef — feat: update iOS examples to use KMP SDK with compiled Swift extensions
+- 5e65caa — refactor: simplify iOS examples using SDK-level convenience extensions
+
+## Migration Analysis (2026-02-18)
+Analyzed all example changes to identify which are inherent to KMP vs fixable in SDK:
+- **17 call sites** of avoidable boilerplate identified across 3 categories:
+  - `.init()` ChatMessage disambiguation (9 sites) — fix: remove redundant free function from `ChatMessageExtensions.kt`
+  - Explicit `generationOptions: nil` / `options: nil` (4 sites) — fix: add Swift default-param overloads
+  - `progress.doubleValue` KotlinDouble unwrap (4 sites) — fix: wrap callback at SDK level
+- **Unavoidable** KMP changes: `onEnum(of:)` (9 switches), `any Conversation`/`any ModelRunner` (8 sites), renames, new imports
+- Plan documented at `.claude/plans/majestic-giggling-lecun.md`
 
 ## Progress
 - [x] Build XCFrameworks from leap-android-sdk (current state)
@@ -36,4 +48,6 @@ Update XCFrameworks from the leap-android-sdk KMP repo and finish the iOS refact
 - [x] Wire up macro targets in Package.swift (Sources/)
 - [x] Update example apps for latest API surface
 - [x] Verify all four examples compile (Swift compilation passes, linker errors expected without native libs)
-- [ ] Create draft PR
+- [x] Apply SDK-level fixes to reduce migration boilerplate (3 fixes, 17 call sites)
+- [x] Update examples with simplified API (verified: all 4 compile with zero Swift errors)
+- [x] Create draft PR — https://github.com/Liquid4All/LeapSDK-Examples/pull/40

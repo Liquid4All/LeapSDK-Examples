@@ -28,18 +28,17 @@ class GeneratorViewModel: ObservableObject {
       modelRunner = try await Leap.shared.load(
         model: modelName,
         quantization: quantization,
-        options: nil
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          let progressValue = progress.doubleValue
-          self?.downloadProgress = progressValue
-          if progressValue < 1.0 {
-            self?.statusMessage = "Downloading: \(Int(progressValue * 100))%"
-          } else {
-            self?.statusMessage = "Loading model..."
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            self?.downloadProgress = progress
+            if progress < 1.0 {
+              self?.statusMessage = "Downloading: \(Int(progress * 100))%"
+            } else {
+              self?.statusMessage = "Loading model..."
+            }
           }
         }
-      }
+      )
 
       statusMessage = "Model loaded and ready"
       isModelLoading = false
@@ -60,7 +59,7 @@ class GeneratorViewModel: ObservableObject {
     isGenerating = true
     statusMessage = "Generating recipe..."
 
-    let systemMessage: ChatMessage = .init(role: .system, content: .text(SYSTEM_PROMPT))
+    let systemMessage = ChatMessage(role: .system, content: .text(SYSTEM_PROMPT))
     let conversation = Conversation(
       modelRunner: modelRunner,
       history: [systemMessage]
@@ -69,7 +68,7 @@ class GeneratorViewModel: ObservableObject {
     let options = GenerationOptions()
     options.setResponseFormat(type: Recipe.self)
 
-    let userMessage: ChatMessage = .init(
+    let userMessage = ChatMessage(
       role: .user,
       content: .text("Generate a recipe for a dinner dish with shrimps"))
     let stream = conversation.generateResponse(
