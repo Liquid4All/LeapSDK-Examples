@@ -7,7 +7,7 @@ let package = Package(
     name: "LeapSDK",
     platforms: [
         .iOS(.v14),
-        .macOS(.v11)
+        .macOS(.v13)
     ],
     products: [
         .library(
@@ -20,7 +20,7 @@ let package = Package(
         ),
     ],
     targets: [
-        // Local XCFrameworks from parent leap-android-sdk repository
+        // Local XCFrameworks copied from the leap-android-sdk build output
         .binaryTarget(
             name: "LeapSDK",
             path: "./LeapSDK.xcframework"
@@ -28,6 +28,6 @@ let package = Package(
         .binaryTarget(
             name: "LeapModelDownloader",
             path: "./LeapModelDownloader.xcframework"
-        )
+        ),
     ]
 )

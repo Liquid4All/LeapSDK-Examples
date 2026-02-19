@@ -5,7 +5,7 @@ import Observation
 
 struct AudioDemoMessage: Identifiable, Equatable {
   let id = UUID()
-  let role: ChatMessageRole
+  let role: ChatMessage.Role
   let text: String
   let audioData: Data?
 
@@ -32,8 +32,8 @@ final class AudioDemoStore {
 
   private let playbackManager = AudioPlaybackManager()
   private let recorder = AudioRecorder()
-  private var conversation: Conversation?
-  private var modelRunner: ModelRunner?
+  private var conversation: (any Conversation)?
+  private var modelRunner: (any ModelRunner)?
   private var streamingTask: Task<Void, Never>?
 
   init() {
@@ -49,28 +49,26 @@ final class AudioDemoStore {
       status = "Downloading \(Self.modelName) model..."
 
       // Use manifest downloading for LFM2.5-Audio-1.5B (speech + text input/output)
-      let runner = try await Leap.load(
+      let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
-        options: LiquidInferenceEngineManifestOptions(
-          contextSize: 1024,
-          nGpuLayers: 0
-        )
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          if progress < 1.0 {
-            self?.status = "Downloading: \(Int(progress * 100))%"
-          } else {
-            self?.status = "Loading model into memory..."
+        options: nil,
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            if progress < 1.0 {
+              self?.status = "Downloading: \(Int(progress * 100))%"
+            } else {
+              self?.status = "Loading model into memory..."
+            }
           }
         }
-      }
+      )
 
       modelRunner = runner
       conversation = Conversation(
         modelRunner: runner,
         history: [
-          ChatMessage(role: .system, content: [.text("Respond with interleaved text and audio.")])
+          ChatMessage(role: .system, content: .text("Respond with interleaved text and audio."))
         ])
       messages.append(
         AudioDemoMessage(
@@ -91,7 +89,7 @@ final class AudioDemoStore {
     let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
     inputText = ""
-    let message = ChatMessage(role: .user, content: [.text(trimmed)])
+    let message = ChatMessage(role: .user, content: .text(trimmed))
     appendUserMessage(text: trimmed, audioData: nil)
     streamResponse(for: message)
   }
@@ -132,20 +130,16 @@ final class AudioDemoStore {
       return
     }
 
-    let content = ChatMessageContent.fromFloatSamples(samples, sampleRate: sampleRate)
-    let chatMessage = ChatMessage(role: .user, content: [content])
+    let audioContent = ChatMessageContent.fromFloatSamples(
+      samples, sampleRate: sampleRate)
+    let chatMessage = ChatMessage(role: .user, content: audioContent)
 
     var display = "Audio prompt (\(samples.count) samples @ \(sampleRate) Hz)"
     if samples.count < sampleRate / 4 {
       display = "Audio prompt (~\(samples.count) samples)"
     }
 
-    let audioData: Data?
-    if case .audio(let data) = content {
-      audioData = data
-    } else {
-      audioData = nil
-    }
+    let audioData = audioContent.data.toData()
 
     appendUserMessage(text: display, audioData: audioData)
     streamResponse(for: chatMessage)
@@ -189,31 +183,34 @@ final class AudioDemoStore {
     }
   }
 
-  private func handle(_ event: MessageResponse) {
-    switch event {
-    case .chunk(let text):
-      streamingText.append(text)
+  private func handle(_ event: any MessageResponse) {
+    switch onEnum(of: event) {
+    case .chunk(let chunk):
+      streamingText.append(chunk.text)
     case .reasoningChunk:
       status = "Thinking..."
-    case .audioSample(let samples, let sampleRate):
-      playbackManager.enqueue(samples: samples, sampleRate: sampleRate)
+    case .audioSample(let sample):
+      let floats = sample.samples.toFloatArray()
+      playbackManager.enqueue(samples: floats, sampleRate: Int(sample.sampleRate))
       status = "Streaming audio..."
-    case .functionCall(let calls):
-      status = "Received function call: \(calls.count)"
+    case .functionCalls(let calls):
+      status = "Received function call: \(calls.functionCalls.count)"
     case .complete(let completion):
       finish(with: completion)
     }
   }
 
-  private func finish(with completion: MessageCompletion) {
-    let text = completion.message.content.compactMap { content -> String? in
-      if case .text(let value) = content {
-        return value
+  private func finish(with completion: MessageResponseComplete) {
+    let text = completion.fullMessage.content.compactMap { content -> String? in
+      switch onEnum(of: content) {
+      case .text(let textContent):
+        return textContent.text
+      case .audio, .image:
+        return nil
       }
-      return nil
     }.joined()
 
-    let audioData = completion.message.content.firstAudioData
+    let audioData = completion.fullMessage.content.firstAudioData
     messages.append(
       AudioDemoMessage(
         role: .assistant,
@@ -243,8 +240,14 @@ final class AudioDemoStore {
     switch reason {
     case .stop:
       return "Response complete."
-    case .exceed_context:
+    case .exceedContext:
       return "Context window exceeded."
+    case .interrupted:
+      return "Generation interrupted."
+    case .constraint:
+      return "Constraint satisfied."
+    case .error:
+      return "Generation error."
     }
   }
 
@@ -262,11 +265,14 @@ final class AudioDemoStore {
   }
 }
 
-extension Array where Element == ChatMessageContent {
+extension Array where Element: ChatMessageContent {
   fileprivate var firstAudioData: Data? {
     for content in self {
-      if case .audio(let data) = content {
-        return data
+      switch onEnum(of: content) {
+      case .audio(let audioContent):
+        return audioContent.data.toData()
+      case .text, .image:
+        continue
       }
     }
     return nil

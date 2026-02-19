@@ -4,6 +4,8 @@ options:
 packages:
   LeapSDK:
     path: ..
+  LeapAndroidSDK:
+    path: ../../../../../leap-android-sdk/worktrees/reduce-kmp-migration-burden
 targets:
   RecipeGenerator:
     type: application
@@ -16,6 +18,19 @@ targets:
     dependencies:
       - package: LeapSDK
         product: LeapSDK
+      - package: LeapAndroidSDK
+        product: LeapSDKMacros
     settings:
       base:
-
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
+    postBuildScripts:
+      - name: Sign nested LeapSDK dylibs
+        script: |
+          set -e
+          NESTED="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Frameworks/LeapSDK.framework/Frameworks"
+          [ -d "$NESTED" ] || exit 0
+          [ "$CODE_SIGNING_ALLOWED" = "YES" ] || exit 0
+          find "$NESTED" -name "*.dylib" | while read dylib; do
+            codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" --timestamp=none "$dylib"
+          done

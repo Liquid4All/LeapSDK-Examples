@@ -1,5 +1,6 @@
 import Foundation
 import LeapSDK
+import LeapSDKMacros
 
 // SloganResponse structure for constrained generation using Swift macros
 @Generatable("Generate creative marketing slogans for a business")

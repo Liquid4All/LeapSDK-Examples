@@ -1,5 +1,9 @@
 import Foundation
 import LeapSDK
+import LeapSDKMacros
+
+private let SYSTEM_PROMPT =
+  "You are a helpful cooking assistant. Generate recipes based on user requests."
 
 @MainActor
 class GeneratorViewModel: ObservableObject {
@@ -9,35 +13,32 @@ class GeneratorViewModel: ObservableObject {
   @Published var statusMessage: String = "Ready to generate"
   @Published var downloadProgress: Double = 0.0
 
-  private var modelRunner: ModelRunner?
+  private var modelRunner: (any ModelRunner)?
 
-  private let modelName = "LFM2-350M"  // Smaller model for faster testing
+  private let modelName = "LFM2-350M"
   private let quantization = "Q4_0"
 
   func setupModel() async {
-    guard modelRunner == nil else {
-      // Model already loaded
-      return
-    }
+    guard modelRunner == nil else { return }
 
     isModelLoading = true
     statusMessage = "Downloading and loading model..."
 
     do {
-      // Use new Leap.load API with model name and quantization
-      modelRunner = try await Leap.load(
+      modelRunner = try await Leap.shared.load(
         model: modelName,
-        quantization: quantization
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          self?.downloadProgress = progress
-          if progress < 1.0 {
-            self?.statusMessage = "Downloading: \(Int(progress * 100))%"
-          } else {
-            self?.statusMessage = "Loading model..."
+        quantization: quantization,
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            self?.downloadProgress = progress
+            if progress < 1.0 {
+              self?.statusMessage = "Downloading: \(Int(progress * 100))%"
+            } else {
+              self?.statusMessage = "Loading model..."
+            }
           }
         }
-      }
+      )
 
       statusMessage = "Model loaded and ready"
       isModelLoading = false
@@ -58,31 +59,34 @@ class GeneratorViewModel: ObservableObject {
     isGenerating = true
     statusMessage = "Generating recipe..."
 
-    // Create conversation with system prompt
-    let conversation = modelRunner.createConversation(
-      systemPrompt: "You are a helpful cooking assistant. Generate recipes in JSON format."
+    let systemMessage = ChatMessage(role: .system, content: .text(SYSTEM_PROMPT))
+    let conversation = Conversation(
+      modelRunner: modelRunner,
+      history: [systemMessage]
     )
 
-    // Generate response - simplified for now without constrained generation
-    var fullText = ""
+    let options = GenerationOptions()
+    options.jsonSchemaConstraint = Recipe.jsonSchema()
+
+    let userMessage = ChatMessage(
+      role: .user,
+      content: .text("Generate a recipe for a dinner dish with shrimps"))
+    let stream = conversation.generateResponse(
+      message: userMessage, generationOptions: options)
+
+    var jsonResponse = ""
     do {
-      let userMessage = ChatMessage(role: .user, content: [.text("Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)")])
-      for try await response in conversation.generateResponse(message: userMessage) {
-        // Accumulate the generated text
-        // The response should have a message property or similar
-        // For now, we'll just use a placeholder
-        print("Received response: \(response)")
+      for try await response in stream {
+        switch onEnum(of: response) {
+        case .chunk(let chunk):
+          jsonResponse.append(chunk.text)
+        case .audioSample, .complete, .reasoningChunk, .functionCalls:
+          break
+        }
       }
 
-      // Placeholder - this will need to be updated based on actual SDK API
-      let mockRecipe = Recipe(
-        name: "Garlic Butter Shrimp",
-        cookingTime: 20,
-        isVegetarian: false,
-        ingredients: ["1 lb shrimp", "4 cloves garlic", "4 tbsp butter", "Salt and pepper"],
-        directions: ["Melt butter in pan", "Add garlic and cook 1 min", "Add shrimp and cook 3-4 min", "Season with salt and pepper"]
-      )
-      recipe = mockRecipe
+      let jsonData = jsonResponse.data(using: .utf8)!
+      recipe = try JSONDecoder().decode(Recipe.self, from: jsonData)
       statusMessage = "Recipe generated!"
     } catch {
       statusMessage = "Error generating recipe: \(error.localizedDescription)"
