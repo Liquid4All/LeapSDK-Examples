@@ -6,7 +6,6 @@
 
 # Xcode
 *.xcodeproj/*
-!*.xcodeproj/project.pbxproj
 !*.xcodeproj/*.xcworkspacedata
 !*.xcodeproj/xcshareddata/
 build/

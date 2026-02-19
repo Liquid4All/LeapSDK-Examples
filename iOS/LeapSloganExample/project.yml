@@ -47,8 +47,20 @@ targets:
         DEVELOPMENT_ASSET_PATHS: "\"LeapSloganExample/Preview Content\""
         ENABLE_PREVIEWS: YES
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
         Release:
           SWIFT_COMPILATION_MODE: wholemodule
+    postBuildScripts:
+      - name: Sign nested LeapSDK dylibs
+        script: |
+          set -e
+          NESTED="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Frameworks/LeapSDK.framework/Frameworks"
+          [ -d "$NESTED" ] || exit 0
+          [ "$CODE_SIGNING_ALLOWED" = "YES" ] || exit 0
+          find "$NESTED" -name "*.dylib" | while read dylib; do
+            codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" --timestamp=none "$dylib"
+          done

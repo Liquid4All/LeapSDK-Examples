@@ -52,7 +52,7 @@ final class AudioDemoStore {
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
-        options: LiquidInferenceEngineManifestOptions(contextSize: 1024, nGpuLayers: 0),
+        options: nil,
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             if progress < 1.0 {
