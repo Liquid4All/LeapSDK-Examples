@@ -18,6 +18,8 @@ settings:
 packages:
   LeapSDK:
     path: ..
+  LeapAndroidSDK:
+    path: ../../../../../leap-android-sdk/worktrees/reduce-kmp-migration-burden
 
 targets:
   LeapSloganExample:
@@ -31,7 +33,7 @@ targets:
     dependencies:
       - package: LeapSDK
         product: LeapSDK
-      - package: LeapSDK
+      - package: LeapAndroidSDK
         product: LeapSDKMacros
     settings:
       base:

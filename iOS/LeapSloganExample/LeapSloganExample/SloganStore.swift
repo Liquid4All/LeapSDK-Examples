@@ -121,7 +121,7 @@ class SloganStore {
 
         // Set up generation options with structured output
         let options = GenerationOptions()
-        options.setResponseFormat(type: SloganResponse.self)
+        options.jsonSchemaConstraint = SloganResponse.jsonSchema()
 
         let userMessage = ChatMessage(
           role: .user, content: .text(String(format: USER_PROMPT_TEMPLATE, topic)))

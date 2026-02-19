@@ -66,7 +66,7 @@ class GeneratorViewModel: ObservableObject {
     )
 
     let options = GenerationOptions()
-    options.setResponseFormat(type: Recipe.self)
+    options.jsonSchemaConstraint = Recipe.jsonSchema()
 
     let userMessage = ChatMessage(
       role: .user,
