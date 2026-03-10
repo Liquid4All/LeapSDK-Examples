@@ -71,7 +71,7 @@ final class AudioDemoStore {
       conversation = Conversation(
         modelRunner: runner,
         history: [
-          ChatMessage(role: .system, content: ChatMessageContent.text("Respond with interleaved text and audio."))
+          ChatMessage(role: .system, textContent: "Respond with interleaved text and audio.")
         ])
       messages.append(
         AudioDemoMessage(
@@ -92,7 +92,7 @@ final class AudioDemoStore {
     let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
     inputText = ""
-    let message = ChatMessage(role: .user, content: ChatMessageContent.text(trimmed))
+    let message = ChatMessage(role: .user, textContent: trimmed)
     appendUserMessage(text: trimmed, audioData: nil)
     streamResponse(for: message)
   }

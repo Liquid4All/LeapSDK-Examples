@@ -48,8 +48,7 @@ class SloganStore {
       )
 
       // Initialize conversation for regular generation
-      let systemMessage = ChatMessage(
-        role: .system, content: ChatMessageContent.text(SYSTEM_PROMPT))
+      let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
       conversation = Conversation(
         modelRunner: modelRunner!,
         history: [systemMessage]
@@ -113,8 +112,7 @@ class SloganStore {
         generatedText = "Generating structured slogans...\n\n"
 
         // Create conversation with constrained generation options
-        let systemMessage = ChatMessage(
-          role: .system, content: ChatMessageContent.text(SYSTEM_PROMPT))
+        let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
         let constrainedConversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
@@ -126,7 +124,7 @@ class SloganStore {
 
         let userMessage = ChatMessage(
           role: .user,
-          content: ChatMessageContent.text(String(format: USER_PROMPT_TEMPLATE, topic)))
+          textContent: String(format: USER_PROMPT_TEMPLATE, topic))
 
         // generateResponse(message:generationOptions:) returns a raw Kotlin flow;
         // bridge it to SkieSwiftFlow for async iteration
@@ -177,15 +175,14 @@ class SloganStore {
         print("Falling back to regular conversation...")
 
         // Reset conversation for each generation to avoid context length issues
-        let systemMessage = ChatMessage(
-          role: .system, content: ChatMessageContent.text(SYSTEM_PROMPT))
+        let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
         conversation = Conversation(
           modelRunner: modelRunner!,
           history: [systemMessage]
         )
 
         let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
-        let userMessage = ChatMessage(role: .user, content: ChatMessageContent.text(prompt))
+        let userMessage = ChatMessage(role: .user, textContent: prompt)
 
         let stream = conversation!.generateResponse(message: userMessage)
 

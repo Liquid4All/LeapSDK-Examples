@@ -61,7 +61,7 @@ class GeneratorViewModel: ObservableObject {
     // Create conversation with system prompt
     let systemMessage = ChatMessage(
       role: .system,
-      content: ChatMessageContent.text("You are a helpful cooking assistant. Generate recipes in JSON format.")
+      textContent: "You are a helpful cooking assistant. Generate recipes in JSON format."
     )
     let conversation = Conversation(modelRunner: modelRunner, history: [systemMessage])
 
@@ -69,9 +69,7 @@ class GeneratorViewModel: ObservableObject {
     do {
       let userMessage = ChatMessage(
         role: .user,
-        content: ChatMessageContent.text(
-          "Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)"
-        )
+        textContent: "Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)"
       )
       let stream = conversation.generateResponse(message: userMessage)
       for try await event in stream {
