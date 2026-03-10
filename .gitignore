@@ -1,5 +1,8 @@
 # LeapSDK Examples - Universal .gitignore
 
+# Dev logs (local only)
+devlog/
+
 ####################
 # iOS & macOS
 ####################
