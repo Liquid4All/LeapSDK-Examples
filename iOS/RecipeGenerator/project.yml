@@ -3,7 +3,8 @@ options:
   bundleIdPrefix: ai.liquid
 packages:
   LeapSDK:
-    path: ..
+    url: https://github.com/Liquid4All/leap-sdk
+    exactVersion: 0.10.0-SNAPSHOT
 targets:
   RecipeGenerator:
     type: application
@@ -15,7 +16,8 @@ targets:
     sources: [RecipeGenerator, Resources]
     dependencies:
       - package: LeapSDK
-        product: LeapSDK
+        product: LeapModelDownloader
     settings:
       base:
-
+        OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"

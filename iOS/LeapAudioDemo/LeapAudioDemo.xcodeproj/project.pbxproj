@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3CDC16DB21F1625FB0ADBD32 /* AudioDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FA776FD950E1203A3F9F6EE /* AudioDemoApp.swift */; };
-		40646CD03E26F84C140CF55D /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1B537F7C0CA9A53E4676FC92 /* LeapSDK */; };
+		40646CD03E26F84C140CF55D /* LeapModelDownloader in Frameworks */ = {isa = PBXBuildFile; productRef = 0C96DE1B168FC86D42742A1D /* LeapModelDownloader */; };
 		50893BA122E0D5C5D8893C9A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D8B333E3DE9AD29A8F7F3E7E /* Assets.xcassets */; };
 		51CD55222E004D65D07C2374 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A83AB90368E259DC45FDF0 /* AudioRecorder.swift */; };
 		6238DC43629096521121BF99 /* AudioDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE149F781D99A21E58820F2 /* AudioDemoView.swift */; };
@@ -22,7 +22,6 @@
 		4FA776FD950E1203A3F9F6EE /* AudioDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDemoApp.swift; sourceTree = "<group>"; };
 		53ECF28854F137D471134B12 /* AudioDemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDemoStore.swift; sourceTree = "<group>"; };
 		53F44F917B6BBB709AEECF08 /* LeapAudioDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LeapAudioDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		58EE71E7F0948C39903BC3F9 /* iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = iOS; path = ..; sourceTree = SOURCE_ROOT; };
 		A420EFCCB89E7AE7FE9512F1 /* AudioPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackManager.swift; sourceTree = "<group>"; };
 		D8B333E3DE9AD29A8F7F3E7E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -32,7 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40646CD03E26F84C140CF55D /* LeapSDK in Frameworks */,
+				40646CD03E26F84C140CF55D /* LeapModelDownloader in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,7 +42,6 @@
 			isa = PBXGroup;
 			children = (
 				12DC65FB0D279D903DC9B644 /* LeapAudioDemo */,
-				DEE0A8AE9D69744430074D90 /* Packages */,
 				B4036A8AC7B70EDB46361BDC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -77,14 +75,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DEE0A8AE9D69744430074D90 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				58EE71E7F0948C39903BC3F9 /* iOS */,
-			);
-			name = Packages;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -102,7 +92,7 @@
 			);
 			name = LeapAudioDemo;
 			packageProductDependencies = (
-				1B537F7C0CA9A53E4676FC92 /* LeapSDK */,
+				0C96DE1B168FC86D42742A1D /* LeapModelDownloader */,
 			);
 			productName = LeapAudioDemo;
 			productReference = 53F44F917B6BBB709AEECF08 /* LeapAudioDemo.app */;
@@ -128,7 +118,7 @@
 			mainGroup = 08D81D3247D5CA1D8D72FF08;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8318B340A63853FC975BFFAA /* XCLocalSwiftPackageReference ".." */,
+				1FE6BE7821D2920B018C83F7 /* XCRemoteSwiftPackageReference "leap-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -180,10 +170,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapAudioDemo;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -265,10 +253,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.examples.LeapAudioDemo;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -366,17 +352,22 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		8318B340A63853FC975BFFAA /* XCLocalSwiftPackageReference ".." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ..;
+/* Begin XCRemoteSwiftPackageReference section */
+		1FE6BE7821D2920B018C83F7 /* XCRemoteSwiftPackageReference "leap-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Liquid4All/leap-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = "0.10.0-SNAPSHOT";
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1B537F7C0CA9A53E4676FC92 /* LeapSDK */ = {
+		0C96DE1B168FC86D42742A1D /* LeapModelDownloader */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LeapSDK;
+			package = 1FE6BE7821D2920B018C83F7 /* XCRemoteSwiftPackageReference "leap-sdk" */;
+			productName = LeapModelDownloader;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

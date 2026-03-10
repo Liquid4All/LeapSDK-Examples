@@ -11,8 +11,8 @@ class ChatStore {
   var currentAssistantMessage = ""
   var attachedImage: UIImage?
 
-  var conversation: Conversation?
-  var modelRunner: ModelRunner?
+  var conversation: (any Conversation)?
+  var modelRunner: (any ModelRunner)?
 
   @MainActor
   func setupModel() async {
@@ -31,28 +31,29 @@ class ChatStore {
           isUser: false))
 
       // Use manifest downloading for LFM2-VL-450M with Q8_0 (smaller model, faster download)
-      let modelRunner = try await Leap.load(
+      let modelRunner = try await Leap.shared.load(
         model: "LFM2-VL-450M",
         quantization: "Q8_0",
         options: LiquidInferenceEngineManifestOptions(
           contextSize: 4096  // Reduced from default for mobile memory constraints
-        )
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          if progress < 1.0 {
-            let progressPercent = Int(progress * 100)
-            self?.messages.append(
-              MessageBubble(
-                content: "⏳ Downloading: \(progressPercent)%",
-                isUser: false))
-          } else {
-            self?.messages.append(
-              MessageBubble(
-                content: "🧠 Loading model into memory...",
-                isUser: false))
+        ),
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            if progress < 1.0 {
+              let progressPercent = Int(progress * 100)
+              self?.messages.append(
+                MessageBubble(
+                  content: "⏳ Downloading: \(progressPercent)%",
+                  isUser: false))
+            } else {
+              self?.messages.append(
+                MessageBubble(
+                  content: "🧠 Loading model into memory...",
+                  isUser: false))
+            }
           }
         }
-      }
+      )
 
       self.modelRunner = modelRunner
       conversation = Conversation(modelRunner: modelRunner, history: [])
@@ -102,7 +103,7 @@ class ChatStore {
       messageContent.append(ChatMessageContent.text(trimmed))
     }
 
-    let userMessage = ChatMessage(role: .user, content: messageContent)
+    let userMessage = ChatMessage_withArray(role: .user, content: messageContent)
 
     // Create display content for the message bubble
     var displayContent = trimmed
@@ -116,20 +117,20 @@ class ChatStore {
     isLoading = true
     currentAssistantMessage = ""
 
-    let stream = conversation!.generateResponse(message: userMessage, generationOptions: nil)
+    let stream = conversation!.generateResponse(message: userMessage)
     do {
       for try await resp in stream {
-        print(resp)
-        switch resp {
-        case .reasoningChunk(let str): break
-        case .chunk(let str):
-          currentAssistantMessage.append(str)
+        switch onEnum(of: resp) {
+        case .reasoningChunk:
+          break
+        case .chunk(let chunk):
+          currentAssistantMessage.append(chunk.text)
         case .audioSample:
           break
         case .complete(let completion):
-          let finalText = completion.message.content.compactMap { content -> String? in
-            if case .text(let text) = content {
-              return text
+          let finalText = completion.fullMessage.content.compactMap { content -> String? in
+            if case .text(let t) = onEnum(of: content) {
+              return t.text
             }
             return nil
           }.joined()
@@ -141,7 +142,7 @@ class ChatStore {
           }
           currentAssistantMessage = ""
           isLoading = false
-        case .functionCall(_):
+        case .functionCalls:
           break  // Function calls not used in this example
         }
       }

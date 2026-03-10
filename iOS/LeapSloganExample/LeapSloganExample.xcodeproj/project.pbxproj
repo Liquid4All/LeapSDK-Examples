@@ -7,17 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		10DB570B168681880F23810A /* LeapSDKMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 1635A4902A05CB052BEA6123 /* LeapSDKMacros */; };
 		4DEEB90F6D2D2F0DE4802B71 /* SloganStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1807EB4474C6CFE6F741978 /* SloganStore.swift */; };
 		933BF833B0A8BD90473D1822 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 885630536C0AA36026D99108 /* Assets.xcassets */; };
 		94ACD34F87EA3BEAE115CA93 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2DEE461B73E28FE4304817 /* ContentView.swift */; };
 		A5963AF3F7F3D9FC9B431470 /* SloganGeneratable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */; };
 		B8A09F7C6B1231F88EB65956 /* LeapSloganExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A1DAD152B2F4AB77F7F3CE /* LeapSloganExampleApp.swift */; };
 		CA753FA13EA002F308976E67 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0C9F134A6A19B80ECC11E5F /* Preview Assets.xcassets */; };
-		CE82A54940A70C970D4D73E9 /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 000309645F503650732E41D9 /* LeapSDK */; };
+		CE82A54940A70C970D4D73E9 /* LeapModelDownloader in Frameworks */ = {isa = PBXBuildFile; productRef = F81F4D9689DBF297FFA783A8 /* LeapModelDownloader */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		346EFFE82C4454FBAB76AB89 /* iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = iOS; path = ..; sourceTree = SOURCE_ROOT; };
 		885630536C0AA36026D99108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E2DEE461B73E28FE4304817 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1F6CE67F3F7815D9F034BBC /* SloganGeneratable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloganGeneratable.swift; sourceTree = "<group>"; };
@@ -32,7 +32,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE82A54940A70C970D4D73E9 /* LeapSDK in Frameworks */,
+				CE82A54940A70C970D4D73E9 /* LeapModelDownloader in Frameworks */,
+				10DB570B168681880F23810A /* LeapSDKMacros in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,17 +57,8 @@
 			isa = PBXGroup;
 			children = (
 				0C7550012B5BF0AB9ABF702E /* LeapSloganExample */,
-				3AECBFEE5E83FE00BE04BD41 /* Packages */,
 				FA867585A59545FF1625C118 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		3AECBFEE5E83FE00BE04BD41 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				346EFFE82C4454FBAB76AB89 /* iOS */,
-			);
-			name = Packages;
 			sourceTree = "<group>";
 		};
 		A1AB7E54FBF734774F7E384E /* Preview Content */ = {
@@ -102,7 +94,8 @@
 			);
 			name = LeapSloganExample;
 			packageProductDependencies = (
-				000309645F503650732E41D9 /* LeapSDK */,
+				F81F4D9689DBF297FFA783A8 /* LeapModelDownloader */,
+				1635A4902A05CB052BEA6123 /* LeapSDKMacros */,
 			);
 			productName = LeapSloganExample;
 			productReference = BCF872115CBFB31559F15F9C /* LeapSloganExample.app */;
@@ -128,7 +121,7 @@
 			mainGroup = 14A66CD5DDEA138765EBEC89;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				BC87A3BA6DD30F34C2ABDF60 /* XCLocalSwiftPackageReference ".." */,
+				51BCB6145283D1AFBC1B3643 /* XCRemoteSwiftPackageReference "leap-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -303,10 +296,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapSloganExample;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -330,10 +321,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapSloganExample;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -366,17 +355,27 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		BC87A3BA6DD30F34C2ABDF60 /* XCLocalSwiftPackageReference ".." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ..;
+/* Begin XCRemoteSwiftPackageReference section */
+		51BCB6145283D1AFBC1B3643 /* XCRemoteSwiftPackageReference "leap-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Liquid4All/leap-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = "0.10.0-SNAPSHOT";
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		000309645F503650732E41D9 /* LeapSDK */ = {
+		1635A4902A05CB052BEA6123 /* LeapSDKMacros */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LeapSDK;
+			package = 51BCB6145283D1AFBC1B3643 /* XCRemoteSwiftPackageReference "leap-sdk" */;
+			productName = LeapSDKMacros;
+		};
+		F81F4D9689DBF297FFA783A8 /* LeapModelDownloader */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51BCB6145283D1AFBC1B3643 /* XCRemoteSwiftPackageReference "leap-sdk" */;
+			productName = LeapModelDownloader;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

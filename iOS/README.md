@@ -6,7 +6,7 @@ This directory contains iOS example applications demonstrating how to use the Le
 
 - Xcode 15.0+
 - iOS 17.0+ deployment target
-- Swift 5.9+
+- Swift 6.0+
 - XcodeGen: `brew install xcodegen`
 
 ## Examples
@@ -16,7 +16,7 @@ A simple SwiftUI app that generates creative slogans using the LeapSDK.
 
 **Features:**
 - Automatic model downloading with manifest resolution
-- Constrained generation with structured JSON output
+- Constrained generation with structured JSON output using `@Generatable` macros
 - SwiftUI interface with download progress tracking
 - Model: **LFM2.5-1.2B-Instruct** (Q4_0) - Optimized for instruction following
 
@@ -36,7 +36,7 @@ A multimodal chat application with vision support.
 - Message history management
 - Token streaming with typing indicators
 - Message bubbles UI
-- Model: **LFM2.5-VL-1.6B** (Q4_0) - Vision-enabled multimodal model
+- Model: **LFM2-VL-450M** (Q8_0) - Vision-enabled multimodal model
 
 **To run:**
 ```bash
@@ -46,12 +46,11 @@ make open  # Opens in Xcode
 ```
 
 ### 3. RecipeGenerator
-Demonstrates constrained generation for structured JSON output.
+Demonstrates structured JSON recipe generation.
 
 **Features:**
 - Automatic model downloading
-- Constrained generation with JSON schema
-- Structured recipe output
+- JSON recipe output
 - Model: **LFM2-350M** (Q4_0) - Small, fast model for testing
 
 **To run:**
@@ -61,12 +60,28 @@ xcodegen generate
 open RecipeGenerator.xcodeproj
 ```
 
+### 4. LeapAudioDemo
+Real-time audio conversation with speech input/output.
+
+**Features:**
+- Speech-to-speech conversation
+- Audio recording and playback
+- Interleaved text and audio responses
+- Model: **LFM2.5-Audio-1.5B** (Q4_0) - Speech + text input/output
+
+**To run:**
+```bash
+cd LeapAudioDemo
+make setup
+make open  # Opens in Xcode
+```
+
 ## Getting Started
 
 All examples use:
 - **Swift Package Manager** for dependency management
 - **XcodeGen** for project generation
-- **LeapSDK v0.9.2** directly from the official [leap-ios](https://github.com/Liquid4All/leap-ios/releases/tag/v0.9.2) GitHub release
+- **LeapSDK v0.10.0-SNAPSHOT** directly from the official [leap-sdk](https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.0-SNAPSHOT) GitHub release
 
 ### Quick Start
 
@@ -106,102 +121,46 @@ ExampleApp/
 
 ## Using LeapSDK
 
-All examples use LeapSDK v0.9.2 with support for automatic model downloading and manifest-based configuration:
+All examples use LeapSDK v0.10.0-SNAPSHOT with the KMP-based SDK and SKIE Swift interop. Import `LeapModelDownloader` for manifest-based model downloading:
 
 ```swift
 import LeapSDK
 
-// Load a model by name and quantization (easiest method)
-let modelRunner = try await Leap.load(
+// Load a model by name and quantization
+let modelRunner = try await Leap.shared.load(
     model: "LFM2-350M",
-    quantization: "Q4_0"
-) { progress, speed in
-    print("Download progress: \(progress * 100)%")
-}
-
-// Or load from a manifest URL
-let modelRunner = try await Leap.load(
-    manifestURL: manifestURL
-) { progress, speed in
-    print("Download: \(progress), Speed: \(speed) bytes/sec")
-}
-
-// Or load from local bundle with explicit options
-let modelRunner = try Leap.load(
-    options: LiquidInferenceEngineOptions(bundlePath: "path/to/model")
+    quantization: "Q4_0",
+    progress: { progress, speed in
+        print("Download progress: \(Int(progress * 100))%")
+    }
 )
 
 // Create a conversation
-let conversation = modelRunner.createConversation(
-    systemPrompt: "You are a helpful assistant."
-)
+let conversation = Conversation(modelRunner: modelRunner, history: [])
 
 // Generate response with streaming
-for try await response in conversation.generateResponse(
-    userTextMessage: "Hello, AI!"
-) {
-    if let chunk = response as? MessageResponseChunk {
+let stream = conversation.generateResponse(message:
+    ChatMessage(role: .user, content: ChatMessageContent.text("Hello, AI!"))
+)
+for try await response in stream {
+    switch onEnum(of: response) {
+    case .chunk(let chunk):
         print(chunk.text)
+    case .complete(let completion):
+        print("Done: \(completion.fullMessage)")
+    default:
+        break
     }
 }
 ```
 
 ## Constrained Generation (Structured Output)
 
-LeapSDK v0.9.2 supports constrained generation to ensure JSON-formatted responses. There are two ways to define schemas:
-
-### Option 1: Manual `GeneratableType` Conformance (Used in Examples)
-
-This approach works with the binary v0.9.2 release:
+LeapSDK v0.10.0-SNAPSHOT supports constrained generation using the `@Generatable` and `@Guide` macros from the `LeapSDKMacros` product:
 
 ```swift
 import LeapSDK
-
-struct ProductRecommendation: Codable, GeneratableType {
-  let name: String
-  let category: String
-  let price: Double
-  let reason: String
-  let features: [String]
-
-  static var typeDescription: String {
-    "Simple product recommendation"
-  }
-
-  static func jsonSchema() throws -> String {
-    """
-    {
-      "type": "object",
-      "description": "Simple product recommendation",
-      "properties": {
-        "name": { "type": "string", "description": "Product name" },
-        "category": { "type": "string", "description": "Category" },
-        "price": { "type": "number", "description": "Price in USD" },
-        "reason": { "type": "string", "description": "Short recommendation reason" },
-        "features": {
-          "type": "array",
-          "description": "List of key features",
-          "items": { "type": "string" }
-        }
-      },
-      "required": ["name", "category", "price", "reason", "features"]
-    }
-    """
-  }
-}
-
-// Usage
-var options = GenerationOptions()
-try options.setResponseFormat(type: ProductRecommendation.self)
-let stream = conversation.generateResponse(message: userMessage, generationOptions: options)
-```
-
-### Option 2: Using `@Generatable` and `@Guide` Macros (Source Builds Only)
-
-For a cleaner, more readable syntax when building from source:
-
-```swift
-import LeapSDK
+import LeapSDKMacros
 
 @Generatable("Simple product recommendation")
 struct ProductRecommendation: Codable {
@@ -221,21 +180,53 @@ struct ProductRecommendation: Codable {
   let features: [String]
 }
 
-// Usage is identical
-var options = GenerationOptions()
-try options.setResponseFormat(type: ProductRecommendation.self)
+// Set up constrained generation options
+let options = GenerationOptions()
+options.jsonSchemaConstraint = ProductRecommendation.jsonSchema()
+
+// generateResponse(message:generationOptions:) returns a raw Kotlin flow;
+// bridge it to SkieSwiftFlow for async iteration
+let rawFlow = conversation.generateResponse(message: userMessage, generationOptions: options)
+let stream = rawFlow as! SkieSwiftFlow<any MessageResponse>
+
+var jsonResponse = ""
+for try await response in stream {
+    switch onEnum(of: response) {
+    case .chunk(let chunk):
+        jsonResponse.append(chunk.text)
+    default:
+        break
+    }
+}
+
+// Decode the JSON response
+let result = try JSONDecoder().decode(ProductRecommendation.self, from: Data(jsonResponse.utf8))
 ```
 
-**Note:** The `@Generatable` and `@Guide` macros are available when building LeapSDK from source ([leap-ios-sdk](https://github.com/Liquid4All/leap-ios-sdk)), but are not included in the binary v0.9.2 XCFramework release. Swift macro plugins must be compiled as executables and cannot be distributed in binary frameworks. These examples use manual `GeneratableType` conformance for compatibility with the published binary release.
+### Package Configuration
 
-### 4. LeapAudioDemo
-Real-time audio conversation with speech input/output.
+Reference the SDK in each example's `project.yml`:
 
-**Features:**
-- Speech-to-speech conversation
-- Audio recording and playback
-- Interleaved text and audio responses
-- Model: **LFM2.5-Audio-1.5B** (Q4_0) - Speech + text input/output
+```yaml
+packages:
+  LeapSDK:
+    url: https://github.com/Liquid4All/leap-sdk
+    exactVersion: 0.10.0-SNAPSHOT
+
+targets:
+  YourApp:
+    dependencies:
+      - package: LeapSDK
+        product: LeapModelDownloader   # Includes LeapSDK; adds manifest downloading
+      # Add LeapSDKMacros if using @Generatable/@Guide macros:
+      - package: LeapSDK
+        product: LeapSDKMacros
+    settings:
+      base:
+        # Required to link the inference engine dynamic libraries
+        OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
+```
 
 ## Model Requirements
 
@@ -243,7 +234,7 @@ Real-time audio conversation with speech input/output.
 
 Models are automatically downloaded and cached on first run using manifest-based resolution:
 - **LeapSloganExample**: LFM2.5-1.2B-Instruct (Q4_0) - ~700 MB
-- **LeapChatExample**: LFM2.5-VL-1.6B (Q4_0) - ~1.0 GB
+- **LeapChatExample**: LFM2-VL-450M (Q8_0) - ~500 MB
 - **RecipeGenerator**: LFM2-350M (Q4_0) - ~209 MB
 - **LeapAudioDemo**: LFM2.5-Audio-1.5B (Q4_0) - ~900 MB
 
@@ -262,8 +253,25 @@ make clean
 make setup
 ```
 
-### Model loading errors
-Ensure model bundles are correctly placed in the `Resources/` directory and properly referenced in the app configuration.
+### Simulator build — `x86_64` architecture errors
+
+The LeapSDK v0.10.0-SNAPSHOT xcframeworks only include `arm64` slices for simulator (no `x86_64`). When building for a generic iOS Simulator destination, add `EXCLUDED_ARCHS=x86_64`:
+
+```bash
+xcodebuild -scheme YourScheme \
+  -destination 'generic/platform=iOS Simulator' \
+  build EXCLUDED_ARCHS=x86_64
+```
+
+Or in Xcode: set **Excluded Architectures** → *Any iOS Simulator SDK* → `x86_64` in Build Settings.
+
+### Macro trust prompt
+
+When building LeapSloganExample, Xcode may prompt to trust the `LeapSDKConstrainedGenerationPlugin` macro. Click **Trust & Enable** to proceed. For command-line builds, run:
+
+```bash
+defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+```
 
 ### Code signing for real devices
 To run on a physical iOS device, you need to configure code signing:
@@ -274,8 +282,6 @@ To run on a physical iOS device, you need to configure code signing:
 4. Go to "Signing & Capabilities"
 5. Select your development team
 6. Xcode will automatically manage provisioning profiles
-
-**Note**: The simulator has GPU memory limitations and cannot run inference models. Always test model inference on real devices.
 
 Alternatively, add to your local `project.yml`:
 ```yaml
@@ -290,9 +296,9 @@ Then run `xcodegen generate` to regenerate the project.
 
 ## LeapSDK Package
 
-All examples reference the official **LeapSDK v0.9.2** release directly from GitHub:
-- **Repository**: https://github.com/Liquid4All/leap-ios
-- **Release**: https://github.com/Liquid4All/leap-ios/releases/tag/v0.9.2
+All examples reference the official **LeapSDK v0.10.0-SNAPSHOT** release directly from GitHub:
+- **Repository**: https://github.com/Liquid4All/leap-sdk
+- **Release**: https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.0-SNAPSHOT
 - **Package Configuration**: Each example's `project.yml` specifies the GitHub URL and version
 
 The SDK is automatically downloaded by Swift Package Manager when you run `xcodegen generate`.
@@ -308,6 +314,6 @@ When adding new examples:
    ```yaml
    packages:
      LeapSDK:
-       url: https://github.com/Liquid4All/leap-ios
-       from: 0.9.2
+       url: https://github.com/Liquid4All/leap-sdk
+       exactVersion: 0.10.0-SNAPSHOT
    ```

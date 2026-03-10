@@ -12,7 +12,7 @@
 		1FD7C3B554B6B9D9B8C686E1 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E0E8DAC812EFA333A05707 /* ChatStore.swift */; };
 		5A8DE8111668A5CDAF017FDD /* ChatInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41D9A0B14EA28A1C90B1CC6 /* ChatInputView.swift */; };
 		73110802E4DD764BA181AB70 /* MessagesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E823D9B11B9B01D46F68 /* MessagesListView.swift */; };
-		7A602B29B7ABA501D6300330 /* LeapSDK in Frameworks */ = {isa = PBXBuildFile; productRef = ED5F88F2A83CAD024F54D0E3 /* LeapSDK */; };
+		7A602B29B7ABA501D6300330 /* LeapModelDownloader in Frameworks */ = {isa = PBXBuildFile; productRef = 1057BB5BBFFFF65F0DD4D15C /* LeapModelDownloader */; };
 		7D329B4AC8701EB0588E2228 /* MessageBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24FE2EF676750A8CE6D61F2F /* MessageBubble.swift */; };
 		B6FC183EE0C9BA0A7E35913A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 31830A56D781777FE7FDB96C /* Assets.xcassets */; };
 		B7C8F0D0957AF5D5E4BB2C6D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3625F59EF40ECF37DA52DB1 /* ContentView.swift */; };
@@ -44,7 +44,6 @@
 		24FE2EF676750A8CE6D61F2F /* MessageBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubble.swift; sourceTree = "<group>"; };
 		2ED2C3FE97DE01341D704218 /* MessageRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageRow.swift; sourceTree = "<group>"; };
 		31830A56D781777FE7FDB96C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		3EBB5BB9807C5D62213DE0FD /* iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = iOS; path = ..; sourceTree = SOURCE_ROOT; };
 		40A4054CA793457E05A974A5 /* TypingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIndicator.swift; sourceTree = "<group>"; };
 		46E0E8DAC812EFA333A05707 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		49B19870300F263D73FA6223 /* LeapChatExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeapChatExampleUITests.swift; sourceTree = "<group>"; };
@@ -63,7 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A602B29B7ABA501D6300330 /* LeapSDK in Frameworks */,
+				7A602B29B7ABA501D6300330 /* LeapModelDownloader in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,14 +76,6 @@
 				AE57D1F06F970553CB2F3BC5 /* LeapChatExampleUITestsLaunchTests.swift */,
 			);
 			path = LeapChatExampleUITests;
-			sourceTree = "<group>";
-		};
-		392F38CF6560D1CAF7D1C008 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				3EBB5BB9807C5D62213DE0FD /* iOS */,
-			);
-			name = Packages;
 			sourceTree = "<group>";
 		};
 		3AEF340CE4CC872A9A84A1DE /* LeapChatExampleTests */ = {
@@ -127,7 +118,6 @@
 			children = (
 				3AEF340CE4CC872A9A84A1DE /* LeapChatExampleTests */,
 				2E1EBA4216B05FAC85C8C406 /* LeapChatExampleUITests */,
-				392F38CF6560D1CAF7D1C008 /* Packages */,
 				97B08C64E1E04D15D4EDFCD7 /* Sources */,
 				81FB3D596814EDD52E7CA9C0 /* Products */,
 			);
@@ -168,7 +158,7 @@
 			);
 			name = LeapChatExample;
 			packageProductDependencies = (
-				ED5F88F2A83CAD024F54D0E3 /* LeapSDK */,
+				1057BB5BBFFFF65F0DD4D15C /* LeapModelDownloader */,
 			);
 			productName = LeapChatExample;
 			productReference = AB8D0D10DEAC7A307D5D59E3 /* LeapChatExample.app */;
@@ -217,7 +207,7 @@
 			mainGroup = DD2B810010CA7F8A20F49DAD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				BCE8D837CFBBE7FDEF38EC4E /* XCLocalSwiftPackageReference ".." */,
+				783535F93DB291EEA38959E8 /* XCRemoteSwiftPackageReference "leap-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -333,10 +323,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapChatExample;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -410,10 +398,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend";
 				PRODUCT_BUNDLE_IDENTIFIER = ai.liquid.LeapChatExample;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -564,17 +550,22 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		BCE8D837CFBBE7FDEF38EC4E /* XCLocalSwiftPackageReference ".." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ..;
+/* Begin XCRemoteSwiftPackageReference section */
+		783535F93DB291EEA38959E8 /* XCRemoteSwiftPackageReference "leap-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Liquid4All/leap-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = "0.10.0-SNAPSHOT";
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		ED5F88F2A83CAD024F54D0E3 /* LeapSDK */ = {
+		1057BB5BBFFFF65F0DD4D15C /* LeapModelDownloader */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LeapSDK;
+			package = 783535F93DB291EEA38959E8 /* XCRemoteSwiftPackageReference "leap-sdk" */;
+			productName = LeapModelDownloader;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

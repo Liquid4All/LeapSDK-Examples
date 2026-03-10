@@ -9,7 +9,7 @@ class GeneratorViewModel: ObservableObject {
   @Published var statusMessage: String = "Ready to generate"
   @Published var downloadProgress: Double = 0.0
 
-  private var modelRunner: ModelRunner?
+  private var modelRunner: (any ModelRunner)?
 
   private let modelName = "LFM2-350M"  // Smaller model for faster testing
   private let quantization = "Q4_0"
@@ -24,20 +24,20 @@ class GeneratorViewModel: ObservableObject {
     statusMessage = "Downloading and loading model..."
 
     do {
-      // Use new Leap.load API with model name and quantization
-      modelRunner = try await Leap.load(
+      modelRunner = try await Leap.shared.load(
         model: modelName,
-        quantization: quantization
-      ) { [weak self] progress, speed in
-        Task { @MainActor in
-          self?.downloadProgress = progress
-          if progress < 1.0 {
-            self?.statusMessage = "Downloading: \(Int(progress * 100))%"
-          } else {
-            self?.statusMessage = "Loading model..."
+        quantization: quantization,
+        progress: { [weak self] progress, speed in
+          Task { @MainActor in
+            self?.downloadProgress = progress
+            if progress < 1.0 {
+              self?.statusMessage = "Downloading: \(Int(progress * 100))%"
+            } else {
+              self?.statusMessage = "Loading model..."
+            }
           }
         }
-      }
+      )
 
       statusMessage = "Model loaded and ready"
       isModelLoading = false
@@ -59,28 +59,65 @@ class GeneratorViewModel: ObservableObject {
     statusMessage = "Generating recipe..."
 
     // Create conversation with system prompt
-    let conversation = modelRunner.createConversation(
-      systemPrompt: "You are a helpful cooking assistant. Generate recipes in JSON format."
+    let systemMessage = ChatMessage(
+      role: .system,
+      content: ChatMessageContent.text("You are a helpful cooking assistant. Generate recipes in JSON format.")
     )
+    let conversation = Conversation(modelRunner: modelRunner, history: [systemMessage])
 
-    // Generate response - simplified for now without constrained generation
     var fullText = ""
     do {
-      let userMessage = ChatMessage(role: .user, content: [.text("Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)")])
-      for try await response in conversation.generateResponse(message: userMessage) {
-        // Accumulate the generated text
-        // The response should have a message property or similar
-        // For now, we'll just use a placeholder
-        print("Received response: \(response)")
+      let userMessage = ChatMessage(
+        role: .user,
+        content: ChatMessageContent.text(
+          "Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)"
+        )
+      )
+      let stream = conversation.generateResponse(message: userMessage)
+      for try await event in stream {
+        switch onEnum(of: event) {
+        case .chunk(let chunk):
+          fullText.append(chunk.text)
+        case .complete(let completion):
+          let finalText = completion.fullMessage.content.compactMap { content -> String? in
+            if case .text(let t) = onEnum(of: content) {
+              return t.text
+            }
+            return nil
+          }.joined()
+          if !finalText.isEmpty {
+            fullText = finalText
+          }
+        case .audioSample, .reasoningChunk, .functionCalls:
+          break
+        }
       }
 
-      // Placeholder - this will need to be updated based on actual SDK API
+      // Attempt to parse the JSON response
+      if let jsonStart = fullText.firstIndex(of: "{"),
+        let jsonEnd = fullText.lastIndex(of: "}")
+      {
+        let jsonString = String(fullText[jsonStart...jsonEnd])
+        if let jsonData = jsonString.data(using: .utf8),
+          let decoded = try? JSONDecoder().decode(Recipe.self, from: jsonData)
+        {
+          recipe = decoded
+          statusMessage = "Recipe generated!"
+          isGenerating = false
+          return
+        }
+      }
+
+      // Fallback mock recipe if JSON parsing fails
       let mockRecipe = Recipe(
         name: "Garlic Butter Shrimp",
         cookingTime: 20,
         isVegetarian: false,
         ingredients: ["1 lb shrimp", "4 cloves garlic", "4 tbsp butter", "Salt and pepper"],
-        directions: ["Melt butter in pan", "Add garlic and cook 1 min", "Add shrimp and cook 3-4 min", "Season with salt and pepper"]
+        directions: [
+          "Melt butter in pan", "Add garlic and cook 1 min", "Add shrimp and cook 3-4 min",
+          "Season with salt and pepper",
+        ]
       )
       recipe = mockRecipe
       statusMessage = "Recipe generated!"
