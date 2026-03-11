@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    revision: 68edfe397a6f55e86b36e0ba6c0e69edc7a4d48d
+    revision: 49708ae1520dc4ed2b457599aaa003308e6341cf
 
 targets:
   LeapAudioDemo:
