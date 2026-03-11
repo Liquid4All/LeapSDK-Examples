@@ -4,7 +4,7 @@ options:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0-SNAPSHOT
+    revision: 68edfe397a6f55e86b36e0ba6c0e69edc7a4d48d
 targets:
   RecipeGenerator:
     type: application
@@ -13,7 +13,7 @@ targets:
       iOS: 18.0
     info:
       path: RecipeGenerator/Info.plist
-    sources: [RecipeGenerator, Resources]
+    sources: [RecipeGenerator]
     dependencies:
       - package: LeapSDK
         product: LeapModelDownloader
