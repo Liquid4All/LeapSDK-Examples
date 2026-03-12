@@ -42,6 +42,8 @@ xcuserdata/
 Packages/
 Package.resolved
 *.xcworkspace
+SPM/
+SourcePackages/
 
 # CocoaPods (if used)
 Pods/
