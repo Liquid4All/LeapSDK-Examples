@@ -14,14 +14,12 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/Liquid4All/leap-android-sdk")
-            credentials {
-                username = System.getenv("GITHUB_PACKAGES_USERNAME")
-                password = System.getenv("GITHUB_PACKAGES_TOKEN")
-            }
+            name = "Central Portal Snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
     }
 }
