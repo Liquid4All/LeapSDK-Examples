@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leap UI Demo</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #000;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Load the Emscripten inference engine module first so LiquidInferenceEngine
+         is defined as a global before the Kotlin bundle calls getLiquidInferenceEngineFactory(). -->
+    <script src="./inference_engine.js"></script>
+    <script src="leap-ui-demo-web.js"></script>
+  </body>
+</html>

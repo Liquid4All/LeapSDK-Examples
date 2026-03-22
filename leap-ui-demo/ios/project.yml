@@ -1,0 +1,51 @@
+name: LeapVoiceAssistantDemo
+options:
+  bundleIdPrefix: ai.liquid.leap
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  deploymentTarget:
+    iOS: "16.0"
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  MARKETING_VERSION: "1.0"
+  CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  LeapSDK:
+    url: https://github.com/Liquid4All/leap-sdk
+    exactVersion: 0.10.0-SNAPSHOT
+
+targets:
+  LeapVoiceAssistantDemo:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: LeapVoiceAssistantDemo
+      - path: ../shared
+    dependencies:
+      - package: LeapSDK
+        product: LeapUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.leap.LeapVoiceAssistantDemo
+        INFOPLIST_FILE: LeapVoiceAssistantDemo/Info.plist
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
+        OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend"
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Leap AI Voice Demo needs microphone access to record your speech for on-device AI processing."
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+        Release:
+          SWIFT_COMPILATION_MODE: wholemodule
