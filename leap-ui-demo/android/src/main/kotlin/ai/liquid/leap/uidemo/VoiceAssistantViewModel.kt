@@ -7,8 +7,10 @@ import ai.liquid.leap.ui.VoiceAssistantStore
 import ai.liquid.leap.ui.VoiceAssistantStoreState
 import ai.liquid.leap.ui.VoiceAudioPlayer
 import ai.liquid.leap.ui.VoiceAudioRecorder
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import java.io.File
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -16,13 +18,15 @@ private const val MODEL_NAME = "LFM2.5-Audio-1.5B"
 private const val QUANTIZATION_SLUG = "Q4_0"
 private const val SYSTEM_PROMPT = "Respond with interleaved text and audio."
 
-class VoiceAssistantViewModel : ViewModel() {
+class VoiceAssistantViewModel(application: Application) : AndroidViewModel(application) {
   private val recorder: VoiceAudioRecorder = AndroidAudioRecorder()
   private val player: VoiceAudioPlayer = AndroidAudioPlayer()
 
   val store = VoiceAssistantStore(recorder = recorder, player = player, scope = viewModelScope)
 
   val state: StateFlow<VoiceAssistantStoreState> = store.state
+
+  private val modelDir = File(application.filesDir, "leap_models").apply { mkdirs() }
 
   init {
     viewModelScope.launch { loadModel() }
@@ -32,7 +36,7 @@ class VoiceAssistantViewModel : ViewModel() {
 
   private suspend fun loadModel() {
     runCatching {
-        val downloader = LeapDownloader(LeapDownloaderConfig())
+        val downloader = LeapDownloader(LeapDownloaderConfig(saveDir = modelDir.absolutePath))
         store.setModelProgress(0f, "Resolving manifest\u2026")
         val runner =
           downloader.loadModel(

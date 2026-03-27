@@ -56,7 +56,7 @@ class AndroidAudioRecorder : VoiceAudioRecorder {
     private const val MAX_SAMPLES = SAMPLE_RATE * MAX_RECORDING_SECONDS
     private const val MIN_BUFFER_SIZE = 4096
     private const val BYTES_PER_FLOAT_SAMPLE = 4
-    private const val RECORDING_AMPLITUDE_SCALE = 3f
+    private const val RECORDING_AMPLITUDE_SCALE = 10f
   }
 
   /**
@@ -275,14 +275,20 @@ class AndroidAudioPlayer : VoiceAudioPlayer {
               t.play()
               for (buf in bufferedSamples) {
                 val written = t.write(buf, 0, buf.size, AudioTrack.WRITE_BLOCKING)
-                if (written > 0) totalFramesWritten += written
+                if (written > 0) {
+                  totalFramesWritten += written
+                  updateAmplitude(buf, written)
+                }
               }
               bufferedSamples.clear()
               bufferedFramesCount = 0
             }
           } else {
             val written = t.write(s, 0, s.size, AudioTrack.WRITE_BLOCKING)
-            if (written > 0) totalFramesWritten += written
+            if (written > 0) {
+              totalFramesWritten += written
+              updateAmplitude(s, written)
+            }
 
             val framesPlayed = t.playbackHeadPosition.toLong() and PLAYHEAD_MASK
             val framesInHardwareBuffer = totalFramesWritten - framesPlayed
@@ -303,10 +309,15 @@ class AndroidAudioPlayer : VoiceAudioPlayer {
   override fun enqueue(samples: FloatArray, sampleRate: Int) {
     if (samples.isEmpty()) return
     if (track == null) startStreaming(sampleRate)
-    var sum = 0f
-    for (s in samples) sum += s * s
-    amplitude = (sqrt(sum / samples.size) * PLAYBACK_AMPLITUDE_SCALE).coerceIn(0f, 1f)
     audioChannel?.trySend(samples.copyOf())
+  }
+
+  /** Calculate RMS amplitude from samples being written to the hardware. */
+  private fun updateAmplitude(samples: FloatArray, count: Int) {
+    if (count <= 0) return
+    var sum = 0f
+    for (i in 0 until count) sum += samples[i] * samples[i]
+    amplitude = (sqrt(sum / count) * PLAYBACK_AMPLITUDE_SCALE).coerceIn(0f, 1f)
   }
 
   /**

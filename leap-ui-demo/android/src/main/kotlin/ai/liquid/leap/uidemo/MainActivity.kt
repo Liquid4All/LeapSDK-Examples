@@ -10,7 +10,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +43,8 @@ class MainActivity : ComponentActivity() {
     private val COLOR_LOADING = Color(0xFFAAAAAA)
     private val COLOR_READY = Color(0xFF66FF66)
     private val COLOR_ERROR = Color(0xFFFF6666)
+    private val COLOR_STATS = Color(0xFF8C8C8C)
+    private const val STATS_FONT_SIZE_SP = 11
     private const val STATUS_FONT_SIZE_SP = 12
     private const val STATUS_BOTTOM_PADDING_DP = 16
   }
@@ -73,14 +77,18 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize().background(Color.Black),
           )
 
-          if (state.statusText.isNotEmpty()) {
-            Text(
-              text = state.statusText,
-              color = statusColor,
-              fontSize = STATUS_FONT_SIZE_SP.sp,
-              modifier =
-                Modifier.align(Alignment.BottomCenter).padding(bottom = STATUS_BOTTOM_PADDING_DP.dp),
-            )
+          Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier =
+              Modifier.align(Alignment.BottomCenter).padding(bottom = STATUS_BOTTOM_PADDING_DP.dp),
+          ) {
+            state.statsText?.let { stats ->
+              Text(text = stats, color = COLOR_STATS, fontSize = STATS_FONT_SIZE_SP.sp)
+            }
+            if (state.statusText.isNotEmpty()) {
+              Text(text = state.statusText, color = statusColor, fontSize = STATUS_FONT_SIZE_SP.sp)
+            }
           }
         }
       }
