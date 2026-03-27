@@ -4,7 +4,7 @@ options:
   createIntermediateGroups: true
   defaultConfig: Debug
   deploymentTarget:
-    macOS: "13.0"
+    macOS: "15.0"
 
 configs:
   Debug: debug
@@ -23,7 +23,7 @@ targets:
   LeapVoiceAssistantDemo:
     type: application
     platform: macOS
-    deploymentTarget: "13.0"
+    deploymentTarget: "15.0"
     sources:
       - path: LeapVoiceAssistantDemo
       - path: ../shared
@@ -35,7 +35,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.leap.LeapVoiceAssistantDemo
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "5.0"
-        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
         SDKROOT: macosx
         SUPPORTED_PLATFORMS: macosx
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
