@@ -6,7 +6,7 @@ This directory contains iOS example applications demonstrating how to use the Le
 
 - Xcode 15.0+
 - iOS 17.0+ deployment target
-- Swift 6.0+
+- Swift 5.9+
 - XcodeGen: `brew install xcodegen`
 
 ## Examples

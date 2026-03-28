@@ -6,7 +6,7 @@ the model responds with interleaved text and audio.
 
 ## Prerequisites
 
-- macOS 13+, Xcode 15+
+- macOS 15+, Xcode 15+
 - [xcodegen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 - Gradle 9+ with JDK 21 (for building the XCFrameworks)
 
