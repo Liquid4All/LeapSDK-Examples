@@ -1,17 +1,18 @@
-name: LeapVoiceAssistantDemo
+name: LeapVLMExample
 options:
-  bundleIdPrefix: ai.liquid.leap
+  bundleIdPrefix: ai.liquid.examples
   createIntermediateGroups: true
   defaultConfig: Debug
   deploymentTarget:
     macOS: "15.0"
+  developmentLanguage: en
 
 configs:
   Debug: debug
   Release: release
 
 settings:
-  MARKETING_VERSION: "1.0"
+  MARKETING_VERSION: "1.0.0"
   CURRENT_PROJECT_VERSION: "1"
 
 packages:
@@ -20,27 +21,23 @@ packages:
     exactVersion: 0.10.0-1-SNAPSHOT
 
 targets:
-  LeapVoiceAssistantDemo:
+  LeapVLMExample:
     type: application
     platform: macOS
     deploymentTarget: "15.0"
     sources:
-      - path: LeapVoiceAssistantDemo
-      - path: ../shared
+      - path: LeapVLMExample
     dependencies:
       - package: LeapSDK
-        product: LeapUI
+        product: LeapModelDownloader
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.leap.LeapVoiceAssistantDemo
+        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapVLMExample.macOS
         GENERATE_INFOPLIST_FILE: YES
-        SWIFT_VERSION: "5.0"
+        SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "15.0"
         SDKROOT: macosx
         SUPPORTED_PLATFORMS: macosx
-        INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        INFOPLIST_KEY_LSApplicationCategoryType: ""
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Leap AI Voice Demo needs microphone access to record your speech for on-device AI processing."
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
         CODE_SIGN_IDENTITY: "-"
         ENABLE_APP_SANDBOX: NO
