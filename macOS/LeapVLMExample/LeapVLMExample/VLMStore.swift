@@ -9,8 +9,8 @@ final class VLMStore {
   var isGenerating = false
   var generatedText = ""
 
-  private static let modelName = "LFM2-VL-450M"
-  private static let quantization = "Q8_0"
+  private static let modelName = "LFM2.5-VL-1.6B"
+  private static let quantization = "Q4_0"
 
   private var modelRunner: (any ModelRunner)?
 

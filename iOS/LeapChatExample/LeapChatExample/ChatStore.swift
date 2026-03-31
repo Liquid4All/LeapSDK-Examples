@@ -27,13 +27,12 @@ class ChatStore {
 
       messages.append(
         MessageBubble(
-          content: "📦 Downloading LFM2-VL-450M model (compact vision support)...",
+          content: "📦 Downloading LFM2.5-VL-1.6B model...",
           isUser: false))
 
-      // Use manifest downloading for LFM2-VL-450M with Q8_0 (smaller model, faster download)
       let modelRunner = try await Leap.shared.load(
-        model: "LFM2-VL-450M",
-        quantization: "Q8_0",
+        model: "LFM2.5-VL-1.6B",
+        quantization: "Q4_0",
         options: LiquidInferenceEngineManifestOptions(
           contextSize: 4096  // Reduced from default for mobile memory constraints
         ),
