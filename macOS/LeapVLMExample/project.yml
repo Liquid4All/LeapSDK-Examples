@@ -1,0 +1,52 @@
+name: LeapVLMExample
+options:
+  bundleIdPrefix: ai.liquid.examples
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  deploymentTarget:
+    macOS: "15.0"
+  developmentLanguage: en
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  LeapSDK:
+    url: https://github.com/Liquid4All/leap-sdk
+    exactVersion: 0.10.0-1-SNAPSHOT
+
+targets:
+  LeapVLMExample:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: LeapVLMExample
+    dependencies:
+      - package: LeapSDK
+        product: LeapModelDownloader
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapVLMExample.macOS
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
+        SDKROOT: macosx
+        SUPPORTED_PLATFORMS: macosx
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_PREVIEWS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+        Release:
+          SWIFT_COMPILATION_MODE: wholemodule
