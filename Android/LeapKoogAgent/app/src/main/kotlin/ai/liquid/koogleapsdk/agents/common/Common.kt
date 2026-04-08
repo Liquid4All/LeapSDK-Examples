@@ -1,3 +1,5 @@
 package ai.liquid.koogleapsdk.agents.common
 
-const val modelsPath = "/tmp/models"
+import ai.liquid.koogleapsdk.App
+
+val modelsPath: String = App.context.filesDir.absolutePath

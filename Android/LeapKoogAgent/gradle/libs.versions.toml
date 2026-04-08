@@ -9,7 +9,8 @@ lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.3"
 composeBom = "2026.01.01"
 
-koog = "0.5.1"
+koog = "0.7.3"
+koogEdge = "0.0.4"
 leapSdk = "0.10.0-1-SNAPSHOT"
 
 kotlinxSerialization = "1.10.0"
@@ -28,6 +29,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
+koog-edge = { module = "io.github.lemcoder:koog-edge", version.ref = "koogEdge" }
 leap-sdk = { module = "ai.liquid.leap:leap-sdk", version.ref = "leapSdk" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
