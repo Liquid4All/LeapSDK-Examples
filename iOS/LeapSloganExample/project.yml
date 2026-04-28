@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0-1-SNAPSHOT
+    exactVersion: 0.10.0
 
 targets:
   LeapSloganExample:
