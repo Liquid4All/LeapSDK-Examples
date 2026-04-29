@@ -26,7 +26,6 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - path: LeapVoiceAssistantDemo
-      - path: ../shared
     dependencies:
       - package: LeapSDK
         product: LeapUI

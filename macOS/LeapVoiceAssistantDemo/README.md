@@ -8,47 +8,33 @@ the model responds with interleaved text and audio.
 
 - macOS 15+, Xcode 15+
 - [xcodegen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
-- Gradle 9+ with JDK 21 (for building the XCFrameworks)
+
+`LeapSDK.xcframework` and `LeapUi.xcframework` are pulled from the
+[`leap-sdk`](https://github.com/Liquid4All/leap-sdk) Swift Package (see `project.yml` →
+`packages.LeapSDK.exactVersion`); no local Gradle build is required.
 
 ## Setup
 
-### 1. Build the XCFrameworks
-
-From the repository root:
-
-```bash
-export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
-./gradlew installVendor
-./gradlew :leap-ui:assembleLeapUiXCFramework
-./gradlew :leap-sdk:assembleLeapSDKXCFramework
-```
-
-This produces:
-- `leap-ui/build/XCFrameworks/release/LeapUi.xcframework` — UI widget
-- `leap-sdk/build/XCFrameworks/release/LeapSDK.xcframework` — inference engine + Swift API
-
-Both are referenced at those relative paths from the Xcode project.
-
-### 2. Generate the Xcode project
+### 1. Generate the Xcode project
 
 The repository stores `project.yml` (the xcodegen spec) rather than the generated
 `LeapVoiceAssistantDemo.xcodeproj`. Run xcodegen once to produce the project file:
 
 ```bash
-cd leap-ui-demo/macos
+cd macOS/LeapVoiceAssistantDemo
 xcodegen generate
 ```
 
 Re-run `xcodegen generate` any time you change `project.yml` (e.g. to add new source files or
 update build settings).
 
-### 3. Open in Xcode
+### 2. Open in Xcode
 
 ```bash
-open leap-ui-demo/macos/LeapVoiceAssistantDemo.xcodeproj
+open macOS/LeapVoiceAssistantDemo/LeapVoiceAssistantDemo.xcodeproj
 ```
 
-### 4. Run
+### 3. Run
 
 Select the **LeapVoiceAssistantDemo** scheme, set destination to **My Mac**, and press **Run** (⌘R). The app
 will download LFM2.5-Audio-1.5B on first launch (~800 MB); subsequent launches use the cached
