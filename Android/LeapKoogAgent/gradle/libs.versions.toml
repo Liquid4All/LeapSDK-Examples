@@ -3,7 +3,7 @@ compileSdk = "36"
 minSdk = "31"
 
 agp = "8.13.2"
-kotlin = "2.3.10"
+kotlin = "2.3.20"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.3"
