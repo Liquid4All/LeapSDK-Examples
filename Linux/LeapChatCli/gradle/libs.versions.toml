@@ -1,0 +1,12 @@
+[versions]
+kotlin = "2.3.20"
+coroutines = "1.10.2"
+leapSdk = "0.10.1"
+
+[libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+leap-sdk                = { module = "ai.liquid.leap:leap-sdk", version.ref = "leapSdk" }
+
+[plugins]
+kotlin-multiplatform   = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+leap-sdk-native-libs   = { id = "ai.liquid.leap.nativelibs",          version.ref = "leapSdk" }

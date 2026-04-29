@@ -39,6 +39,18 @@ Gradle-based projects using the LeapSDK Android library.
 
 - **LeapVoiceAssistantDemo**: Kotlin/Wasm Compose-for-Web port of the voice assistant. Run with `./gradlew wasmJsBrowserDevelopmentRun` (dev server) or `./gradlew wasmJsBrowserDistribution` (static bundle).
 
+### ☕ [JVM Examples](./JVM/)
+
+- **LeapChatCli**: REPL chat CLI on the JVM using `leap-sdk-jvm`. Single artifact runs on Linux/macOS/Windows — JNI binaries are bundled in the JAR and extracted at runtime.
+
+### 🐧 [Linux Examples](./Linux/)
+
+- **LeapChatCli**: REPL chat CLI as a native Linux x86_64 executable using Kotlin/Native (`linuxX64`) and `leap-sdk-linuxx64`. The `ai.liquid.leap.nativelibs` Gradle plugin auto-extracts `libinference_engine.so` from the published `:natives@zip` classifier alongside the binary.
+
+### 🪟 [Windows Examples](./Windows/)
+
+- **LeapChatCli**: REPL chat CLI as a native Windows x86_64 `.exe` using Kotlin/Native (`mingwX64`) and `leap-sdk-mingwx64`. Same `ai.liquid.leap.nativelibs` plugin auto-extracts `inference_engine.dll`.
+
 ## Quick Start
 
 ### iOS
@@ -63,14 +75,23 @@ cd Web/LeapVoiceAssistantDemo
 # open http://localhost:8080
 ```
 
+### JVM / Linux / Windows
+
+```bash
+cd JVM/LeapChatCli   # or Linux/LeapChatCli, Windows/LeapChatCli
+./gradlew installDist                       # JVM
+./gradlew linkReleaseExecutableLinuxX64     # Linux  (run on a Linux host)
+./gradlew linkReleaseExecutableMingwX64     # Windows (run on a Windows host)
+```
+
 ## What is LeapSDK?
 
-LeapSDK enables running AI models locally on mobile devices and in the browser using the Liquid Inference Engine. It provides:
+LeapSDK enables running AI models locally across mobile, desktop, and browser using the Liquid Inference Engine. It provides:
 
 - **On-device inference** - No internet required
 - **Real-time streaming** - Token-by-token response generation
-- **Cross-platform** - iOS, macOS, Android, and Web (Kotlin/Wasm) support
-- **High performance** - Optimized for mobile hardware
+- **Cross-platform** - iOS, macOS, Android, Web (Kotlin/Wasm), JVM, Linux, and Windows
+- **High performance** - Optimized for mobile and desktop hardware
 - **Easy integration** - Simple API for chat and text generation
 
 ## Documentation
