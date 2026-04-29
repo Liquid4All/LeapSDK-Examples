@@ -1,0 +1,46 @@
+name: JVM LeapChatCli Build
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'JVM/LeapChatCli/**'
+      - '.github/workflows/jvm-leap-chat-cli-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'JVM/LeapChatCli/**'
+      - '.github/workflows/jvm-leap-chat-cli-test.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: JVM/LeapChatCli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - name: Cache downloaded model
+        uses: actions/cache@v4
+        with:
+          path: JVM/LeapChatCli/leap_models
+          key: leap-models-LFM2-350M-Q8_0-v1
+      - name: Build runnable distribution
+        run: ./gradlew installDist
+      - name: Smoke test (download model, open + close conversation)
+        run: |
+          set -euo pipefail
+          # Pipe :quit to exit immediately after the model is loaded. Verifies the
+          # full LeapDownloader → loadModel → createConversation flow on JVM.
+          printf ':quit\n' | timeout 900 build/install/leap-chat-cli/bin/leap-chat-cli \
+            > stdout.log 2> stderr.log
+          echo "--- stdout ---"; cat stdout.log
+          echo "--- stderr ---"; cat stderr.log
+          grep -q 'ready (model id:' stdout.log
