@@ -8,7 +8,8 @@ streams responses to stdout. No JVM at runtime.
 
 - Linux x86_64 host (Ubuntu 22.04+ tested)
 - JDK 21 to run Gradle (Zulu recommended)
-- A LeapSDK model bundle on local disk (e.g. `LFM2-1.2B-Q4_0.bundle`)
+- Internet access on first run (the demo downloads `LFM2-350M` Q8_0 — about
+  370 MB — into `./leap_models/` and reuses the cache afterwards)
 
 > **Note on cross-compile**: Kotlin/Native can cross-compile `linuxX64` Kotlin
 > code from macOS, but cross-linking against the shared `libinference_engine.so`
@@ -45,22 +46,20 @@ three `.so` files alongside it.
 ## Run
 
 ```bash
-build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe /path/to/model.bundle
+build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe
 ```
 
-Optionally pass a custom system prompt:
+The first run streams a `Downloading: NN% (M / N MB)` line until the model
+lands on disk, then drops you into the REPL. Type a message + Enter to send.
+EOF (Ctrl-D) or `:quit` exits. Subsequent launches reuse the cached model.
 
-```bash
-build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe /path/to/model.bundle \
-  "You are a terse Linux sysadmin. Answer in one sentence."
-```
-
-Type a message + Enter to send. EOF (Ctrl-D) or `:quit` exits.
+To use a different model or quantization, change the `MODEL_NAME` and
+`QUANTIZATION_SLUG` constants at the top of `Main.kt` and rebuild.
 
 ## How it works
 
-Same `LeapClient.loadModel(modelPath)` + `Conversation.generateResponse(...)`
-flow as the [JVM CLI](../../JVM/LeapChatCli/) — a single Kotlin source file
+Same `LeapDownloader().loadModel(...)` + `Conversation.generateResponse(...)`
+flow as the [JVM CLI](../../JVM/LeapChatCli/) and the [Web demo](../../Web/LeapVoiceAssistantDemo/) — a single Kotlin source file
 (`src/linuxX64Main/kotlin/ai/liquid/leap/cli/Main.kt`) drives the REPL. The
 Kotlin Multiplatform machinery picks the published `leap-sdk-linuxx64`
 variant (cinterop bindings to the bare C inference engine API) instead of

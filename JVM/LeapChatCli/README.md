@@ -10,7 +10,8 @@ at runtime).
 ## Prerequisites
 
 - JDK 21 (Zulu recommended on Apple Silicon)
-- A LeapSDK model bundle on local disk (e.g. `LFM2-1.2B-Q4_0.bundle`)
+- Internet access on first run (the demo downloads `LFM2-350M` Q8_0 — about
+  370 MB — into `./leap_models/` and reuses the cache afterwards)
 
 ## Build
 
@@ -24,26 +25,29 @@ This produces a runnable distribution at
 ## Run
 
 ```bash
-build/install/leap-chat-cli/bin/leap-chat-cli /path/to/model.bundle
+build/install/leap-chat-cli/bin/leap-chat-cli
 ```
 
-Optionally pass a custom system prompt as the second argument:
+The first run streams a `Downloading: NN% (M / N MB)` line until the model
+lands on disk, then drops you into the REPL. Type a message + Enter to send.
+Generation streams to stdout token-by-token; a `[<n> tok, <r> tok/s]` summary
+lands on stderr after each turn. EOF (Ctrl-D) or `:quit` exits. Subsequent
+launches reuse the cached model and start the REPL immediately.
 
-```bash
-build/install/leap-chat-cli/bin/leap-chat-cli /path/to/model.bundle \
-  "You are a terse Linux sysadmin. Answer in one sentence."
-```
-
-Type a message + Enter to send. Generation streams to stdout token-by-token;
-a `[<n> tok, <r> tok/s]` summary lands on stderr after each turn. EOF
-(Ctrl-D) or `:quit` exits.
+To use a different model or quantization, change the `MODEL_NAME` and
+`QUANTIZATION_SLUG` constants at the top of `Main.kt` and rebuild.
 
 ## How it works
 
 ```kotlin
-val runner = LeapClient.loadModel(modelPath = "/path/to/model.bundle")
-val conversation = runner.createConversation(systemPrompt = "…")
+val downloader = LeapDownloader()
+val runner = downloader.loadModel(
+  modelName = "LFM2-350M",
+  quantizationSlug = "Q8_0",
+  progress = { pd -> /* bytes / total → percent for the progress line */ },
+)
 
+val conversation = runner.createConversation(systemPrompt = "…")
 conversation.generateResponse("Hello").collect { response ->
   when (response) {
     is MessageResponse.Chunk    -> print(response.text)
@@ -53,10 +57,13 @@ conversation.generateResponse("Hello").collect { response ->
 }
 ```
 
-`Conversation.generateResponse` returns a `Flow<MessageResponse>` whose
-`Chunk`s arrive as the model decodes; the terminal `Complete` carries
-generation stats. Per-turn history is kept by the `Conversation` object so
-follow-up turns include prior context.
+`LeapDownloader` (from `ai.liquid.leap.manifest`, in the common SDK module —
+same one the Web demo uses) resolves the manifest from `leap.liquid.ai`,
+downloads the model bundle to `./leap_models/<name>-<quant>/`, and returns a
+ready `ModelRunner`. `Conversation.generateResponse` returns a
+`Flow<MessageResponse>` whose `Chunk`s arrive as the model decodes; the
+terminal `Complete` carries generation stats. Per-turn history is kept by
+the `Conversation` object so follow-up turns include prior context.
 
 See [`Linux/LeapChatCli/`](../../Linux/LeapChatCli/) and
 [`Windows/LeapChatCli/`](../../Windows/LeapChatCli/) for Kotlin/Native

@@ -2,56 +2,68 @@
 
 package ai.liquid.leap.cli
 
-import ai.liquid.leap.LeapClient
+import ai.liquid.leap.manifest.LeapDownloader
 import ai.liquid.leap.message.MessageResponse
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import platform.posix.fflush
 
-// Kotlin/Native print()/println() go through stdio which is line-buffered when stdout is a TTY
-// and fully buffered otherwise. Flushing after every chunk + after the prompt keeps the REPL
-// truly streaming. fflush(null) flushes all open output streams per POSIX — works on every
-// libc Kotlin/Native targets without needing a per-target stdout symbol lookup.
+// Kotlin/Native print()/println() go through stdio which is line-buffered on a TTY and fully
+// buffered otherwise — flushing keeps the REPL truly streaming. fflush(NULL) flushes all open
+// output streams per POSIX, avoiding a per-target stdout symbol lookup.
 private fun flushStdout() {
   fflush(null)
 }
 
-private const val DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant. Be concise."
+/** Defaults match the Android LeapChat demo. ~370 MB on first run; cached afterwards. */
+private const val MODEL_NAME = "LFM2-350M"
+private const val QUANTIZATION_SLUG = "Q8_0"
+private const val SYSTEM_PROMPT = "You are a helpful assistant. Be concise."
 
 fun main(args: Array<String>): Unit = runBlocking {
-  if (args.isEmpty() || args[0] in setOf("-h", "--help")) {
+  if (args.isNotEmpty() && args[0] in setOf("-h", "--help")) {
     println(
       """
-      |usage: leap-chat-cli <model-bundle-path> [system-prompt]
+      |usage: leap-chat-cli
       |
-      |  <model-bundle-path>  Path to a .bundle file (e.g. LFM2-1.2B-Q4_0.bundle)
-      |  [system-prompt]      Optional. Defaults to "$DEFAULT_SYSTEM_PROMPT"
-      |
-      |Type messages and press Enter to chat. EOF (Ctrl-Z) or :quit exits.
+      |Downloads $MODEL_NAME ($QUANTIZATION_SLUG) on first run and caches it under
+      |./leap_models/. Type messages and press Enter to chat. EOF (Ctrl-Z) or
+      |:quit exits.
       """
         .trimMargin()
     )
-    exitProcess(if (args.isEmpty()) 64 else 0)
+    exitProcess(0)
   }
 
-  val modelPath = args[0]
-  val systemPrompt = args.getOrNull(1) ?: DEFAULT_SYSTEM_PROMPT
-
-  println("Loading model from $modelPath … ")
+  val downloader = LeapDownloader()
+  print("Loading $MODEL_NAME ($QUANTIZATION_SLUG) … ")
+  flushStdout()
   val runner =
     try {
-      LeapClient.loadModel(modelPath = modelPath)
+      downloader.loadModel(
+        modelName = MODEL_NAME,
+        quantizationSlug = QUANTIZATION_SLUG,
+        progress = { pd ->
+          if (pd.total > 0) {
+            val pct = (pd.bytes * 100 / pd.total).toInt()
+            val mbDone = pd.bytes / 1_000_000
+            val mbTotal = pd.total / 1_000_000
+            print("\rDownloading: $pct% ($mbDone / $mbTotal MB)")
+            flushStdout()
+          }
+        },
+      )
     } catch (e: Exception) {
-      println("failed to load model: ${e.message}")
+      println("\nfailed to load model: ${e.message}")
       exitProcess(1)
     }
-  println("ready (model id: ${runner.modelId})")
+  println("\nready (model id: ${runner.modelId})")
   println("Type a message and press Enter. EOF (Ctrl-Z) or :quit to exit.")
   println()
 
   try {
-    val conversation = runner.createConversation(systemPrompt = systemPrompt)
+    val conversation = runner.createConversation(systemPrompt = SYSTEM_PROMPT)
     while (true) {
       print("> ")
       flushStdout()

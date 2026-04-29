@@ -8,7 +8,8 @@ streams responses to stdout. No JVM at runtime.
 
 - Windows x86_64 host (Windows 10/11)
 - JDK 21 to run Gradle (Zulu recommended)
-- A LeapSDK model bundle on local disk (e.g. `LFM2-1.2B-Q4_0.bundle`)
+- Internet access on first run (the demo downloads `LFM2-350M` Q8_0 — about
+  370 MB — into `.\leap_models\` and reuses the cache afterwards)
 
 > **Note on cross-compile**: Kotlin/Native can compile `mingwX64` Kotlin code
 > from any host (verified on macOS), but cross-linking the final `.exe`
@@ -43,23 +44,21 @@ three `.dll` files alongside it.
 ## Run
 
 ```powershell
-.\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe C:\path\to\model.bundle
+.\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe
 ```
 
-Optionally pass a custom system prompt:
+The first run streams a `Downloading: NN% (M / N MB)` line until the model
+lands on disk, then drops you into the REPL. Type a message + Enter to send.
+EOF (Ctrl-Z + Enter) or `:quit` exits. Subsequent launches reuse the cached
+model.
 
-```powershell
-.\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe C:\path\to\model.bundle `
-  "You are a terse Windows admin. Answer in one sentence."
-```
-
-Type a message + Enter to send. EOF (Ctrl-Z + Enter on Windows) or `:quit`
-exits.
+To use a different model or quantization, change the `MODEL_NAME` and
+`QUANTIZATION_SLUG` constants at the top of `Main.kt` and rebuild.
 
 ## How it works
 
-Same `LeapClient.loadModel(modelPath)` + `Conversation.generateResponse(...)`
-flow as the [JVM CLI](../../JVM/LeapChatCli/) — a single Kotlin source file
+Same `LeapDownloader().loadModel(...)` + `Conversation.generateResponse(...)`
+flow as the [JVM CLI](../../JVM/LeapChatCli/) and the [Web demo](../../Web/LeapVoiceAssistantDemo/) — a single Kotlin source file
 (`src/mingwX64Main/kotlin/ai/liquid/leap/cli/Main.kt`) drives the REPL. The
 Kotlin Multiplatform machinery picks the published `leap-sdk-mingwx64`
 variant (cinterop bindings to the bare C inference engine API) instead of

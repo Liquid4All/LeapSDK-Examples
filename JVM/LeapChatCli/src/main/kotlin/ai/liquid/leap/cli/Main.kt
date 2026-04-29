@@ -1,47 +1,57 @@
 package ai.liquid.leap.cli
 
-import ai.liquid.leap.LeapClient
+import ai.liquid.leap.manifest.LeapDownloader
 import ai.liquid.leap.message.MessageResponse
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
-private const val DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant. Be concise."
+/** Defaults match the Android LeapChat demo. ~370 MB on first run; cached afterwards. */
+private const val MODEL_NAME = "LFM2-350M"
+private const val QUANTIZATION_SLUG = "Q8_0"
+private const val SYSTEM_PROMPT = "You are a helpful assistant. Be concise."
 
 fun main(args: Array<String>): Unit = runBlocking {
-  if (args.isEmpty() || args[0] in setOf("-h", "--help")) {
+  if (args.isNotEmpty() && args[0] in setOf("-h", "--help")) {
     System.err.println(
       """
-      |usage: leap-chat-cli <model-bundle-path> [system-prompt]
+      |usage: leap-chat-cli
       |
-      |  <model-bundle-path>  Path to a .bundle file (e.g. LFM2-1.2B-Q4_0.bundle)
-      |  [system-prompt]      Optional. Defaults to "$DEFAULT_SYSTEM_PROMPT"
-      |
-      |Type messages and press Enter to chat. EOF (Ctrl-D) or :quit exits.
+      |Downloads $MODEL_NAME ($QUANTIZATION_SLUG) on first run and caches it under
+      |./leap_models/. Type messages and press Enter to chat. EOF (Ctrl-D) or
+      |:quit exits.
       """
         .trimMargin()
     )
-    exitProcess(if (args.isEmpty()) 64 else 0)
+    exitProcess(0)
   }
 
-  val modelPath = args[0]
-  val systemPrompt = args.getOrNull(1) ?: DEFAULT_SYSTEM_PROMPT
-
-  print("Loading model from $modelPath … ")
+  val downloader = LeapDownloader()
+  print("Loading $MODEL_NAME ($QUANTIZATION_SLUG) … ")
   System.out.flush()
   val runner =
     try {
-      LeapClient.loadModel(modelPath = modelPath)
+      downloader.loadModel(
+        modelName = MODEL_NAME,
+        quantizationSlug = QUANTIZATION_SLUG,
+        progress = { pd ->
+          if (pd.total > 0) {
+            val pct = (pd.bytes * 100 / pd.total).toInt()
+            print("\rDownloading: %3d%% (%d / %d MB)".format(pct, pd.bytes / 1_000_000, pd.total / 1_000_000))
+            System.out.flush()
+          }
+        },
+      )
     } catch (e: Exception) {
       System.err.println("\nfailed to load model: ${e.message}")
       exitProcess(1)
     }
-  println("ready (model id: ${runner.modelId})")
+  println("\nready (model id: ${runner.modelId})")
   println("Type a message and press Enter. EOF (Ctrl-D) or :quit to exit.")
   println()
 
   try {
-    val conversation = runner.createConversation(systemPrompt = systemPrompt)
+    val conversation = runner.createConversation(systemPrompt = SYSTEM_PROMPT)
     while (true) {
       print("> ")
       System.out.flush()
@@ -60,8 +70,7 @@ fun main(args: Array<String>): Unit = runBlocking {
             println()
             response.stats?.let { stats ->
               System.err.println(
-                "[${stats.completionTokens} tok, " +
-                  "%.1f tok/s]".format(stats.tokenPerSecond)
+                "[${stats.completionTokens} tok, " + "%.1f tok/s]".format(stats.tokenPerSecond)
               )
             }
           }
