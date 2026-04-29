@@ -6,15 +6,15 @@ streams responses to stdout. No JVM at runtime.
 
 ## Prerequisites
 
-- Windows x86_64 host (Windows 10/11 tested; or build via WSL2 / Linux host
-  with mingw cross-toolchain)
+- Windows x86_64 host (Windows 10/11)
 - JDK 21 to run Gradle (Zulu recommended)
 - A LeapSDK model bundle on local disk (e.g. `LFM2-1.2B-Q4_0.bundle`)
 
 > **Note on cross-compile**: Kotlin/Native can compile `mingwX64` Kotlin code
 > from any host (verified on macOS), but cross-linking the final `.exe`
 > against `inference_engine.dll` from non-Windows hosts isn't supported by
-> Kotlin/Native. Build + run from Windows.
+> Kotlin/Native. Build + run from Windows itself, not WSL2 (which is Linux
+> under the hood and would still hit the cross-link limitation).
 
 ## How the native libraries get there
 

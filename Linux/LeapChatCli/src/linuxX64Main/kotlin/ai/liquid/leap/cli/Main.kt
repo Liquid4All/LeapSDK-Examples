@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+
 package ai.liquid.leap.cli
 
 import ai.liquid.leap.LeapClient
@@ -5,6 +7,15 @@ import ai.liquid.leap.message.MessageResponse
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
+import platform.posix.fflush
+
+// Kotlin/Native print()/println() go through stdio which is line-buffered when stdout is a TTY
+// and fully buffered otherwise. Flushing after every chunk + after the prompt keeps the REPL
+// truly streaming. fflush(null) flushes all open output streams per POSIX — works on every
+// libc Kotlin/Native targets without needing a per-target stdout symbol lookup.
+private fun flushStdout() {
+  fflush(null)
+}
 
 private const val DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant. Be concise."
 
@@ -43,6 +54,7 @@ fun main(args: Array<String>): Unit = runBlocking {
     val conversation = runner.createConversation(systemPrompt = systemPrompt)
     while (true) {
       print("> ")
+      flushStdout()
       val line = readlnOrNull() ?: break
       val trimmed = line.trim()
       if (trimmed == ":quit") break
@@ -50,7 +62,10 @@ fun main(args: Array<String>): Unit = runBlocking {
 
       conversation.generateResponse(line).collect { response ->
         when (response) {
-          is MessageResponse.Chunk -> print(response.text)
+          is MessageResponse.Chunk -> {
+            print(response.text)
+            flushStdout()
+          }
           is MessageResponse.Complete -> {
             println()
             response.stats?.let { stats ->

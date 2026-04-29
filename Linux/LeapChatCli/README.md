@@ -32,7 +32,11 @@ finds them at runtime. No `installVendor`, no S3, no manual binary drops.
 ## Build
 
 ```bash
-JAVA_HOME="$(/usr/libexec/java_home -v 21)" ./gradlew linkReleaseExecutableLinuxX64
+# Set JAVA_HOME to your JDK 21 install. On Debian/Ubuntu after installing
+# `openjdk-21-jdk` it lives at /usr/lib/jvm/java-21-openjdk-amd64/. With
+# SDKMAN it's $HOME/.sdkman/candidates/java/current/. Pick whichever fits.
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+./gradlew linkReleaseExecutableLinuxX64
 ```
 
 Output: `build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe` plus the
