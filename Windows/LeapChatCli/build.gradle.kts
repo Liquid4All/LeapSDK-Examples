@@ -15,10 +15,15 @@ kotlin {
         // Both ktor-client-curl-mingwx64 (statically links pthread-win32) and
         // libinference_engine.dll (also statically links pthread-win32) pull in
         // duplicate definitions of pthread_*, sched_yield, etc. lld errors out
-        // with `duplicate symbol` by default. --allow-multiple-definition tells
-        // it to take the first and ignore subsequent — safe here because both
+        // with `duplicate symbol` by default. -Wl,--allow-multiple-definition
+        // tells lld (via the clang driver Kotlin/Native invokes on mingwX64) to
+        // take the first definition and ignore subsequent — safe because both
         // sides are using the same pthread-win32 ABI.
-        linkerOpts("--allow-multiple-definition")
+        //
+        // Note: must be the gcc-driver passthrough form (`-Wl,...`) — unlike
+        // linuxX64 (which invokes ld.lld directly and wants bare `--xxx`),
+        // mingwX64 invokes clang++ which only accepts driver-level flags.
+        linkerOpts("-Wl,--allow-multiple-definition")
       }
     }
   }
