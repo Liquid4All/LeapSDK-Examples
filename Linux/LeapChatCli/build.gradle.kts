@@ -21,6 +21,10 @@ kotlin {
       dependencies {
         implementation(libs.leap.sdk)
         implementation(libs.kotlinx.coroutines.core)
+        // Ktor Curl engine for TLS on Kotlin/Native (the leap-sdk's bundled CIO
+        // engine doesn't support TLS on Native; injecting HttpClient(Curl) into
+        // LeapDownloader fixes HTTPS calls to leap.liquid.ai).
+        implementation(libs.ktor.client.curl)
       }
     }
   }

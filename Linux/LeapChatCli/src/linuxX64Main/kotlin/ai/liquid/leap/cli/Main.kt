@@ -4,6 +4,8 @@ package ai.liquid.leap.cli
 
 import ai.liquid.leap.manifest.LeapDownloader
 import ai.liquid.leap.message.MessageResponse
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.curl.Curl
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
@@ -36,7 +38,15 @@ fun main(args: Array<String>): Unit = runBlocking {
     exitProcess(0)
   }
 
-  val downloader = LeapDownloader()
+  // Inject an HttpClient backed by the Curl engine so HTTPS works. The leap-sdk
+  // for linuxX64 bundles Ktor CIO which has no TLS support on Native; without this
+  // injection, LeapDownloader's call to leap.liquid.ai fails with "TLS sessions
+  // are not supported on Native platform."
+  HttpClient(Curl).use { http -> chatLoop(http) }
+}
+
+private suspend fun chatLoop(http: HttpClient) {
+  val downloader = LeapDownloader(httpClient = http)
   print("Loading $MODEL_NAME ($QUANTIZATION_SLUG) … ")
   flushStdout()
   val runner =
