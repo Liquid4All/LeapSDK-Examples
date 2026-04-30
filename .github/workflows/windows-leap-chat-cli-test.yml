@@ -61,10 +61,22 @@ jobs:
           # baseline (see JVM/LeapChatCli for the portable JNI-based equivalent).
           & .\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe --help *> output.log
           $exit_code = $LASTEXITCODE
-          Write-Host "--- exit code: $exit_code ---"
+          Write-Host "--- exit code: $exit_code (hex: 0x$('{0:X8}' -f $exit_code)) ---"
           Write-Host "--- output ---"
           Get-Content output.log
+          Write-Host "--- files in releaseExecutable dir ---"
+          Get-ChildItem build\bin\mingwX64\releaseExecutable | Select-Object Name, Length | Format-Table
           if ($exit_code -ne 0) {
+            # 0xC0000135 = STATUS_DLL_NOT_FOUND. Try to identify which DLL.
+            Write-Host "--- DLL imports of leap-chat-cli.exe (objdump from Konan toolchain) ---"
+            $objdump = Get-ChildItem -Path "$env:USERPROFILE\.konan\dependencies" -Filter "*objdump*.exe" -Recurse | Select-Object -First 1
+            if ($objdump) {
+              & $objdump.FullName -p .\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe 2>&1 |
+                Select-String "DLL Name:" |
+                ForEach-Object { Write-Host $_.Line }
+            } else {
+              Write-Host "(objdump not found in Konan toolchain)"
+            }
             throw "binary exited with code $exit_code"
           }
           if (-not (Select-String -Path output.log -Pattern 'usage: leap-chat-cli' -Quiet)) {
