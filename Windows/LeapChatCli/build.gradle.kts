@@ -12,6 +12,13 @@ kotlin {
       executable {
         entryPoint = "ai.liquid.leap.cli.main"
         baseName = "leap-chat-cli"
+        // Both ktor-client-curl-mingwx64 (statically links pthread-win32) and
+        // libinference_engine.dll (also statically links pthread-win32) pull in
+        // duplicate definitions of pthread_*, sched_yield, etc. lld errors out
+        // with `duplicate symbol` by default. --allow-multiple-definition tells
+        // it to take the first and ignore subsequent — safe here because both
+        // sides are using the same pthread-win32 ABI.
+        linkerOpts("--allow-multiple-definition")
       }
     }
   }
@@ -25,7 +32,11 @@ kotlin {
         // engine doesn't support TLS on Native; injecting HttpClient(Curl) into
         // LeapDownloader fixes HTTPS calls to leap.liquid.ai). Windows variant
         // statically links libcurl + openssl, so no system-side install needed.
+        // ContentNegotiation + kotlinx-json plugins match what leap-sdk's own
+        // default client installs — required for body<Manifest>() deserialization.
         implementation(libs.ktor.client.curl)
+        implementation(libs.ktor.client.content.negotiation)
+        implementation(libs.ktor.serialization.kotlinx.json)
       }
     }
   }

@@ -6,9 +6,12 @@ import ai.liquid.leap.manifest.LeapDownloader
 import ai.liquid.leap.message.MessageResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.curl.Curl
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import platform.posix.fflush
 
 // Kotlin/Native print()/println() go through stdio which is line-buffered on a TTY and fully
@@ -42,7 +45,14 @@ fun main(args: Array<String>): Unit = runBlocking {
   // for mingwX64 bundles Ktor CIO which has no TLS support on Native; without this
   // injection, LeapDownloader's call to leap.liquid.ai fails with "TLS sessions
   // are not supported on Native platform."
-  HttpClient(Curl).use { http -> chatLoop(http) }
+  //
+  // ContentNegotiation + json are required because LeapDownloader's body<Manifest>()
+  // expects the client to deserialize the JSON response — same plugins the SDK's
+  // own default client installs. Without them: NoTransformationFoundException.
+  val http = HttpClient(Curl) {
+    install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+  }
+  http.use { chatLoop(it) }
 }
 
 private suspend fun chatLoop(http: HttpClient) {

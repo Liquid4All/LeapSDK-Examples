@@ -23,8 +23,13 @@ kotlin {
         implementation(libs.kotlinx.coroutines.core)
         // Ktor Curl engine for TLS on Kotlin/Native (the leap-sdk's bundled CIO
         // engine doesn't support TLS on Native; injecting HttpClient(Curl) into
-        // LeapDownloader fixes HTTPS calls to leap.liquid.ai).
+        // LeapDownloader fixes HTTPS calls to leap.liquid.ai). The
+        // ContentNegotiation + kotlinx-json plugins match what leap-sdk's own
+        // default client installs — required for `body<Manifest>()` to deserialize
+        // the JSON manifest response.
         implementation(libs.ktor.client.curl)
+        implementation(libs.ktor.client.content.negotiation)
+        implementation(libs.ktor.serialization.kotlinx.json)
       }
     }
   }
