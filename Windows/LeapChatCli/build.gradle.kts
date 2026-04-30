@@ -24,7 +24,7 @@ kotlin {
         // linuxX64 (which invokes ld.lld directly and wants bare `--xxx`),
         // mingwX64 invokes clang++ which only accepts driver-level flags.
         //
-        // -static-libstdc++ / -static-libgcc / -Bstatic -lwinpthread:
+        // -Wl,-Bstatic,-lstdc++,-lgcc,-lgcc_s,-lwinpthread,-Bdynamic:
         // statically link the MinGW C++/gcc/winpthread runtimes into the .exe
         // so it does NOT depend on libstdc++-6.dll / libgcc_s_seh-1.dll /
         // libwinpthread-1.dll being on the user's PATH. Without these flags,
@@ -32,14 +32,20 @@ kotlin {
         // build time, but they aren't present on a clean Windows host (or on
         // GitHub's windows-latest runner) at runtime — leading to a silent
         // STATUS_DLL_NOT_FOUND (0xC0000135) before the Kotlin entry point runs.
-        // -Bstatic must be wrapped back to -Bdynamic so the rest of the .exe
+        //
+        // The explicit `-Bstatic -l<name>` form is required (as opposed to
+        // the clang-driver `-static-libstdc++` / `-static-libgcc` flags):
+        // Kotlin/Native's mingwX64 link injects `-lstdc++` etc. into the link
+        // line directly rather than letting the clang++ driver pick the C++
+        // runtime, so the driver-level flags have nothing to substitute. The
+        // explicit form forces those specific `-l` lookups to resolve to the
+        // static `.a` archive instead of the import library for the DLL.
+        // -Bdynamic at the end switches back so the rest of the .exe
         // (kernel32, user32, ws2_32, the inference_engine DLLs) still imports
         // dynamically.
         linkerOpts(
           "-Wl,--allow-multiple-definition",
-          "-static-libstdc++",
-          "-static-libgcc",
-          "-Wl,-Bstatic,-lwinpthread,-Bdynamic",
+          "-Wl,-Bstatic,-lstdc++,-lgcc,-lgcc_s,-lwinpthread,-Bdynamic",
         )
       }
     }
