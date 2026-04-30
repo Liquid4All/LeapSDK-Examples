@@ -23,7 +23,24 @@ kotlin {
         // Note: must be the gcc-driver passthrough form (`-Wl,...`) — unlike
         // linuxX64 (which invokes ld.lld directly and wants bare `--xxx`),
         // mingwX64 invokes clang++ which only accepts driver-level flags.
-        linkerOpts("-Wl,--allow-multiple-definition")
+        //
+        // -static-libstdc++ / -static-libgcc / -Bstatic -lwinpthread:
+        // statically link the MinGW C++/gcc/winpthread runtimes into the .exe
+        // so it does NOT depend on libstdc++-6.dll / libgcc_s_seh-1.dll /
+        // libwinpthread-1.dll being on the user's PATH. Without these flags,
+        // the .exe imports those DLLs from Konan's bundled MinGW toolchain at
+        // build time, but they aren't present on a clean Windows host (or on
+        // GitHub's windows-latest runner) at runtime — leading to a silent
+        // STATUS_DLL_NOT_FOUND (0xC0000135) before the Kotlin entry point runs.
+        // -Bstatic must be wrapped back to -Bdynamic so the rest of the .exe
+        // (kernel32, user32, ws2_32, the inference_engine DLLs) still imports
+        // dynamically.
+        linkerOpts(
+          "-Wl,--allow-multiple-definition",
+          "-static-libstdc++",
+          "-static-libgcc",
+          "-Wl,-Bstatic,-lwinpthread,-Bdynamic",
+        )
       }
     }
   }
