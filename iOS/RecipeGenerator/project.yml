@@ -4,7 +4,7 @@ options:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.3-SNAPSHOT
+    exactVersion: 0.10.3
 targets:
   RecipeGenerator:
     type: application

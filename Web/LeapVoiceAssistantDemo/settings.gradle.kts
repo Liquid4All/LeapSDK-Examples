@@ -14,10 +14,6 @@ dependencyResolutionManagement {
   repositories {
     mavenCentral()
     google()
-    maven {
-      name = "Central Portal Snapshots"
-      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    }
 
     // Required for Kotlin/Wasm + Kotlin/JS Node.js / Yarn / Binaryen toolchain
     // downloads. FAIL_ON_PROJECT_REPOS blocks the Kotlin plugin from adding its

@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.20"
 coroutines = "1.10.2"
-leapSdk = "0.10.3-SNAPSHOT"
+leapSdk = "0.10.3"
 ktor = "3.3.3"
 
 [libraries]
