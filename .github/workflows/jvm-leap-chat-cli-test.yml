@@ -40,11 +40,16 @@ jobs:
         run: ./gradlew installDist
       - name: Smoke test (download model, open + close conversation)
         run: |
-          set -euo pipefail
           # Pipe :quit to exit immediately after the model is loaded. Verifies the
           # full LeapDownloader → loadModel → createConversation flow on JVM.
+          # Capture exit code separately so logs are always printed on failure.
+          set +e
           printf ':quit\n' | timeout 900 build/install/leap-chat-cli/bin/leap-chat-cli \
             > stdout.log 2> stderr.log
+          exit_code=$?
+          set -e
+          echo "--- exit code: $exit_code ---"
           echo "--- stdout ---"; cat stdout.log
           echo "--- stderr ---"; cat stderr.log
+          test "$exit_code" -eq 0
           grep -q 'ready (model id:' stdout.log

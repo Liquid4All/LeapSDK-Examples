@@ -45,12 +45,19 @@ jobs:
         run: ./gradlew linkReleaseExecutableLinuxX64
       - name: Smoke test (download model, open + close conversation)
         run: |
-          set -euo pipefail
           # Pipe :quit to exit immediately after the model is loaded. Verifies the
           # cinterop binding + native libs from leap-sdk-linuxx64:natives@zip work
           # end to end (model download → loadModel → createConversation → unload).
+          # Capture exit code separately so logs are always printed on failure.
+          set +e
           printf ':quit\n' | timeout 900 build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe \
             > stdout.log 2> stderr.log
+          exit_code=$?
+          set -e
+          echo "--- exit code: $exit_code ---"
           echo "--- stdout ---"; cat stdout.log
           echo "--- stderr ---"; cat stderr.log
+          echo "--- file (kexe) ---"; file build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe || true
+          echo "--- ldd ---"; ldd build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe || true
+          test "$exit_code" -eq 0
           grep -q 'ready (model id:' stdout.log
