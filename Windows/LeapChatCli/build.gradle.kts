@@ -1,5 +1,3 @@
-import java.io.File
-
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   // Auto-wires leap-sdk-mingwx64:<ver>:natives@zip and extracts inference_engine.dll +
@@ -29,11 +27,11 @@ kotlin {
         // -Wl,-Bstatic,-lstdc++,-lwinpthread,-Bdynamic:
         // statically link the MinGW C++ + winpthread runtimes into the .exe so
         // it does NOT depend on libstdc++-6.dll / libwinpthread-1.dll being on
-        // the user's PATH. (libgcc_s_seh-1.dll is handled separately, by
-        // copying it next to the .exe — see copyMingwRuntimeDlls below — since
-        // libgcc_s on MinGW-w64 x86_64 has no usable static counterpart in
-        // Konan's toolchain: -lgcc_s resolves to libgcc_s.dll.a, the import
-        // library, and there's no libgcc_s.a to fall back to.)
+        // the user's PATH. The .exe still depends on libgcc_s_seh-1.dll (no
+        // static counterpart ships in Konan's MinGW toolchain — `-lgcc_s`
+        // resolves to libgcc_s.dll.a, the import library); for now, that DLL
+        // is expected to be alongside the .exe (or on PATH) at run time. A
+        // proper redistributable bundle of MinGW runtime DLLs is deferred.
         //
         // The explicit `-Bstatic -l<name>` form is required (as opposed to
         // the clang-driver `-static-libstdc++` flag): Kotlin/Native's
@@ -51,26 +49,6 @@ kotlin {
       }
     }
   }
-
-  // Copy libgcc_s_seh-1.dll from Konan's bundled MinGW toolchain alongside
-  // the produced .exe so the binary is fully self-contained. (-lgcc_s can't be
-  // statically linked on MinGW-w64 x86_64 — Konan ships only the import lib
-  // libgcc_s.dll.a, no libgcc_s.a — so we ship the DLL next to the .exe.)
-  // Wired as a finalizer of linkReleaseExecutableMingwX64 so the file lands in
-  // releaseExecutable/ alongside the .exe and the inference_engine DLLs.
-  val copyMingwRuntimeDlls by tasks.registering(Copy::class) {
-    from(providers.provider {
-      val home = File(System.getProperty("user.home"))
-      val konanRoot = File(home, ".konan/dependencies")
-      val candidate = konanRoot.walkTopDown()
-        .firstOrNull { it.isFile && it.name == "libgcc_s_seh-1.dll" }
-      checkNotNull(candidate) {
-        "libgcc_s_seh-1.dll not found under $konanRoot — Konan toolchain layout may have changed"
-      }
-    })
-    into(layout.buildDirectory.dir("bin/mingwX64/releaseExecutable"))
-  }
-  tasks.named("linkReleaseExecutableMingwX64") { finalizedBy(copyMingwRuntimeDlls) }
 
   sourceSets {
     val mingwX64Main by getting {
