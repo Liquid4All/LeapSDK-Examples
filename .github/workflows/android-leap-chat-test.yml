@@ -12,6 +12,10 @@ on:
       - '.github/workflows/android-leap-chat-test.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-e2e-test:
     runs-on: ubuntu-latest

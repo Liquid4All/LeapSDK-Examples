@@ -1,0 +1,65 @@
+# LeapChatCli — Windows
+
+A REPL-style multi-turn chat CLI built as a native Windows executable using
+Kotlin/Native (`mingwX64` target). Loads a local LeapSDK model bundle and
+streams responses to stdout. No JVM at runtime.
+
+## Prerequisites
+
+- Windows x86_64 host (Windows 10/11)
+- JDK 21 to run Gradle (Zulu recommended)
+- Internet access on first run (the demo downloads `LFM2-350M` Q8_0 — about
+  370 MB — into `.\leap_models\` and reuses the cache afterwards)
+
+> **Note on cross-compile**: Kotlin/Native can compile `mingwX64` Kotlin code
+> from any host (verified on macOS), but cross-linking the final `.exe`
+> against `inference_engine.dll` from non-Windows hosts isn't supported by
+> Kotlin/Native. Build + run from Windows itself, not WSL2 (which is Linux
+> under the hood and would still hit the cross-link limitation).
+
+## How the native libraries get there
+
+The `ai.liquid.leap.nativelibs` Gradle plugin (declared in `build.gradle.kts`)
+auto-resolves `ai.liquid.leap:leap-sdk-mingwx64:0.10.1:natives@zip` from
+Maven and extracts:
+
+- `inference_engine.dll`
+- `libinference_engine_llamacpp_backend.dll`
+- `ie_zip.dll`
+
+into `build/bin/mingwX64/releaseExecutable/` so standard Windows
+DLL co-location loads them at runtime when you launch the `.exe`. No
+`installVendor`, no S3, no manual binary drops.
+
+## Build
+
+```powershell
+$env:JAVA_HOME = "C:\Path\To\jdk-21"
+.\gradlew.bat linkReleaseExecutableMingwX64
+```
+
+Output: `build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe` plus the
+three `.dll` files alongside it.
+
+## Run
+
+```powershell
+.\build\bin\mingwX64\releaseExecutable\leap-chat-cli.exe
+```
+
+The first run streams a `Downloading: NN% (M / N MB)` line until the model
+lands on disk, then drops you into the REPL. Type a message + Enter to send.
+EOF (Ctrl-Z + Enter) or `:quit` exits. Subsequent launches reuse the cached
+model.
+
+To use a different model or quantization, change the `MODEL_NAME` and
+`QUANTIZATION_SLUG` constants at the top of `Main.kt` and rebuild.
+
+## How it works
+
+Same `LeapDownloader().loadModel(...)` + `Conversation.generateResponse(...)`
+flow as the [JVM CLI](../../JVM/LeapChatCli/) and the [Web demo](../../Web/LeapVoiceAssistantDemo/) — a single Kotlin source file
+(`src/mingwX64Main/kotlin/ai/liquid/leap/cli/Main.kt`) drives the REPL. The
+Kotlin Multiplatform machinery picks the published `leap-sdk-mingwx64`
+variant (cinterop bindings to the bare C inference engine API) instead of
+the JNI-backed JVM artifact.

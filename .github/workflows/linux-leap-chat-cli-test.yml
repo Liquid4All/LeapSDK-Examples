@@ -1,0 +1,70 @@
+name: Linux LeapChatCli Build
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Linux/LeapChatCli/**'
+      - '.github/workflows/linux-leap-chat-cli-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Linux/LeapChatCli/**'
+      - '.github/workflows/linux-leap-chat-cli-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Linux/LeapChatCli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - name: Cache Kotlin/Native distribution
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('Linux/LeapChatCli/gradle/libs.versions.toml') }}
+      - name: Cache downloaded model
+        uses: actions/cache@v4
+        with:
+          path: Linux/LeapChatCli/leap_models
+          key: leap-models-LFM2-350M-Q8_0-v1
+      - name: Build native executable
+        run: ./gradlew linkReleaseExecutableLinuxX64
+      - name: Smoke test (binary launches + Kotlin entry point runs)
+        run: |
+          # Just `--help` — verifies the .kexe loads (which exercises the cinterop
+          # binding + rpath-resolved loading of libinference_engine.so + .llamacpp_backend.so
+          # + .ie_zip.so end to end) and the Kotlin entry point runs.
+          #
+          # We can't go further with a real model download here: the published
+          # libinference_engine_llamacpp_backend.so SIGILLs on the github-hosted
+          # ubuntu-latest runner shortly after `Using text engine` — likely a CPU
+          # baseline mismatch (the .so requires instructions the runner CPU doesn't
+          # support). End-to-end download + chat works fine on hosts with the right
+          # CPU baseline (verified locally; see JVM/LeapChatCli for portable
+          # equivalent that uses the JVM JNI binary instead).
+          set +e
+          timeout 60 build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe --help \
+            > stdout.log 2> stderr.log
+          exit_code=$?
+          set -e
+          echo "--- exit code: $exit_code ---"
+          echo "--- stdout ---"; cat stdout.log
+          echo "--- stderr ---"; cat stderr.log
+          echo "--- file (kexe) ---"; file build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe || true
+          echo "--- ldd ---"; ldd build/bin/linuxX64/releaseExecutable/leap-chat-cli.kexe || true
+          test "$exit_code" -eq 0
+          grep -q 'usage: leap-chat-cli' stdout.log

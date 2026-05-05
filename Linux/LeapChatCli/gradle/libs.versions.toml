@@ -1,0 +1,25 @@
+[versions]
+kotlin = "2.3.20"
+coroutines = "1.10.2"
+leapSdk = "0.10.4-SNAPSHOT"
+ktor = "3.3.3"
+
+[libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+leap-sdk                = { module = "ai.liquid.leap:leap-sdk", version.ref = "leapSdk" }
+# Curl engine for Ktor on linuxX64 — the leap-sdk-linuxx64 artifact pulls in
+# ktor-client-cio which has no TLS support on Kotlin/Native, so HTTPS calls
+# (e.g. LeapDownloader hitting leap.liquid.ai) fail with "TLS sessions are not
+# supported on Native platform." Adding the Curl engine and passing
+# `HttpClient(Curl)` to LeapDownloader gives us TLS via libcurl + openssl.
+ktor-client-curl                = { module = "io.ktor:ktor-client-curl",                version.ref = "ktor" }
+# Required because LeapDownloader expects the injected HttpClient to deserialize
+# JSON responses (the manifest endpoint returns application/json). Without the
+# ContentNegotiation + json plugins, the SDK's `body<Manifest>()` throws
+# NoTransformationFoundException. Mirrors what leap-sdk's own default client installs.
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+[plugins]
+kotlin-multiplatform   = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+leap-sdk-native-libs   = { id = "ai.liquid.leap.nativelibs",          version.ref = "leapSdk" }

@@ -81,7 +81,7 @@ make open  # Opens in Xcode
 All examples use:
 - **Swift Package Manager** for dependency management
 - **XcodeGen** for project generation
-- **LeapSDK v0.10.0** directly from the official [leap-sdk](https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.0) GitHub release
+- **LeapSDK v0.10.4-SNAPSHOT** directly from the official [leap-sdk](https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.4-SNAPSHOT) GitHub release
 
 ### Quick Start
 
@@ -121,7 +121,7 @@ ExampleApp/
 
 ## Using LeapSDK
 
-All examples use LeapSDK v0.10.0 with the KMP-based SDK and SKIE Swift interop. Import `LeapModelDownloader` for manifest-based model downloading:
+All examples use LeapSDK v0.10.4-SNAPSHOT with the KMP-based SDK and SKIE Swift interop. Import `LeapModelDownloader` for manifest-based model downloading:
 
 ```swift
 import LeapSDK
@@ -156,7 +156,7 @@ for try await response in stream {
 
 ## Constrained Generation (Structured Output)
 
-LeapSDK v0.10.0 supports constrained generation using the `@Generatable` and `@Guide` macros from the `LeapSDKMacros` product:
+LeapSDK v0.10.4-SNAPSHOT supports constrained generation using the `@Generatable` and `@Guide` macros from the `LeapSDKMacros` product:
 
 ```swift
 import LeapSDK
@@ -211,7 +211,7 @@ Reference the SDK in each example's `project.yml`:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0
+    exactVersion: 0.10.4-SNAPSHOT
 
 targets:
   YourApp:
@@ -255,7 +255,7 @@ make setup
 
 ### Simulator build — `x86_64` architecture errors
 
-The LeapSDK v0.10.0 xcframeworks only include `arm64` slices for simulator (no `x86_64`). When building for a generic iOS Simulator destination, add `EXCLUDED_ARCHS=x86_64`:
+The LeapSDK v0.10.4-SNAPSHOT xcframeworks only include `arm64` slices for simulator (no `x86_64`). When building for a generic iOS Simulator destination, add `EXCLUDED_ARCHS=x86_64`:
 
 ```bash
 xcodebuild -scheme YourScheme \
@@ -296,9 +296,9 @@ Then run `xcodegen generate` to regenerate the project.
 
 ## LeapSDK Package
 
-All examples reference the official **LeapSDK v0.10.0** release directly from GitHub:
+All examples reference the official **LeapSDK v0.10.4-SNAPSHOT** release directly from GitHub:
 - **Repository**: https://github.com/Liquid4All/leap-sdk
-- **Release**: https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.0
+- **Release**: https://github.com/Liquid4All/leap-sdk/releases/tag/v0.10.4-SNAPSHOT
 - **Package Configuration**: Each example's `project.yml` specifies the GitHub URL and version
 
 The SDK is automatically downloaded by Swift Package Manager when you run `xcodegen generate`.
@@ -315,5 +315,5 @@ When adding new examples:
    packages:
      LeapSDK:
        url: https://github.com/Liquid4All/leap-sdk
-       exactVersion: 0.10.0
+       exactVersion: 0.10.4-SNAPSHOT
    ```

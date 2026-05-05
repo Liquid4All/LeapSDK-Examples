@@ -1,0 +1,26 @@
+[versions]
+kotlin = "2.3.20"
+coroutines = "1.10.2"
+leapSdk = "0.10.4-SNAPSHOT"
+ktor = "3.3.3"
+
+[libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+leap-sdk                = { module = "ai.liquid.leap:leap-sdk", version.ref = "leapSdk" }
+# Curl engine for Ktor on mingwX64 — the leap-sdk-mingwx64 artifact pulls in
+# ktor-client-cio which has no TLS support on Kotlin/Native, so HTTPS calls
+# (e.g. LeapDownloader hitting leap.liquid.ai) fail with "TLS sessions are not
+# supported on Native platform." Adding the Curl engine and passing
+# `HttpClient(Curl)` to LeapDownloader gives us TLS via libcurl. The Windows
+# Curl engine artifact statically links libcurl + openssl, so no additional
+# system libraries are needed at build/run time. Note: requires
+# `--allow-multiple-definition` linker flag in build.gradle.kts because both
+# ktor-client-curl-mingwx64 and libinference_engine.dll statically link
+# pthread-win32, producing duplicate-symbol errors at link time otherwise.
+ktor-client-curl                = { module = "io.ktor:ktor-client-curl",                version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+[plugins]
+kotlin-multiplatform   = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+leap-sdk-native-libs   = { id = "ai.liquid.leap.nativelibs",          version.ref = "leapSdk" }

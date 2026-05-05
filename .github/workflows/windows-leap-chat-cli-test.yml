@@ -1,0 +1,67 @@
+name: Windows LeapChatCli Build
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Windows/LeapChatCli/**'
+      - '.github/workflows/windows-leap-chat-cli-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Windows/LeapChatCli/**'
+      - '.github/workflows/windows-leap-chat-cli-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Windows/LeapChatCli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - name: Cache Kotlin/Native distribution
+        uses: actions/cache@v4
+        with:
+          path: ~\.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('Windows/LeapChatCli/gradle/libs.versions.toml') }}
+      - name: Build native executable
+        # Build-only — no smoke test on the github-hosted runner. The .exe links
+        # against libgcc_s_seh-1.dll (Konan's MinGW toolchain ships only the
+        # import library, no static counterpart for libgcc_s on x86_64), so the
+        # binary fails to load on a clean Windows host with STATUS_DLL_NOT_FOUND
+        # (0xC0000135) before any Kotlin code runs. End-to-end download + chat
+        # works on developer hosts that have a MinGW runtime on PATH (or with
+        # the DLL co-located). A proper redistributable bundle of the MinGW
+        # runtime DLLs is deferred — see JVM/LeapChatCli for the portable
+        # JNI-based equivalent that has no native runtime dependencies.
+        run: .\gradlew.bat linkReleaseExecutableMingwX64
+      - name: Verify expected artifacts produced
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $dir = "build\bin\mingwX64\releaseExecutable"
+          $expected = @(
+            "leap-chat-cli.exe",
+            "inference_engine.dll",
+            "libinference_engine_llamacpp_backend.dll",
+            "ie_zip.dll"
+          )
+          Write-Host "--- files in $dir ---"
+          Get-ChildItem $dir | Select-Object Name, Length | Format-Table
+          $missing = $expected | Where-Object { -not (Test-Path "$dir\$_") }
+          if ($missing) {
+            throw "missing expected artifacts: $($missing -join ', ')"
+          }
