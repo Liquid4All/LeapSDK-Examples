@@ -10,7 +10,7 @@ activityCompose = "1.12.3"
 composeBom = "2026.01.01"
 
 koog = "0.5.1"
-leapSdk = "0.10.3"
+leapSdk = "0.10.4-SNAPSHOT"
 
 kotlinxSerialization = "1.10.0"
 

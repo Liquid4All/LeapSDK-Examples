@@ -2,6 +2,10 @@ pluginManagement {
   repositories {
     gradlePluginPortal()
     mavenCentral()
+    maven {
+      name = "Central Portal Snapshots"
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    }
     google()
   }
 }
@@ -13,6 +17,10 @@ dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
   repositories {
     mavenCentral()
+    maven {
+      name = "Central Portal Snapshots"
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    }
     google()
 
     // Required for Kotlin/Wasm + Kotlin/JS Node.js / Yarn / Binaryen toolchain

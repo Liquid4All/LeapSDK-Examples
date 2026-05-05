@@ -16,7 +16,7 @@ The main business logic is in [MainActivityViewModel.kt](app/src/main/java/ai/li
 
 ## Requirements
 
-- LeapSDK 0.10.3
+- LeapSDK 0.10.4-SNAPSHOT
 - Android device or emulator with internet connection (for initial model download)
 
 The model will be automatically downloaded and cached on first run via `LeapDownloader`.
