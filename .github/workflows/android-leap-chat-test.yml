@@ -13,7 +13,9 @@ on:
   workflow_dispatch:
 
 # Least-privilege default. The job authenticates with gcloud against Firebase
-# Test Lab via a service-account JSON; no GitHub API access needed.
+# Test Lab via a service-account JSON; nothing here needs GITHUB_TOKEN write
+# scope. The Actions cache (used by gradle/actions/setup-gradle below) is gated
+# by the runtime token, not GITHUB_TOKEN, so contents: read is sufficient.
 permissions:
   contents: read
 
@@ -29,7 +31,8 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: 'gradle'
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
     - name: Build LeapChat
       run: cd Android/LeapChat && ./gradlew :app:assemble
     - name: Build E2E test
