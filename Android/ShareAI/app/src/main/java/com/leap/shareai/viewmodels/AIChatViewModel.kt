@@ -3,6 +3,7 @@ package com.leap.shareai.viewmodels
 import ai.liquid.leap.Conversation
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.LeapModelLoadingException
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.downloader.LeapModelDownloader
 import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
@@ -123,6 +124,11 @@ class AIChatViewModel : ViewModel() {
                 modelRunner = downloaderInstance.loadModel(
                     modelName = MODEL_NAME,
                     quantizationType = QUANTIZATION_SLUG,
+                    options = ModelLoadingOptions(
+                        cacheOptions = ModelLoadingOptions.cacheOptions(
+                            path = context.cacheDir.resolve("leap-cache").absolutePath,
+                        ),
+                    ),
                 )
                 conversation = modelRunner?.createConversation()
                 Log.d(TAG, "Model loaded and conversation created")

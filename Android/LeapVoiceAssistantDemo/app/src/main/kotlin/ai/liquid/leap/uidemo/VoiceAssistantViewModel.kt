@@ -1,5 +1,6 @@
 package ai.liquid.leap.uidemo
 
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.manifest.LeapDownloader
 import ai.liquid.leap.manifest.LeapDownloaderConfig
 import ai.liquid.leap.ui.VoiceAssistantIntent
@@ -41,7 +42,14 @@ class VoiceAssistantViewModel(application: Application) : AndroidViewModel(appli
         val runner =
           downloader.loadModel(
             modelName = MODEL_NAME,
-            quantizationSlug = QUANTIZATION_SLUG,
+            quantizationType = QUANTIZATION_SLUG,
+            options =
+              ModelLoadingOptions(
+                cacheOptions =
+                  ModelLoadingOptions.cacheOptions(
+                    path = getApplication<Application>().cacheDir.resolve("leap-cache").absolutePath,
+                  )
+              ),
             progress = { pd ->
               val pct = if (pd.total > 0) " (${(pd.bytes * 100 / pd.total).toInt()}%)" else ""
               store.setModelProgress(

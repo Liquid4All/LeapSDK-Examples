@@ -1,6 +1,7 @@
 package ai.liquid.vlmtestapp
 
 import ai.liquid.leap.LeapClient
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.downloader.LeapModelDownloader
 import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
@@ -171,7 +172,15 @@ class MainActivity : ComponentActivity() {
                     .collect()
             }
 
-            modelRunner = downloaderInstance.loadModel(modelName, quantType)
+            modelRunner = downloaderInstance.loadModel(
+                modelName = modelName,
+                quantizationType = quantType,
+                options = ModelLoadingOptions(
+                    cacheOptions = ModelLoadingOptions.cacheOptions(
+                        path = cacheDir.resolve("leap-cache").absolutePath,
+                    ),
+                ),
+            )
         }
         generateText.value = "Looking at the image and generating a description..."
         val conversation =

@@ -75,9 +75,15 @@ final class DemoViewModel: ObservableObject {
     private func loadModel() async {
         store.setModelProgress(fraction: 0, message: "Resolving manifest\u{2026}")
         do {
+            let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("leap-cache").path
+            try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
             let runner = try await Leap.shared.load(
                 model: modelName,
                 quantization: quantizationSlug,
+                options: LiquidInferenceEngineManifestOptions(
+                    cacheOptions: .enabled(path: cachePath)
+                ),
                 progress: { [weak self] fraction, _ in
                     Task { @MainActor [weak self] in
                         self?.store.setModelProgress(

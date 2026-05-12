@@ -21,9 +21,15 @@ final class VLMStore {
     do {
       status = "Downloading \(Self.modelName) model..."
 
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
+        options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath)
+        ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             if progress < 1.0 {

@@ -1,5 +1,5 @@
 import Foundation
-import LeapSDK
+import LeapModelDownloader
 
 struct Recipe: Codable {
   var name: String

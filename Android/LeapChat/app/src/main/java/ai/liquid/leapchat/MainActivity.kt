@@ -3,6 +3,7 @@ package ai.liquid.leapchat
 import ai.liquid.leap.Conversation
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.LeapModelLoadingException
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.message.ChatMessage
 import ai.liquid.leap.downloader.LeapModelDownloader
@@ -279,6 +280,11 @@ class MainActivity : ComponentActivity() {
                 modelRunner.value = downloaderInstance.loadModel(
                     modelName = MODEL_NAME,
                     quantizationType = QUANTIZATION_SLUG,
+                    options = ModelLoadingOptions(
+                        cacheOptions = ModelLoadingOptions.cacheOptions(
+                            path = cacheDir.resolve("leap-cache").absolutePath,
+                        ),
+                    ),
                 )
             } catch (e: LeapModelLoadingException) {
                 onError(e)

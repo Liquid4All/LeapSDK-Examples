@@ -1,6 +1,7 @@
 package ai.liquid.leapaudiodemo
 
 import ai.liquid.leap.Conversation
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.downloader.LeapModelDownloader
 import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
@@ -310,7 +311,15 @@ constructor(
         // Load the model
         _state.update { it.copy(status = getString(R.string.status_loading_model)) }
         modelRunner =
-          downloaderInstance.loadModel(modelName = MODEL_NAME, quantizationType = QUANTIZATION)
+          downloaderInstance.loadModel(
+            modelName = MODEL_NAME,
+            quantizationType = QUANTIZATION,
+            options = ModelLoadingOptions(
+              cacheOptions = ModelLoadingOptions.cacheOptions(
+                path = getApplication<Application>().cacheDir.resolve("leap-cache").absolutePath,
+              ),
+            ),
+          )
 
         // Create initial conversation
         conversation = modelRunner!!.createConversation(getString(R.string.system_prompt_audio))

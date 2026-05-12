@@ -1,6 +1,7 @@
 package ai.liquid.sloganapp
 
 import ai.liquid.leap.LeapClient
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.downloader.LeapModelDownloader
 import ai.liquid.leap.downloader.LeapModelDownloaderNotificationConfig
@@ -113,7 +114,15 @@ class MainActivity : ComponentActivity() {
                     .collect()
             }
 
-            modelRunner = downloaderInstance.loadModel(modelName, quantType)
+            modelRunner = downloaderInstance.loadModel(
+                modelName = modelName,
+                quantizationType = quantType,
+                options = ModelLoadingOptions(
+                    cacheOptions = ModelLoadingOptions.cacheOptions(
+                        path = cacheDir.resolve("leap-cache").absolutePath,
+                    ),
+                ),
+            )
             modelLoaded = true
 
             modelStatus.text = resources.getText(R.string.model_status_loaded)

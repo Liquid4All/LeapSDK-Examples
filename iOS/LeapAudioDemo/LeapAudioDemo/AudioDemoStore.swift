@@ -1,6 +1,6 @@
 import AVFoundation
 import Foundation
-import LeapSDK
+import LeapModelDownloader
 import Observation
 
 struct AudioDemoMessage: Identifiable, Equatable {
@@ -49,10 +49,14 @@ final class AudioDemoStore {
       status = "Downloading \(Self.modelName) model..."
 
       // Use manifest downloading for LFM2.5-Audio-1.5B (speech + text input/output)
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
         options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath),
           contextSize: 1024,
           nGpuLayers: 0
         ),

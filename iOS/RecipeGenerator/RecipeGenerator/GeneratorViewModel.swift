@@ -1,5 +1,5 @@
 import Foundation
-import LeapSDK
+import LeapModelDownloader
 
 @MainActor
 class GeneratorViewModel: ObservableObject {
@@ -24,9 +24,15 @@ class GeneratorViewModel: ObservableObject {
     statusMessage = "Downloading and loading model..."
 
     do {
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       modelRunner = try await Leap.shared.load(
         model: modelName,
         quantization: quantization,
+        options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath)
+        ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             self?.downloadProgress = progress

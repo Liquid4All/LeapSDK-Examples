@@ -1,4 +1,4 @@
-import LeapSDK
+import LeapModelDownloader
 import PhotosUI
 import SwiftUI
 
@@ -30,11 +30,15 @@ class ChatStore {
           content: "📦 Downloading LFM2.5-VL-1.6B model...",
           isUser: false))
 
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let modelRunner = try await Leap.shared.load(
         model: "LFM2.5-VL-1.6B",
         quantization: "Q4_0",
         options: LiquidInferenceEngineManifestOptions(
-          contextSize: 4096  // Reduced from default for mobile memory constraints
+          cacheOptions: .enabled(path: cachePath),
+          contextSize: 4096
         ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in

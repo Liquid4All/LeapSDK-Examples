@@ -93,7 +93,7 @@ fun main() {
             val runner =
               downloader.loadModel(
                 modelName = MODEL_NAME,
-                quantizationSlug = QUANTIZATION_SLUG,
+                quantizationType = QUANTIZATION_SLUG,
                 progress = { pd ->
                   val pct = if (pd.total > 0) " ${(pd.bytes * 100 / pd.total).toInt()}%" else ""
                   idleLabel = "Downloading$pct"

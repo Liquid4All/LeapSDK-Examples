@@ -1,4 +1,4 @@
-import LeapSDK
+import LeapModelDownloader
 import SwiftUI
 
 // System prompt and user prompt constants
@@ -31,9 +31,15 @@ class SloganStore {
 
     do {
       // Use manifest downloading for LFM2.5-1.2B-Instruct (best for instruction following)
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       modelRunner = try await Leap.shared.load(
         model: "LFM2.5-1.2B-Instruct",
         quantization: "Q4_0",
+        options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath)
+        ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             if progress < 1.0 {

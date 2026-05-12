@@ -2,6 +2,7 @@ package ai.liquid.recipegenerator
 
 import ai.liquid.leap.LeapClient
 import ai.liquid.leap.LeapJson
+import ai.liquid.leap.ModelLoadingOptions
 import ai.liquid.leap.ModelRunner
 import ai.liquid.leap.GenerationOptions
 import ai.liquid.leap.downloader.LeapModelDownloader
@@ -113,7 +114,15 @@ class MainActivityViewModel: ViewModel() {
         // Load the model
         status = "Loading model..."
         try {
-            modelRunner = downloader.loadModel(modelName, quantType)
+            modelRunner = downloader.loadModel(
+                modelName = modelName,
+                quantizationType = quantType,
+                options = ModelLoadingOptions(
+                    cacheOptions = ModelLoadingOptions.cacheOptions(
+                        path = context.cacheDir.resolve("leap-cache").absolutePath,
+                    ),
+                ),
+            )
             status = "Model loaded"
         } catch (e: Exception) {
             Log.e("RecipeGenerator", "Error loading model", e)

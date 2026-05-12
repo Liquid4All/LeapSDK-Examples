@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0
+    revision: v0.10.6
 
 targets:
   LeapChatExample:
@@ -47,20 +47,20 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "5.9"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-        OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapSDK.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend"
-        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
+        OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapModelDownloader.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend -lie_zip"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapModelDownloader.framework/Frameworks"
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
         Release:
           SWIFT_COMPILATION_MODE: wholemodule
     postBuildScripts:
-      - name: Sign nested LeapSDK dylibs
+      - name: Sign nested LeapModelDownloader dylibs
         shell: /bin/sh
         basedOnDependencyAnalysis: false
         script: |
           set -e
-          NESTED="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Frameworks/LeapSDK.framework/Frameworks"
+          NESTED="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Frameworks/LeapModelDownloader.framework/Frameworks"
           [ -d "$NESTED" ] || exit 0
           [ "$CODE_SIGNING_ALLOWED" = "YES" ] || exit 0
           find "$NESTED" -name "*.dylib" | while read dylib; do

@@ -98,7 +98,8 @@ final class AppleVoiceConversation: VoiceConversation {
                         promptTokens: stats.promptTokens,
                         completionTokens: stats.completionTokens,
                         totalTokens: stats.totalTokens,
-                        tokenPerSecond: stats.tokenPerSecond
+                        tokenPerSecond: stats.tokenPerSecond,
+                        cachedPromptTokens: stats.cachedPromptTokens
                     )
                 }
             }
