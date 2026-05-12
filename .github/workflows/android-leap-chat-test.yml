@@ -12,6 +12,10 @@ on:
       - '.github/workflows/android-leap-chat-test.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Least-privilege default. The job authenticates with gcloud against Firebase
 # Test Lab via a service-account JSON; nothing here needs GITHUB_TOKEN write
 # scope. The Actions cache (used by gradle/actions/setup-gradle below) is gated
@@ -33,10 +37,52 @@ jobs:
         distribution: 'temurin'
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+    - name: Purge cached leap-sdk artifacts if Sonatype snapshot was republished
+      # The pin may be a SNAPSHOT in which case the upstream may force-update it under
+      # the same SNAPSHOT version, with new contents. When that happens,
+      # `--refresh-dependencies` alone isn't enough: the gradle cache restored by
+      # setup-java's cache: 'gradle' still contains the prior artifact, and gradle
+      # short-circuits the re-download because the cached SHA matches its metadata.
+      #
+      # Detect the situation by comparing Sonatype's <lastUpdated> for the snapshot
+      # against a marker we wrote on the previous run. Purge only when they differ —
+      # so the cache stays warm in the common case (no upstream republish) and
+      # rebuilds get the new artifact in the rare case (snapshot updated).
+      run: |
+        SDK_VERSION=$(grep -E '^\s*leapSdk\s*=' Android/LeapChat/gradle/libs.versions.toml | sed -E 's/.*"([^"]+)".*/\1/')
+        # Whitelist before interpolating into the curl URL below.
+        if ! echo "$SDK_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*(-[A-Za-z0-9.]+)?(-SNAPSHOT)?$'; then
+          echo "(unexpected leapSdk version shape '$SDK_VERSION' — skipping purge check)"
+          exit 0
+        fi
+        case "$SDK_VERSION" in
+          *-SNAPSHOT) ;;
+          *) echo "leap-sdk pinned to stable $SDK_VERSION; skipping snapshot purge check"; exit 0 ;;
+        esac
+        # Check the parent `leap-sdk` artifact's <lastUpdated> — when the SDK is
+        # republished, the parent and every per-target sibling get re-uploaded
+        # together with the same timestamp, so one URL is representative for any
+        # workflow. Marker lives under ~/.gradle/caches so it's preserved by
+        # setup-java's gradle cache between runs.
+        REMOTE_TS=$(curl -fsSL "https://central.sonatype.com/repository/maven-snapshots/ai/liquid/leap/leap-sdk/$SDK_VERSION/maven-metadata.xml" 2>/dev/null \
+          | grep -oE '<lastUpdated>[0-9]+</lastUpdated>' | grep -oE '[0-9]+' || true)
+        MARKER=~/.gradle/caches/leap-snapshot-marker
+        LOCAL_TS=$(cat "$MARKER" 2>/dev/null || true)
+        if [ -z "$REMOTE_TS" ]; then
+          echo "(could not fetch snapshot metadata for $SDK_VERSION from Sonatype — skipping purge check)"
+        elif [ "$REMOTE_TS" = "$LOCAL_TS" ]; then
+          echo "Sonatype snapshot timestamp unchanged for $SDK_VERSION ($LOCAL_TS); leap-sdk cache is fresh"
+        else
+          echo "Sonatype snapshot timestamp changed for $SDK_VERSION (${LOCAL_TS:-<none>} -> $REMOTE_TS); purging leap-sdk cache"
+          rm -rf ~/.gradle/caches/modules-2/files-2.1/ai.liquid.leap* \
+                 ~/.gradle/caches/modules-2/metadata-*/descriptors/ai.liquid.leap*
+          mkdir -p "$(dirname "$MARKER")"
+          echo "$REMOTE_TS" > "$MARKER"
+        fi
     - name: Build LeapChat
-      run: cd Android/LeapChat && ./gradlew :app:assemble
+      run: cd Android/LeapChat && ./gradlew --refresh-dependencies :app:assemble
     - name: Build E2E test
-      run: cd Android/LeapChat && ./gradlew :app:assembleAndroidTest
+      run: cd Android/LeapChat && ./gradlew --refresh-dependencies :app:assembleAndroidTest
     - name: Run E2E test on Firebase Test Lab
       env:
         SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
