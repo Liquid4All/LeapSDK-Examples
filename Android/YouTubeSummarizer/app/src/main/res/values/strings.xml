@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">tl;dw</string>
+    <string name="enter_youtube_url">Enter YouTube URL</string>
+    <string name="fetch_transcript">Fetch Transcript</string>
+    <string name="transcript">Transcript</string>
+    <string name="tldr_label">TL;DR</string>
+    <string name="tldr_model_not_downloaded">Download the AI model to generate a TL;DR summary.</string>
+    <string name="generate_tldr">Generate TL;DR</string>
+    <string name="model_download_title">AI Model</string>
+    <string name="model_download_description">Download the %1$s model to enable AI-powered TL;DR generation.</string>
+    <string name="download_model">Download Model</string>
+    <string name="checking_model_status">Checking model status…</string>
+    <string name="downloading_model">Starting download…</string>
+    <string name="loading_model">Loading model into memory…</string>
+    <string name="model_ready">Model Ready</string>
+    <string name="model_ready_description">The AI model is loaded and ready to generate TL;DRs.</string>
+    <string name="go_back">Go Back</string>
+    <string name="skip">Skip</string>
+    <color name="ic_launcher_background">#F4B400</color>
+</resources>
