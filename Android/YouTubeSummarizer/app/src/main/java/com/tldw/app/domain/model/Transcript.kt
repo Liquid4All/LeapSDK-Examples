@@ -11,13 +11,13 @@ package com.tldw.app.domain.model
  * @property snippets Ordered list of timed transcript snippets.
  */
 data class Transcript(
-    val videoId: String,
-    val language: String,
-    val languageCode: String,
-    val isGenerated: Boolean,
-    val snippets: List<TranscriptSnippet>,
-    val videoInfo: VideoInfo? = null,
+  val videoId: String,
+  val language: String,
+  val languageCode: String,
+  val isGenerated: Boolean,
+  val snippets: List<TranscriptSnippet>,
+  val videoInfo: VideoInfo? = null,
 ) {
-    /** Returns the full transcript as a single plain-text string. */
-    fun toFullText(): String = snippets.joinToString(separator = " ") { it.text }
+  /** Returns the full transcript as a single plain-text string. */
+  fun toFullText(): String = snippets.joinToString(separator = " ") { it.text }
 }

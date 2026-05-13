@@ -15,34 +15,31 @@ import com.tldw.app.domain.usecase.LoadModelUseCase
 import com.tldw.app.domain.usecase.UnloadModelUseCase
 
 @Composable
-fun TranscriptScreenRoute(
-    sharedUrl: String? = null,
-    onNavigateToModelDownload: () -> Unit = {}
-) {
-    val context = LocalContext.current
-    val viewModel: TranscriptViewModel = viewModel {
-        val modelRepository = ModelRepositoryImpl(context.applicationContext)
-        val transcriptRepository = TranscriptRepositoryImpl()
-        TranscriptViewModelFactory(
-            fetchTranscriptUseCase = FetchTranscriptUseCase(transcriptRepository),
-            checkModelDownloadedUseCase = CheckModelDownloadedUseCase(modelRepository),
-            loadModelUseCase = LoadModelUseCase(modelRepository),
-            generateTldrUseCase = GenerateTldrUseCase(modelRepository),
-            unloadModelUseCase = UnloadModelUseCase(modelRepository),
-        )
-            .create(TranscriptViewModel::class.java)
-    }
-    val state by viewModel.state.collectAsStateWithLifecycle()
+fun TranscriptScreenRoute(sharedUrl: String? = null, onNavigateToModelDownload: () -> Unit = {}) {
+  val context = LocalContext.current
+  val viewModel: TranscriptViewModel = viewModel {
+    val modelRepository = ModelRepositoryImpl(context.applicationContext)
+    val transcriptRepository = TranscriptRepositoryImpl()
+    TranscriptViewModelFactory(
+        fetchTranscriptUseCase = FetchTranscriptUseCase(transcriptRepository),
+        checkModelDownloadedUseCase = CheckModelDownloadedUseCase(modelRepository),
+        loadModelUseCase = LoadModelUseCase(modelRepository),
+        generateTldrUseCase = GenerateTldrUseCase(modelRepository),
+        unloadModelUseCase = UnloadModelUseCase(modelRepository),
+      )
+      .create(TranscriptViewModel::class.java)
+  }
+  val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(sharedUrl) {
-        if (sharedUrl != null) {
-            viewModel.handleSharedUrl(sharedUrl)
-        }
+  LaunchedEffect(sharedUrl) {
+    if (sharedUrl != null) {
+      viewModel.handleSharedUrl(sharedUrl)
     }
+  }
 
-    TranscriptScreen(
-        state = state,
-        onEvent = viewModel::onEvent,
-        onNavigateToModelDownload = onNavigateToModelDownload,
-    )
+  TranscriptScreen(
+    state = state,
+    onEvent = viewModel::onEvent,
+    onNavigateToModelDownload = onNavigateToModelDownload,
+  )
 }

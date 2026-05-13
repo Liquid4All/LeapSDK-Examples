@@ -1,5 +1,5 @@
 # tl;dw
-TLDW (Too Long Didn't Watch) Is a summary generation app for YouTube videos.
+TLDW (Too Long Didn't Watch) is a summary generation app for YouTube videos.
 
 # Demo
 

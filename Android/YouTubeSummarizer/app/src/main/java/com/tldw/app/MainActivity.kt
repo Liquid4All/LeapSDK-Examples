@@ -22,53 +22,47 @@ import com.tldw.app.ui.transcriptscreen.TranscriptScreenRoute
 
 class MainActivity : ComponentActivity() {
 
-    val mainViewModel: MainViewModel by viewModels {
-        val repository = ModelRepositoryImpl(applicationContext)
-        MainViewModelFactory(CheckModelDownloadedUseCase(repository))
-    }
+  val mainViewModel: MainViewModel by viewModels {
+    val repository = ModelRepositoryImpl(applicationContext)
+    MainViewModelFactory(CheckModelDownloadedUseCase(repository))
+  }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
 
-        val sharedUrl = resolveSharedUrl(intent)
-        mainViewModel.checkStatus()
+    val sharedUrl = resolveSharedUrl(intent)
 
-        setContent {
-            TldwTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    val state by mainViewModel.state.collectAsStateWithLifecycle()
+    setContent {
+      TldwTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+          val state by mainViewModel.state.collectAsStateWithLifecycle()
 
-                    when {
-                        state.isCheckingStatus -> {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-
-                        state.isModelDownloaded -> {
-                            TranscriptScreenRoute(
-                                sharedUrl = sharedUrl,
-                                onNavigateToModelDownload = { mainViewModel.checkStatus() },
-                            )
-                        }
-
-                        else -> {
-                            ModelDownloadScreenRoute(onModelReady = { mainViewModel.checkStatus() })
-                        }
-                    }
-                }
+          when {
+            state.isCheckingStatus -> {
+              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator()
+              }
             }
+            state.isModelDownloaded -> {
+              TranscriptScreenRoute(
+                sharedUrl = sharedUrl,
+                onNavigateToModelDownload = { mainViewModel.checkStatus() },
+              )
+            }
+            else -> {
+              ModelDownloadScreenRoute(onModelReady = { mainViewModel.checkStatus() })
+            }
+          }
         }
+      }
     }
+  }
 
-    private fun resolveSharedUrl(intent: Intent): String? =
-        if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            intent.getStringExtra(Intent.EXTRA_TEXT)
-        } else {
-            null
-        }
+  private fun resolveSharedUrl(intent: Intent): String? =
+    if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+      intent.getStringExtra(Intent.EXTRA_TEXT)
+    } else {
+      null
+    }
 }

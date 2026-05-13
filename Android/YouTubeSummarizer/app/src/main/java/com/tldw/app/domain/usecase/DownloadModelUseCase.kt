@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.withContext
 
 class DownloadModelUseCase(private val repository: ModelRepository) {
-    operator fun invoke(): Flow<DownloadProgress> =
-        repository.downloadModel().onCompletion { cause ->
-            if (cause is CancellationException) {
-                withContext(NonCancellable) { repository.stopDownload() }
-            }
-        }
+  operator fun invoke(): Flow<DownloadProgress> =
+    repository.downloadModel().onCompletion { cause ->
+      if (cause is CancellationException) {
+        withContext(NonCancellable) { repository.stopDownload() }
+      }
+    }
 }

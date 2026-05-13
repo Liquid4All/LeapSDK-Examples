@@ -10,17 +10,12 @@ import com.tldw.app.domain.usecase.DownloadModelUseCase
 
 @Composable
 fun ModelDownloadScreenRoute(onModelReady: () -> Unit) {
-    val context = LocalContext.current
-    val viewModel: ModelDownloadViewModel = viewModel {
-        val modelRepository = ModelRepositoryImpl(context.applicationContext)
-        ModelDownloadViewModelFactory(
-            downloadModelUseCase = DownloadModelUseCase(modelRepository),
-        ).create(ModelDownloadViewModel::class.java)
-    }
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    ModelDownloadScreen(
-        state = state,
-        onEvent = viewModel::onEvent,
-        onModelReady = onModelReady
-    )
+  val context = LocalContext.current
+  val viewModel: ModelDownloadViewModel = viewModel {
+    val modelRepository = ModelRepositoryImpl(context.applicationContext)
+    ModelDownloadViewModelFactory(downloadModelUseCase = DownloadModelUseCase(modelRepository))
+      .create(ModelDownloadViewModel::class.java)
+  }
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  ModelDownloadScreen(state = state, onEvent = viewModel::onEvent, onModelReady = onModelReady)
 }

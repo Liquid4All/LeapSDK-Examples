@@ -1,46 +1,43 @@
 package com.tldw.app.data.remote
 
 import com.tldw.app.data.dto.TranscriptSnippetDto
-import javax.xml.parsers.DocumentBuilderFactory
-import org.w3c.dom.Element
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
 
-/**
- * Parses the raw transcript XML returned by the YouTube caption track endpoint.
- *
- * The XML has the following structure:
- * ```xml
- * <transcript>
- *   <text start="0.0" dur="2.5">Hello world</text>
- *   ...
- * </transcript>
- * ```
- */
 class TranscriptXmlParser {
 
-    fun parse(xml: String): List<TranscriptSnippetDto> {
-        val inputStream = xml.byteInputStream(Charsets.UTF_8)
-        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
-        val elements = document.getElementsByTagName("text")
-        val snippets = mutableListOf<TranscriptSnippetDto>()
-        for (i in 0 until elements.length) {
-            val element = elements.item(i) as? Element ?: continue
-            val rawText = element.textContent ?: continue
-            val text = decodeHtml(rawText)
-            if (text.isBlank()) continue
-            val start = element.getAttribute("start").toFloatOrNull() ?: 0f
-            val duration = element.getAttribute("dur").toFloatOrNull() ?: 0f
-            snippets.add(TranscriptSnippetDto(text = text, start = start, duration = duration))
+  fun parse(xml: String): List<TranscriptSnippetDto> {
+    val parser = XmlPullParserFactory.newInstance().newPullParser()
+    parser.setInput(xml.reader())
+
+    val snippets = mutableListOf<TranscriptSnippetDto>()
+    var currentStart = 0f
+    var currentDuration = 0f
+    var inTextTag = false
+
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+      when (eventType) {
+        XmlPullParser.START_TAG if parser.name == "text" -> {
+          currentStart = parser.getAttributeValue(null, "start").toFloatOrNull() ?: 0f
+          currentDuration = parser.getAttributeValue(null, "dur").toFloatOrNull() ?: 0f
+          inTextTag = true
         }
-        return snippets
+        XmlPullParser.TEXT if inTextTag -> {
+          val text = (parser.text ?: "").replace("\n", " ").trim()
+          if (text.isNotBlank()) {
+            snippets.add(
+              TranscriptSnippetDto(text = text, start = currentStart, duration = currentDuration)
+            )
+          }
+        }
+        XmlPullParser.END_TAG if parser.name == "text" -> {
+          inTextTag = false
+        }
+      }
+      eventType = parser.next()
     }
 
-    private fun decodeHtml(input: String): String =
-        input
-            .replace("&amp;", "&")
-            .replace("&lt;", "<")
-            .replace("&gt;", ">")
-            .replace("&quot;", "\"")
-            .replace("&#39;", "'")
-            .replace("\n", " ")
-            .trim()
+    return snippets
+  }
 }
