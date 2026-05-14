@@ -1,0 +1,23 @@
+# Add local.properties to gitignore
+local.properties
+
+# Gradle
+.gradle/
+build/
+
+# Android Studio
+.idea/
+.kotlin/
+*.iml
+*.iws
+*.ipr
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing configs
+*.jks
+*.keystore
+
+# Generated files
+app/release/
