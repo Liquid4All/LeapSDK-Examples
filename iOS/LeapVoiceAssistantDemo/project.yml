@@ -27,7 +27,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    revision: v0.10.6
+    revision: v0.10.7
 
 targets:
   LeapVoiceAssistantDemo:

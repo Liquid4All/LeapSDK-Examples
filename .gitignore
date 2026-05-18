@@ -204,6 +204,10 @@ yarn-error.log*
 *.mlpackage
 *.onnx
 *.tflite
+*.gguf
+
+# Local model cache created by JVM/Linux/Windows LeapChatCli demos at run time
+leap_models/
 
 ####################
 # Secrets
