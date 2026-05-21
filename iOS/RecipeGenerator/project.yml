@@ -4,7 +4,7 @@ options:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    revision: v0.10.7
+    revision: v0.10.8
 targets:
   RecipeGenerator:
     type: application
@@ -17,8 +17,11 @@ targets:
     dependencies:
       - package: LeapSDK
         product: LeapModelDownloader
+      - package: LeapSDK
+        product: LeapSDKMacros
     settings:
       base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         OTHER_LDFLAGS: "$(inherited) -L$(BUILT_PRODUCTS_DIR)/LeapModelDownloader.framework/Frameworks -linference_engine -linference_engine_llamacpp_backend -lie_zip"
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapModelDownloader.framework/Frameworks"
     postBuildScripts:

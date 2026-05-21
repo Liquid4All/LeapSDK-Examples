@@ -4,7 +4,10 @@ plugins {
   // libinference_engine.so + libinference_engine_llamacpp_backend.so + libie_zip.so
   // alongside the produced executable so the cinterop $ORIGIN rpath finds them at runtime.
   alias(libs.plugins.leap.sdk.native.libs)
+  alias(libs.plugins.com.ncorti.ktfmt.gradle)
 }
+
+ktfmt { googleStyle() }
 
 kotlin {
   linuxX64 {

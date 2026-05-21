@@ -27,7 +27,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    revision: v0.10.7
+    revision: v0.10.8
 
 targets:
   LeapVoiceAssistantDemo:
@@ -41,6 +41,7 @@ targets:
         product: LeapUI
     settings:
       base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.leap.LeapVoiceAssistantDemo
         INFOPLIST_FILE: LeapVoiceAssistantDemo/Info.plist
         SWIFT_VERSION: "5.0"

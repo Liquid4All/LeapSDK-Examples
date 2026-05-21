@@ -12,65 +12,42 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CalculatorToolViewModel : MviViewModel<CalculatorToolState, CalculatorToolEvent>() {
-    private val _state = MutableStateFlow(CalculatorToolState())
-    override val state: StateFlow<CalculatorToolState> = _state.asStateFlow()
+  private val _state = MutableStateFlow(CalculatorToolState())
+  override val state: StateFlow<CalculatorToolState> = _state.asStateFlow()
 
-    override fun onEvent(event: CalculatorToolEvent) {
-        when (event) {
-            is CalculatorToolEvent.Calculate -> {
-                calculateUsingAgent(event.expression)
-            }
-        }
+  override fun onEvent(event: CalculatorToolEvent) {
+    when (event) {
+      is CalculatorToolEvent.Calculate -> {
+        calculateUsingAgent(event.expression)
+      }
     }
+  }
 
-    internal fun calculateUsingAgent(expression: String) {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    isCalculating = true
-                )
-            }
-            val prompt = "What is the result of: $expression"
-            try {
-                val agent = CalculatorAgentProvider().provideAgent(
-                    onToolCallEvent = {
-                        _state.update { state ->
-                            state.copy(
-                                toolCalls = _state.value.toolCalls + it
-                            )
-                        }
-                    },
-                    onErrorEvent = {
-                        SnackbarUtil.showSnackbar(
-                            "Error occurred: $it",
-                        )
-                    },
-                    onAssistantMessage = {
-                        Log.d("CalculatorToolViewModel", "Assistant message: $it")
-                        _state.update { state ->
-                            state.copy(
-                                answer = it
-                            )
-                        }
-                        it
-                    }
-                )
-                val result = agent.run(prompt)
+  internal fun calculateUsingAgent(expression: String) {
+    viewModelScope.launch {
+      _state.update { it.copy(isCalculating = true) }
+      val prompt = "What is the result of: $expression"
+      try {
+        val agent =
+          CalculatorAgentProvider()
+            .provideAgent(
+              onToolCallEvent = {
+                _state.update { state -> state.copy(toolCalls = _state.value.toolCalls + it) }
+              },
+              onErrorEvent = { SnackbarUtil.showSnackbar("Error occurred: $it") },
+              onAssistantMessage = {
+                Log.d("CalculatorToolViewModel", "Assistant message: $it")
+                _state.update { state -> state.copy(answer = it) }
+                it
+              },
+            )
+        val result = agent.run(prompt)
 
-                _state.update {
-                    it.copy(
-                        isCalculating = false,
-                        answer = result
-                    )
-                }
-            } catch (ex: Exception) {
-                _state.update {
-                    it.copy(
-                        isCalculating = false,
-                    )
-                }
-                Log.e(this@CalculatorToolViewModel::class.simpleName, "Error occurred", ex)
-            }
-        }
+        _state.update { it.copy(isCalculating = false, answer = result) }
+      } catch (ex: Exception) {
+        _state.update { it.copy(isCalculating = false) }
+        Log.e(this@CalculatorToolViewModel::class.simpleName, "Error occurred", ex)
+      }
     }
+  }
 }

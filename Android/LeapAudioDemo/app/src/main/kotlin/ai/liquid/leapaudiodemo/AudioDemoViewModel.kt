@@ -38,7 +38,7 @@ constructor(
   companion object {
     private const val TAG = "AudioDemoViewModel"
     private const val MODEL_NAME = "LFM2.5-Audio-1.5B"
-    private const val QUANTIZATION = "Q4_0"
+    private const val QUANTIZATION_TYPE = "Q4_0"
     // Limit message history to prevent memory issues and slow scrolling
     private const val MAX_MESSAGES = 50
     // Maximum recording duration in seconds (matches AudioRecorder.MAX_RECORDING_SECONDS)
@@ -116,7 +116,7 @@ constructor(
                 },
             )
         }
-        val status = downloader?.queryStatus(MODEL_NAME, QUANTIZATION)
+        val status = downloader?.queryStatus(MODEL_NAME, QUANTIZATION_TYPE)
         _state.update {
           it.copy(isModelCached = status is LeapModelDownloader.ModelDownloadStatus.Downloaded)
         }
@@ -154,18 +154,14 @@ constructor(
   private fun cancelModelLoad() {
     // Cancel model loading without retrying - used when permissions are denied
     _state.update {
-      it.copy(
-        modelState = ModelState.NotLoaded,
-        status = null,
-        downloadProgress = null,
-      )
+      it.copy(modelState = ModelState.NotLoaded, status = null, downloadProgress = null)
     }
   }
 
   private fun cancelDownload() {
     viewModelScope.launch {
       try {
-        downloader?.requestStopDownload(MODEL_NAME, QUANTIZATION)
+        downloader?.requestStopDownload(MODEL_NAME, QUANTIZATION_TYPE)
         _state.update {
           it.copy(
             modelState = ModelState.NotLoaded,
@@ -173,7 +169,9 @@ constructor(
             downloadProgress = null, // Reset progress
           )
         }
-        _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_download_cancelled)))
+        _sideEffect.emit(
+          AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_download_cancelled))
+        )
       } catch (e: Exception) {
         Log.e(TAG, "Failed to cancel download", e)
       }
@@ -187,7 +185,7 @@ constructor(
         modelRunner?.unload()
         modelRunner = null
 
-        val modelFolder = downloader?.getModelResourceFolder(MODEL_NAME, QUANTIZATION)
+        val modelFolder = downloader?.getModelResourceFolder(MODEL_NAME, QUANTIZATION_TYPE)
         if (modelFolder?.exists() == true) {
           modelFolder.deleteRecursively()
           _state.update {
@@ -199,12 +197,16 @@ constructor(
               isModelCached = false, // Model no longer cached
             )
           }
-          _sideEffect.emit(AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_model_deleted)))
+          _sideEffect.emit(
+            AudioDemoSideEffect.ShowSnackbar(getString(R.string.success_model_deleted))
+          )
         }
       } catch (e: Exception) {
         Log.e(TAG, "Failed to delete model", e)
         _sideEffect.emit(
-          AudioDemoSideEffect.ShowSnackbar(getString(R.string.error_delete_model, e.message ?: "Unknown error"))
+          AudioDemoSideEffect.ShowSnackbar(
+            getString(R.string.error_delete_model, e.message ?: "Unknown error")
+          )
         )
       }
     }
@@ -241,7 +243,7 @@ constructor(
         val downloaderInstance = downloader!!
 
         // Check if model needs to be downloaded
-        val currentStatus = downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION)
+        val currentStatus = downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION_TYPE)
 
         if (currentStatus is LeapModelDownloader.ModelDownloadStatus.NotOnLocal) {
           _state.update { it.copy(status = getString(R.string.status_starting_download)) }
@@ -249,27 +251,32 @@ constructor(
           // Start observing progress before requesting download
           val progressJob =
             viewModelScope.launch {
-              downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION).collect {
+              downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION_TYPE).collect {
                 progress ->
                 if (progress != null) {
                   // Validate and bound progress values to prevent division by zero and overflow
-                  val percentage = when {
-                    progress.totalSizeInBytes <= 0 -> 0
-                    progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 100
-                    else -> ((progress.downloadedSizeInBytes * 100.0) / progress.totalSizeInBytes)
-                      .coerceIn(0.0, 100.0)
-                      .toInt()
-                  }
-                  val progressFloat = when {
-                    progress.totalSizeInBytes <= 0 -> 0f
-                    progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 1f
-                    else -> (progress.downloadedSizeInBytes.toFloat() / progress.totalSizeInBytes.toFloat())
-                      .coerceIn(0f, 1f)
-                  }
+                  val percentage =
+                    when {
+                      progress.totalSizeInBytes <= 0 -> 0
+                      progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 100
+                      else ->
+                        ((progress.downloadedSizeInBytes * 100.0) / progress.totalSizeInBytes)
+                          .coerceIn(0.0, 100.0)
+                          .toInt()
+                    }
+                  val progressFloat =
+                    when {
+                      progress.totalSizeInBytes <= 0 -> 0f
+                      progress.downloadedSizeInBytes > progress.totalSizeInBytes -> 1f
+                      else ->
+                        (progress.downloadedSizeInBytes.toFloat() /
+                            progress.totalSizeInBytes.toFloat())
+                          .coerceIn(0f, 1f)
+                    }
                   _state.update {
                     it.copy(
                       status = getString(R.string.status_downloading_progress, percentage),
-                      downloadProgress = progressFloat
+                      downloadProgress = progressFloat,
                     )
                   }
                 }
@@ -277,16 +284,17 @@ constructor(
             }
 
           // Request download
-          downloaderInstance.requestDownloadModel(MODEL_NAME, QUANTIZATION)
+          downloaderInstance.requestDownloadModel(MODEL_NAME, QUANTIZATION_TYPE)
 
           // Wait until download completes with timeout
           // 30 minutes allows for slow connections and large model (2-3 GB)
           // Calculation: 3 GB / 30 min = 1.7 Mbps minimum speed
           try {
             withTimeout(30 * 60 * 1000L) {
-              downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION).first { progress ->
+              downloaderInstance.observeDownloadProgress(MODEL_NAME, QUANTIZATION_TYPE).first {
+                progress ->
                 progress == null &&
-                  downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION) is
+                  downloaderInstance.queryStatus(MODEL_NAME, QUANTIZATION_TYPE) is
                     LeapModelDownloader.ModelDownloadStatus.Downloaded
               }
             }
@@ -313,12 +321,14 @@ constructor(
         modelRunner =
           downloaderInstance.loadModel(
             modelName = MODEL_NAME,
-            quantizationType = QUANTIZATION,
-            options = ModelLoadingOptions(
-              cacheOptions = ModelLoadingOptions.cacheOptions(
-                path = getApplication<Application>().cacheDir.resolve("leap-cache").absolutePath,
+            quantizationType = QUANTIZATION_TYPE,
+            options =
+              ModelLoadingOptions(
+                cacheOptions =
+                  ModelLoadingOptions.cacheOptions(
+                    path = getApplication<Application>().cacheDir.resolve("leap-cache").absolutePath
+                  )
               ),
-            ),
           )
 
         // Create initial conversation
@@ -327,7 +337,7 @@ constructor(
         _state.update {
           it.copy(
             modelState = ModelState.Ready,
-            status = getString(R.string.model_loaded, MODEL_NAME, QUANTIZATION),
+            status = getString(R.string.model_loaded, MODEL_NAME, QUANTIZATION_TYPE),
             downloadProgress = null, // Reset progress
           )
         }
@@ -368,15 +378,13 @@ constructor(
     _state.update {
       val newMessage = AudioDemoMessage(role = ChatMessage.Role.USER, text = trimmed)
       // Enforce bounds check before appending to prevent race conditions
-      val updatedMessages = if (it.messages.size < MAX_MESSAGES) {
-        it.messages + newMessage
-      } else {
-        (it.messages.drop(1) + newMessage)
-      }
-      it.copy(
-        inputText = "",
-        messages = updatedMessages,
-      )
+      val updatedMessages =
+        if (it.messages.size < MAX_MESSAGES) {
+          it.messages + newMessage
+        } else {
+          (it.messages.drop(1) + newMessage)
+        }
+      it.copy(inputText = "", messages = updatedMessages)
     }
     streamResponse(message)
   }
@@ -395,18 +403,20 @@ constructor(
     val display = getString(R.string.audio_prompt_format, samples.size, sampleRate)
 
     _state.update {
-      val newMessage = AudioDemoMessage(
-        role = ChatMessage.Role.USER,
-        text = display,
-        audioData = samples,
-        sampleRate = sampleRate,
-      )
+      val newMessage =
+        AudioDemoMessage(
+          role = ChatMessage.Role.USER,
+          text = display,
+          audioData = samples,
+          sampleRate = sampleRate,
+        )
       // Enforce bounds check before appending to prevent race conditions
-      val updatedMessages = if (it.messages.size < MAX_MESSAGES) {
-        it.messages + newMessage
-      } else {
-        (it.messages.drop(1) + newMessage)
-      }
+      val updatedMessages =
+        if (it.messages.size < MAX_MESSAGES) {
+          it.messages + newMessage
+        } else {
+          (it.messages.drop(1) + newMessage)
+        }
       it.copy(messages = updatedMessages)
     }
     streamResponse(message)
@@ -431,18 +441,19 @@ constructor(
 
   private fun startRecordingTimer() {
     recordingTimerJob?.cancel()
-    recordingTimerJob = viewModelScope.launch {
-      var remainingSeconds = MAX_RECORDING_SECONDS
-      while (remainingSeconds > 0 && _state.value.recordingState is RecordingState.Recording) {
-        kotlinx.coroutines.delay(1000)
-        remainingSeconds--
-        _state.update { it.copy(recordingDurationSeconds = remainingSeconds) }
+    recordingTimerJob =
+      viewModelScope.launch {
+        var remainingSeconds = MAX_RECORDING_SECONDS
+        while (remainingSeconds > 0 && _state.value.recordingState is RecordingState.Recording) {
+          kotlinx.coroutines.delay(1000)
+          remainingSeconds--
+          _state.update { it.copy(recordingDurationSeconds = remainingSeconds) }
+        }
+        // Auto-stop when timer reaches 0
+        if (remainingSeconds == 0 && _state.value.recordingState is RecordingState.Recording) {
+          stopRecording()
+        }
       }
-      // Auto-stop when timer reaches 0
-      if (remainingSeconds == 0 && _state.value.recordingState is RecordingState.Recording) {
-        stopRecording()
-      }
-    }
   }
 
   private fun stopRecording() {
@@ -512,20 +523,21 @@ constructor(
     generationJob =
       viewModelScope.launch {
         // Create fresh conversation for each message (audio model doesn't support multi-turn)
-        val currentConversation = try {
-          currentModelRunner.createConversation(getString(R.string.system_prompt_audio))
-        } catch (e: Exception) {
-          _state.update {
-            it.copy(
-              // Don't update status - keep model loaded visible
-              generationState = GenerationState.Idle,
-            )
+        val currentConversation =
+          try {
+            currentModelRunner.createConversation(getString(R.string.system_prompt_audio))
+          } catch (e: Exception) {
+            _state.update {
+              it.copy(
+                // Don't update status - keep model loaded visible
+                generationState = GenerationState.Idle
+              )
+            }
+            return@launch
           }
-          return@launch
-        }
         _state.update {
           it.copy(
-            generationState = GenerationState.GeneratingText(""),
+            generationState = GenerationState.GeneratingText("")
             // Keep model loaded status - don't show generation progress
           )
         }
@@ -536,12 +548,13 @@ constructor(
         // (24,000 samples/sec × 30 sec = 720,000 samples ≈ 2.88 MB)
         // Reduces GC pressure for typical responses
         // Falls back to default capacity if pre-allocation fails (low memory device)
-        val audioSamplesList = try {
-          ArrayList<Float>(720_000)
-        } catch (e: OutOfMemoryError) {
-          Log.w(TAG, "Failed to pre-allocate audio buffer, using default capacity", e)
-          ArrayList<Float>()
-        }
+        val audioSamplesList =
+          try {
+            ArrayList<Float>(720_000)
+          } catch (e: OutOfMemoryError) {
+            Log.w(TAG, "Failed to pre-allocate audio buffer, using default capacity", e)
+            ArrayList<Float>()
+          }
         var audioSampleRate = 24000
         var isAudioStreamStarted = false
 
@@ -617,6 +630,7 @@ constructor(
                   )
                 }
               }
+              is MessageResponse.Error -> throw event.throwable
               else -> {}
             }
           }

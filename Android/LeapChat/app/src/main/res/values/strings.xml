@@ -8,4 +8,16 @@
     <string name="stop_generation_button_label">Stop</string>
     <string name="tool_on_button_label">Tool ON</string>
     <string name="tool_off_button_label">Tool OFF</string>
+    <string name="notification_downloading_chat_model">Downloading Chat Model</string>
+    <string name="notification_chat_model_ready">Model Ready!</string>
+    <string name="status_starting_download">Starting download...</string>
+    <string name="status_downloading_progress">Downloading model: %1$d%% (%2$d MB / %3$d MB)</string>
+    <string name="status_download_complete">Download complete!</string>
+    <string name="assistant_label">Assistant</string>
+    <string name="assistant_icon_description">Assistant icon</string>
+    <string name="user_label">User</string>
+    <string name="user_icon_description">User icon</string>
+    <string name="tool_label">Tool</string>
+    <string name="tool_icon_description">Tool icon</string>
+    <string name="error_generation_failed">Error: %1$s</string>
 </resources>

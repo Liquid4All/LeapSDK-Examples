@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -61,8 +60,8 @@ class AudioPlayer(
   /**
    * Audio focus change listener.
    *
-   * Handles audio focus changes from the system (phone calls, notifications, other apps).
-   * For AI-generated audio, we don't auto-resume after interruption because:
+   * Handles audio focus changes from the system (phone calls, notifications, other apps). For
+   * AI-generated audio, we don't auto-resume after interruption because:
    * 1. The user may have moved on to other tasks
    * 2. Resuming mid-sentence would be confusing
    * 3. User can manually replay if desired
@@ -332,9 +331,7 @@ class AudioPlayer(
     require(sampleRate in 8000..192000) {
       "Sample rate must be between 8000 and 192000 Hz, got: $sampleRate"
     }
-    require(samples.isNotEmpty()) {
-      "Samples array cannot be empty"
-    }
+    require(samples.isNotEmpty()) { "Samples array cannot be empty" }
 
     // Clean up any existing playback synchronously before creating new resources
     playbackJob?.cancel()
@@ -395,24 +392,26 @@ class AudioPlayer(
       // Set up notification marker at the end of playback for completion callback
       // This is more efficient than polling with delay()
       track.notificationMarkerPosition = samples.size
-      track.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
-        override fun onMarkerReached(track: AudioTrack?) {
-          // Playback completed naturally - clean up resources
-          try {
-            track?.stop()
-            track?.release()
-          } catch (e: Exception) {
-            Log.e(TAG, "Error releasing AudioTrack on completion", e)
+      track.setPlaybackPositionUpdateListener(
+        object : AudioTrack.OnPlaybackPositionUpdateListener {
+          override fun onMarkerReached(track: AudioTrack?) {
+            // Playback completed naturally - clean up resources
+            try {
+              track?.stop()
+              track?.release()
+            } catch (e: Exception) {
+              Log.e(TAG, "Error releasing AudioTrack on completion", e)
+            }
+            audioTrack = null
+            abandonAudioFocus()
+            onPlaybackCompleted?.invoke()
           }
-          audioTrack = null
-          abandonAudioFocus()
-          onPlaybackCompleted?.invoke()
-        }
 
-        override fun onPeriodicNotification(track: AudioTrack?) {
-          // Not used
+          override fun onPeriodicNotification(track: AudioTrack?) {
+            // Not used
+          }
         }
-      })
+      )
 
       track.play()
     }

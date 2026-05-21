@@ -19,44 +19,55 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AssistantMessage(
-    text: String,
-    reasoningText: String?,
-) {
-    val reasoningText = reasoningText?.trim()
-    Row(modifier = Modifier.padding(all = 8.dp).fillMaxWidth(1.0f).testTag("AssistantMessageView"), horizontalArrangement = Arrangement.Absolute.Left) {
-        Image(
-            painter = painterResource(R.drawable.smart_toy_outline),
-            contentDescription = "Assistant icon",
-            modifier =
-                Modifier.size(36.dp)
-                    .border(1.5.dp, MaterialTheme.colorScheme.secondary),
+fun AssistantMessage(text: String, reasoningText: String?) {
+  val reasoningText = reasoningText?.trim()
+  Row(
+    modifier = Modifier.padding(all = 8.dp).fillMaxWidth(1.0f).testTag("AssistantMessageView"),
+    horizontalArrangement = Arrangement.Absolute.Left,
+  ) {
+    Image(
+      painter = painterResource(R.drawable.smart_toy_outline),
+      contentDescription = stringResource(R.string.assistant_icon_description),
+      modifier = Modifier.size(36.dp).border(1.5.dp, MaterialTheme.colorScheme.secondary),
+    )
+    Spacer(modifier = Modifier.width(8.dp))
+    Column(horizontalAlignment = Alignment.Start) {
+      Text(
+        text = stringResource(R.string.assistant_label),
+        color = MaterialTheme.colorScheme.secondary,
+        style = MaterialTheme.typography.titleSmall,
+      )
+      if (!reasoningText.isNullOrEmpty()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+          text = reasoningText,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.secondary,
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(horizontalAlignment = Alignment.Start) {
-            Text(text = "Assistant", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.titleSmall)
-            if (!reasoningText.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = reasoningText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("AssistantMessageViewText"))
-        }
+      }
+      Spacer(modifier = Modifier.height(4.dp))
+      Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.testTag("AssistantMessageViewText"),
+      )
     }
+  }
 }
 
 @Preview
 @Composable
 fun AssistantMessagePreview() {
-    AssistantMessage("Hello world!", null)
+  AssistantMessage("Hello world!", null)
 }
 
 @Preview
 @Composable
 fun AssistantMessageWithReasoningPreview() {
-    AssistantMessage("Hello world!", "I need to be friendly")
+  AssistantMessage("Hello world!", "I need to be friendly")
 }

@@ -106,7 +106,12 @@ class ChatStore {
       messageContent.append(ChatMessageContent.text(trimmed))
     }
 
-    let userMessage = ChatMessage_withArray(role: .user, content: messageContent)
+    let userMessage = ChatMessage(
+      role: .user,
+      content: messageContent,
+      reasoningContent: nil,
+      functionCalls: nil
+    )
 
     // Create display content for the message bubble
     var displayContent = trimmed
@@ -121,39 +126,38 @@ class ChatStore {
     currentAssistantMessage = ""
 
     let stream = conversation!.generateResponse(message: userMessage)
-    do {
-      for try await resp in stream {
-        switch onEnum(of: resp) {
-        case .reasoningChunk:
-          break
-        case .chunk(let chunk):
-          currentAssistantMessage.append(chunk.text)
-        case .audioSample:
-          break
-        case .complete(let completion):
-          let finalText = completion.fullMessage.content.compactMap { content -> String? in
-            if case .text(let t) = onEnum(of: content) {
-              return t.text
-            }
-            return nil
-          }.joined()
-          if !finalText.isEmpty {
-            currentAssistantMessage = finalText
+    for await resp in stream {
+      switch onEnum(of: resp) {
+      case .reasoningChunk:
+        break
+      case .chunk(let chunk):
+        currentAssistantMessage.append(chunk.text)
+      case .audioSample:
+        break
+      case .complete(let completion):
+        let finalText = completion.fullMessage.content.compactMap { content -> String? in
+          if case .text(let t) = onEnum(of: content) {
+            return t.text
           }
-          if !currentAssistantMessage.isEmpty {
-            messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
-          }
-          currentAssistantMessage = ""
-          isLoading = false
-        case .functionCalls:
-          break  // Function calls not used in this example
+          return nil
+        }.joined()
+        if !finalText.isEmpty {
+          currentAssistantMessage = finalText
         }
+        if !currentAssistantMessage.isEmpty {
+          messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
+        }
+        currentAssistantMessage = ""
+        isLoading = false
+      case .functionCalls:
+        break  // Function calls not used in this example
+      case .error(let err):
+        // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
+        messages.append(
+          MessageBubble(content: "🚨 Generation error: \(err.message)", isUser: false))
+        currentAssistantMessage = ""
+        isLoading = false
       }
-    } catch {
-      currentAssistantMessage = "Error: \(error.localizedDescription)"
-      messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
-      currentAssistantMessage = ""
-      isLoading = false
     }
   }
 

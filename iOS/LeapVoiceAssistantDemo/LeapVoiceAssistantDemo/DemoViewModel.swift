@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import LeapSDK
 import LeapUi
+import Observation
 
 private let modelName = "LFM2.5-Audio-1.5B"
 private let quantizationSlug = "Q4_0"
@@ -15,15 +16,16 @@ private let systemPrompt = "Respond with interleaved text and audio."
 /// - Loading the model and wiring it to the store via `AppleVoiceConversation`
 /// - Observing `store.state` and publishing changes for SwiftUI
 @MainActor
-final class DemoViewModel: ObservableObject {
+@Observable
+final class DemoViewModel {
 
-    // MARK: - Published state
+    // MARK: - Observed state
 
     let store: VoiceAssistantStore
 
-    @Published private(set) var statusText: String = "Initializing\u{2026}"
-    @Published private(set) var statusType: DemoStatusType = .loading
-    @Published private(set) var statsText: String? = nil
+    private(set) var statusText: String = "Initializing\u{2026}"
+    private(set) var statusType: DemoStatusType = .loading
+    private(set) var statsText: String? = nil
 
     // MARK: - Private
 
@@ -106,6 +108,6 @@ final class DemoViewModel: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
         try? session.setActive(true)
-        session.requestRecordPermission { _ in }
+        AVAudioApplication.requestRecordPermission { _ in }
     }
 }

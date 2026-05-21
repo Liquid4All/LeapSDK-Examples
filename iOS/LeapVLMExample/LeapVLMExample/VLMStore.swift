@@ -13,6 +13,7 @@ final class VLMStore {
   private static let quantization = "Q4_0"
 
   private var modelRunner: (any ModelRunner)?
+  private var generationTask: Task<Void, Never>?
 
   @MainActor
   func setupModel() async {
@@ -58,11 +59,14 @@ final class VLMStore {
       return
     }
 
+    // Cancel any in-flight generation before starting a new one.
+    generationTask?.cancel()
+
     isGenerating = true
     generatedText = ""
     status = "Generating..."
 
-    do {
+    generationTask = Task { @MainActor in
       let imageContent = ChatMessageContent.Image.fromJPEGData(jpegData)
       let message = ChatMessage(
         role: .user,
@@ -73,22 +77,33 @@ final class VLMStore {
 
       let conversation = runner.createConversation(systemPrompt: nil)
 
-      for try await resp in conversation.generateResponse(message: message) {
+      for await resp in conversation.generateResponse(message: message) {
+        if Task.isCancelled { break }
         switch onEnum(of: resp) {
         case .chunk(let chunk):
           generatedText.append(chunk.text)
         case .complete:
           isGenerating = false
           status = "Model ready"
+        case .error(let err):
+          // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
+          isGenerating = false
+          status = "Generation failed: \(err.message)"
         default:
           break
         }
       }
-    } catch {
-      generatedText = "Error: \(error.localizedDescription)"
-      isGenerating = false
-      status = "Model ready"
+      generationTask = nil
     }
+  }
+
+  func stop() {
+    generationTask?.cancel()
+    generationTask = nil
+  }
+
+  deinit {
+    generationTask?.cancel()
   }
 
   private func resizedJPEGData(forAsset name: String, maxSize: CGSize) -> Data? {

@@ -1,66 +1,80 @@
 # LeapSDK Examples
 
-This repository contains example applications demonstrating how to use the LeapSDK for on-device AI inference across multiple platforms.
+Example applications demonstrating [LeapSDK](https://leap.liquid.ai) for on-device AI inference across mobile, desktop, and the browser. All demos auto-download their models on first launch — no manual setup required.
+
+Current SDK pin: **v0.10.8**. Each demo picks the model best suited to what it showcases — see the individual demo README for the exact model and quantization.
 
 ## Platforms
 
-### 📱 [iOS Examples](./iOS/)
+### 📱 [iOS](./iOS/) — Swift Package Manager + XcodeGen
 
-- **LeapSloganExample**: Simple SwiftUI app for slogan generation
-- **LeapChatExample**: Comprehensive chat application with real-time streaming
-- **LeapAudioDemo**: Audio processing and transcription demo
-- **LeapVLMExample**: Vision language model demo for image understanding
-- **LeapVoiceAssistantDemo**: Press-and-hold voice assistant powered by `VoiceAssistantWidget` from `leap-ui`
-- **RecipeGenerator**: Recipe generation with constrained JSON output
+| Demo | Description |
+| --- | --- |
+| [LeapSloganExample](./iOS/LeapSloganExample) | Simple SwiftUI slogan generator |
+| [LeapChatExample](./iOS/LeapChatExample) | Multimodal chat with streaming + image attachments |
+| [LeapAudioDemo](./iOS/LeapAudioDemo) | Speech-to-speech conversation with audio I/O |
+| [LeapVLMExample](./iOS/LeapVLMExample) | Vision language model demo |
+| [LeapVoiceAssistantDemo](./iOS/LeapVoiceAssistantDemo) | Press-and-hold voice assistant via `VoiceAssistantWidget` (`leap-ui`) |
+| [RecipeGenerator](./iOS/RecipeGenerator) | Constrained JSON output with `@Generatable` macros |
 
-Swift Package Manager integration with XcodeGen project generation.
+### 🖥️ [macOS](./macOS/) — Swift Package Manager + XcodeGen
 
-### 🖥️ [macOS Examples](./macOS/)
+| Demo | Description |
+| --- | --- |
+| [LeapVLMExample](./macOS/LeapVLMExample) | Vision language model demo |
+| [LeapVoiceAssistantDemo](./macOS/LeapVoiceAssistantDemo) | Press-and-hold voice assistant (macOS counterpart of the iOS demo) |
 
-- **LeapVLMExample**: Vision language model demo for image understanding
-- **LeapVoiceAssistantDemo**: Press-and-hold voice assistant (macOS counterpart of the iOS demo)
+### 🤖 [Android](./Android/) — Gradle + Jetpack Compose
 
-Swift Package Manager integration with XcodeGen project generation.
+| Demo | Description |
+| --- | --- |
+| [SloganApp](./Android/SloganApp) | Basic slogan generator |
+| [LeapChat](./Android/LeapChat) | Full-featured chat application |
+| [LeapAudioDemo](./Android/LeapAudioDemo) | Audio input/output with streaming playback |
+| [ShareAI](./Android/ShareAI) | Summarize a web page by sharing it to the app |
+| [RecipeGenerator](./Android/RecipeGenerator) | Constrained JSON output |
+| [VLMExample](./Android/VLMExample) | Vision language model demo |
+| [LeapVoiceAssistantDemo](./Android/LeapVoiceAssistantDemo) | Press-and-hold voice assistant via `VoiceAssistantWidget` (`leap-ui`) |
+| [LeapKoogAgent](./Android/LeapKoogAgent) | Agent demo integrating the [Koog framework](https://docs.koog.ai) |
 
-### 🤖 [Android Examples](./Android/)
+### 🌐 [Web](./Web/) — Kotlin/Wasm + Compose for Web
 
-- **SloganApp**: Basic slogan generator using Jetpack Compose
-- **LeapChat**: Full-featured chat application with modern Android UI
-- **LeapAudioDemo**: Audio input/output demo with streaming playback and interactive controls
-- **ShareAI**: Web page summary generator
-- **RecipeGenerator**: Recipe generation with constrained JSON output
-- **VLMExample**: Vision language model demo for image understanding
-- **LeapVoiceAssistantDemo**: Press-and-hold voice assistant powered by `VoiceAssistantWidget` from `leap-ui`
-- **LeapKoogAgent**: AI agent demo integrating [Koog framework](https://docs.koog.ai) with LeapSDK
+| Demo | Description |
+| --- | --- |
+| [LeapVoiceAssistantDemo](./Web/LeapVoiceAssistantDemo) | Compose-for-Web port of the voice assistant |
 
-Gradle-based projects using the LeapSDK Android library.
+### ☕ [JVM](./JVM/) — Kotlin/JVM (Linux, macOS, Windows)
 
-### 🌐 [Web Examples](./Web/)
+| Demo | Description |
+| --- | --- |
+| [LeapChatCli](./JVM/LeapChatCli) | REPL chat CLI using `leap-sdk-jvm`. Single artifact runs on Linux/macOS/Windows — JNI binaries are bundled in the JAR and extracted at runtime. |
 
-- **LeapVoiceAssistantDemo**: Kotlin/Wasm Compose-for-Web port of the voice assistant. Run with `./gradlew wasmJsBrowserDevelopmentRun` (dev server) or `./gradlew wasmJsBrowserDistribution` (static bundle).
+### 🐧 [Linux](./Linux/) — Kotlin/Native (linuxX64)
 
-### ☕ [JVM Examples](./JVM/)
+| Demo | Description |
+| --- | --- |
+| [LeapChatCli](./Linux/LeapChatCli) | Native x86_64 executable using `leap-sdk-linuxx64`. The `ai.liquid.leap.nativelibs` Gradle plugin auto-extracts `libinference_engine.so` from the `:natives@zip` classifier alongside the binary. |
 
-- **LeapChatCli**: REPL chat CLI on the JVM using `leap-sdk-jvm`. Single artifact runs on Linux/macOS/Windows — JNI binaries are bundled in the JAR and extracted at runtime.
+### 🪟 [Windows](./Windows/) — Kotlin/Native (mingwX64)
 
-### 🐧 [Linux Examples](./Linux/)
-
-- **LeapChatCli**: REPL chat CLI as a native Linux x86_64 executable using Kotlin/Native (`linuxX64`) and `leap-sdk-linuxx64`. The `ai.liquid.leap.nativelibs` Gradle plugin auto-extracts `libinference_engine.so` from the published `:natives@zip` classifier alongside the binary.
-
-### 🪟 [Windows Examples](./Windows/)
-
-- **LeapChatCli**: REPL chat CLI as a native Windows x86_64 `.exe` using Kotlin/Native (`mingwX64`) and `leap-sdk-mingwx64`. Same `ai.liquid.leap.nativelibs` plugin auto-extracts `inference_engine.dll`.
+| Demo | Description |
+| --- | --- |
+| [LeapChatCli](./Windows/LeapChatCli) | Native x86_64 `.exe` using `leap-sdk-mingwx64`. Same `ai.liquid.leap.nativelibs` plugin auto-extracts `inference_engine.dll`. |
 
 ## Quick Start
 
-### iOS
+### iOS / macOS
+
+Requires Xcode 15+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```bash
-cd iOS/LeapSloganExample
+cd iOS/LeapSloganExample        # or any iOS/macOS demo
 make setup && make open
 ```
 
 ### Android
+
+Requires JDK 21 and the Android SDK.
 
 ```bash
 cd Android/SloganApp
@@ -78,29 +92,34 @@ cd Web/LeapVoiceAssistantDemo
 ### JVM / Linux / Windows
 
 ```bash
-cd JVM/LeapChatCli   # or Linux/LeapChatCli, Windows/LeapChatCli
-./gradlew installDist                       # JVM
-./gradlew linkReleaseExecutableLinuxX64     # Linux  (run on a Linux host)
-./gradlew linkReleaseExecutableMingwX64     # Windows (run on a Windows host)
+# JVM (cross-platform)
+cd JVM/LeapChatCli && ./gradlew installDist
+
+# Linux native (run on a Linux x86_64 host)
+cd Linux/LeapChatCli && ./gradlew linkReleaseExecutableLinuxX64
+
+# Windows native (run on a Windows x86_64 host)
+cd Windows/LeapChatCli && ./gradlew linkReleaseExecutableMingwX64
 ```
 
 ## What is LeapSDK?
 
-LeapSDK enables running AI models locally across mobile, desktop, and browser using the Liquid Inference Engine. It provides:
+LeapSDK runs Liquid AI models locally using the Liquid Inference Engine. Key features:
 
-- **On-device inference** - No internet required
-- **Real-time streaming** - Token-by-token response generation
-- **Cross-platform** - iOS, macOS, Android, Web (Kotlin/Wasm), JVM, Linux, and Windows
-- **High performance** - Optimized for mobile and desktop hardware
-- **Easy integration** - Simple API for chat and text generation
+- **On-device inference** — no internet required after the initial model download
+- **Real-time streaming** — token-by-token response generation
+- **Cross-platform** — iOS, macOS, Android, Web (Kotlin/Wasm), JVM, Linux, and Windows from a unified API
+- **Multimodal** — text, vision, and audio (speech-to-speech) models supported
+- **Constrained generation** — structured JSON output via schema constraints (`@Generatable` on Swift; equivalent APIs on Kotlin)
 
 ## Documentation
 
-- 📚 [iOS Quick Start Guide](https://leap.liquid.ai/docs/edge-sdk/ios/ios-quick-start-guide)
-- 📚 [Android Quick Start Guide](https://leap.liquid.ai/docs/edge-sdk/android/android-quick-start-guide)
-- 🔗 [iOS SDK Repository](https://github.com/Liquid4All/leap-ios)
-- 🔗 [Android SDK Repository](https://github.com/Liquid4All/leap-android-sdk)
+- 📚 [iOS Quick Start](https://leap.liquid.ai/docs/edge-sdk/ios/ios-quick-start-guide)
+- 📚 [Android Quick Start](https://leap.liquid.ai/docs/edge-sdk/android/android-quick-start-guide)
+- 🔗 [iOS SDK repository](https://github.com/Liquid4All/leap-ios)
+- 🔗 [Android / KMP SDK repository](https://github.com/Liquid4All/leap-android-sdk)
+- 🔗 [Model registry](https://leap.liquid.ai/api/models)
 
 ## License
 
-See [LICENSE](./LICENSE) for details.
+See [LICENSE](./LICENSE).

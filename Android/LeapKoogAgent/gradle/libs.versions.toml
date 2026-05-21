@@ -3,16 +3,17 @@ compileSdk = "36"
 minSdk = "31"
 
 agp = "8.13.2"
-kotlin = "2.3.20"
+kotlin = "2.3.21"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.3"
 composeBom = "2026.01.01"
 
 koog = "0.5.1"
-leapSdk = "0.10.7"
+leapSdk = "0.10.8"
 
 kotlinxSerialization = "1.10.0"
+ktfmt = "0.25.0"
 
 
 [libraries]
@@ -38,4 +39,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+com-ncorti-ktfmt-gradle = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 

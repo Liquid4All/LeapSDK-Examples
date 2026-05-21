@@ -4,7 +4,10 @@ plugins {
   // libinference_engine_llamacpp_backend.dll + ie_zip.dll alongside the produced .exe so
   // standard Windows DLL co-location loads them at runtime.
   alias(libs.plugins.leap.sdk.native.libs)
+  alias(libs.plugins.com.ncorti.ktfmt.gradle)
 }
+
+ktfmt { googleStyle() }
 
 kotlin {
   mingwX64 {

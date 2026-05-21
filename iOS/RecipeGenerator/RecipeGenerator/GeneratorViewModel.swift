@@ -1,17 +1,19 @@
 import Foundation
 import LeapModelDownloader
+import Observation
 
 @MainActor
-class GeneratorViewModel: ObservableObject {
-  @Published var isModelLoading = false
-  @Published var isGenerating = false
-  @Published var recipe: Recipe? = nil
-  @Published var statusMessage: String = "Ready to generate"
-  @Published var downloadProgress: Double = 0.0
+@Observable
+class GeneratorViewModel {
+  var isModelLoading = false
+  var isGenerating = false
+  var recipe: Recipe? = nil
+  var statusMessage: String = "Ready to generate"
+  var downloadProgress: Double = 0.0
 
   private var modelRunner: (any ModelRunner)?
 
-  private let modelName = "LFM2-350M"  // Smaller model for faster testing
+  private let modelName = "LFM2.5-350M"  // Smaller model for faster testing
   private let quantization = "Q4_0"
 
   func setupModel() async {
@@ -64,72 +66,55 @@ class GeneratorViewModel: ObservableObject {
     isGenerating = true
     statusMessage = "Generating recipe..."
 
-    // Create conversation with system prompt
     let systemMessage = ChatMessage(
       role: .system,
-      textContent: "You are a helpful cooking assistant. Generate recipes in JSON format."
+      textContent: "You are a helpful cooking assistant."
     )
     let conversation = Conversation(modelRunner: modelRunner, history: [systemMessage])
 
-    var fullText = ""
+    let userMessage = ChatMessage(
+      role: .user,
+      textContent: "Generate a recipe for a dinner dish with shrimps."
+    )
+
+    // Constrain output to the Recipe schema so the model emits valid JSON we can decode directly.
+    let options = GenerationOptions()
+    options.jsonSchemaConstraint = Recipe.jsonSchema()
+
     do {
-      let userMessage = ChatMessage(
-        role: .user,
-        textContent: "Generate a recipe for a dinner dish with shrimps in JSON format with fields: name, cookingTime, isVegetarian, ingredients (array), directions (array)"
-      )
-      let stream = conversation.generateResponse(message: userMessage)
-      for try await event in stream {
+      // generateResponse(message:generationOptions:) returns a SkieSwiftFlow directly,
+      // suitable for async iteration.
+      let stream = conversation.generateResponse(message: userMessage, generationOptions: options)
+
+      var jsonResponse = ""
+      var streamError: String?
+      for await event in stream {
         switch onEnum(of: event) {
         case .chunk(let chunk):
-          fullText.append(chunk.text)
-        case .complete(let completion):
-          let finalText = completion.fullMessage.content.compactMap { content -> String? in
-            if case .text(let t) = onEnum(of: content) {
-              return t.text
-            }
-            return nil
-          }.joined()
-          if !finalText.isEmpty {
-            fullText = finalText
-          }
-        case .audioSample, .reasoningChunk, .functionCalls:
+          jsonResponse.append(chunk.text)
+        case .complete, .audioSample, .reasoningChunk, .functionCalls:
           break
+        case .error(let err):
+          // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
+          streamError = err.message
         }
       }
-
-      // Attempt to parse the JSON response
-      if let jsonStart = fullText.firstIndex(of: "{"),
-        let jsonEnd = fullText.lastIndex(of: "}")
-      {
-        let jsonString = String(fullText[jsonStart...jsonEnd])
-        if let jsonData = jsonString.data(using: .utf8),
-          let decoded = try? JSONDecoder().decode(Recipe.self, from: jsonData)
-        {
-          recipe = decoded
-          statusMessage = "Recipe generated!"
-          isGenerating = false
-          return
-        }
+      if let streamError {
+        throw NSError(
+          domain: "RecipeGenerator",
+          code: 0,
+          userInfo: [NSLocalizedDescriptionKey: streamError]
+        )
       }
 
-      // Fallback mock recipe if JSON parsing fails
-      let mockRecipe = Recipe(
-        name: "Garlic Butter Shrimp",
-        cookingTime: 20,
-        isVegetarian: false,
-        ingredients: ["1 lb shrimp", "4 cloves garlic", "4 tbsp butter", "Salt and pepper"],
-        directions: [
-          "Melt butter in pan", "Add garlic and cook 1 min", "Add shrimp and cook 3-4 min",
-          "Season with salt and pepper",
-        ]
-      )
-      recipe = mockRecipe
+      let data = Data(jsonResponse.utf8)
+      recipe = try JSONDecoder().decode(Recipe.self, from: data)
       statusMessage = "Recipe generated!"
+      isGenerating = false
     } catch {
       statusMessage = "Error generating recipe: \(error.localizedDescription)"
+      isGenerating = false
       throw error
     }
-
-    isGenerating = false
   }
 }

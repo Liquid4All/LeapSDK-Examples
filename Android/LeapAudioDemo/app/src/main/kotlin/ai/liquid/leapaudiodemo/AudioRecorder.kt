@@ -22,7 +22,8 @@ import kotlinx.coroutines.withContext
 class AudioRecorder : AudioRecording {
   private var audioRecord: AudioRecord? = null
   private var recordingJob: Job? = null
-  private val recordedSamples = mutableListOf<Float>()
+  // Pre-allocate to the known cap to avoid repeated ArrayList growth/copy during capture.
+  private val recordedSamples = ArrayList<Float>(MAX_SAMPLES)
   private val samplesMutex = Mutex()
   private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -32,7 +33,7 @@ class AudioRecorder : AudioRecording {
     private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_FLOAT
     private const val MAX_RECORDING_SECONDS = 60
-    private val MAX_SAMPLES = SAMPLE_RATE * MAX_RECORDING_SECONDS
+    private const val MAX_SAMPLES = SAMPLE_RATE * MAX_RECORDING_SECONDS
   }
 
   /**
@@ -88,48 +89,50 @@ class AudioRecorder : AudioRecording {
     }
 
     recordingJob =
-      coroutineScope.launch {
-        val buffer = FloatArray(bufferSize / 4) // 4 bytes per float
-        while (isActive) {
-          val read = audioRecord?.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING) ?: 0
-          when {
-            read > 0 -> {
-              samplesMutex.withLock {
-                val samplesToAdd = minOf(read, MAX_SAMPLES - recordedSamples.size)
-                if (samplesToAdd > 0) {
-                  // Copy samples directly to avoid intermediate collection allocation and boxing
-                  for (i in 0 until samplesToAdd) {
-                    recordedSamples.add(buffer[i])
+      coroutineScope
+        .launch {
+          val buffer = FloatArray(bufferSize / 4) // 4 bytes per float
+          while (isActive) {
+            val read = audioRecord?.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING) ?: 0
+            when {
+              read > 0 -> {
+                samplesMutex.withLock {
+                  val samplesToAdd = minOf(read, MAX_SAMPLES - recordedSamples.size)
+                  if (samplesToAdd > 0) {
+                    // Copy samples directly to avoid intermediate collection allocation and boxing
+                    for (i in 0 until samplesToAdd) {
+                      recordedSamples.add(buffer[i])
+                    }
+                  }
+                  // Check if we hit the max limit
+                  if (recordedSamples.size >= MAX_SAMPLES) {
+                    // Break out of while loop - will auto-stop below
+                    return@launch
                   }
                 }
-                // Check if we hit the max limit
-                if (recordedSamples.size >= MAX_SAMPLES) {
-                  // Break out of while loop - will auto-stop below
-                  return@launch
-                }
               }
-            }
-            read < 0 -> {
-              // AudioRecord.read() returned error code
-              // Negative values indicate errors: ERROR_INVALID_OPERATION (-3),
-              // ERROR_BAD_VALUE (-2), ERROR_DEAD_OBJECT (-6), ERROR (-1)
-              Log.e(TAG, "AudioRecord read error: $read")
-              return@launch
-            }
+              read < 0 -> {
+                // AudioRecord.read() returned error code
+                // Negative values indicate errors: ERROR_INVALID_OPERATION (-3),
+                // ERROR_BAD_VALUE (-2), ERROR_DEAD_OBJECT (-6), ERROR (-1)
+                Log.e(TAG, "AudioRecord read error: $read")
+                return@launch
+              }
             // read == 0: No samples available, continue loop
+            }
           }
         }
-      }.also { job ->
-        // Auto-stop recording when job completes
-        job.invokeOnCompletion {
-          try {
-            audioRecord?.takeIf { it.recordingState == AudioRecord.RECORDSTATE_RECORDING }?.stop()
-          } catch (e: IllegalStateException) {
-            // AudioRecord already stopped or in invalid state
-            Log.w(TAG, "AudioRecord already stopped during auto-stop", e)
+        .also { job ->
+          // Auto-stop recording when job completes
+          job.invokeOnCompletion {
+            try {
+              audioRecord?.takeIf { it.recordingState == AudioRecord.RECORDSTATE_RECORDING }?.stop()
+            } catch (e: IllegalStateException) {
+              // AudioRecord already stopped or in invalid state
+              Log.w(TAG, "AudioRecord already stopped during auto-stop", e)
+            }
           }
         }
-      }
 
     return true
   }
@@ -190,8 +193,6 @@ class AudioRecorder : AudioRecording {
       audioRecord?.release()
       audioRecord = null
 
-      samplesMutex.withLock {
-        recordedSamples.clear()
-      }
+      samplesMutex.withLock { recordedSamples.clear() }
     }
 }

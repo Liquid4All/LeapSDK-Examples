@@ -518,21 +518,25 @@ class WebAudioPlayer {
     val highWaterMarkFrames = samples.size * 5
     lastSampleRate = sampleRate
 
-    if (jsSamples != null) {
-      jsFloat32ArrayReduceGain(jsSamples)
-    } else {
-      var maxAbs = 0f
-      for (element in samples) {
-        val abs = kotlin.math.abs(element)
-        if (abs > maxAbs) maxAbs = abs
-      }
-      val scale = if (maxAbs > 1f) 1f / maxAbs else 1f
-      if (scale < 1f) {
-        for (i in samples.indices) {
-          samples[i] = samples[i] * scale
+    val normalized: FloatArray =
+      if (jsSamples != null) {
+        jsFloat32ArrayReduceGain(jsSamples)
+        samples
+      } else {
+        var maxAbs = 0f
+        for (element in samples) {
+          val abs = kotlin.math.abs(element)
+          if (abs > maxAbs) maxAbs = abs
         }
+        val scale = if (maxAbs > 1f) 1f / maxAbs else 1f
+        if (scale < 1f) {
+          val copy = samples.copyOf()
+          for (i in copy.indices) {
+            copy[i] = copy[i] * scale
+          }
+          copy
+        } else samples
       }
-    }
 
     // Compute RMS for orb animation — prefer JS Float32Array (samples may be zero-initialized
     // when the SDK defers the WASM copy for performance).
@@ -540,15 +544,15 @@ class WebAudioPlayer {
       if (jsSamples != null) jsFloat32ArrayRms(jsSamples)
       else {
         var sumSq = 0f
-        for (s in samples) sumSq += s * s
-        sqrt(sumSq / samples.size)
+        for (s in normalized) sumSq += s * s
+        sqrt(sumSq / normalized.size)
       }
 
     if (!isPlaying) {
       // Buffering phase: accumulate until high-water mark, then flush.
-      bufferedSamples.add(samples)
+      bufferedSamples.add(normalized)
       bufferedJsSamples.add(jsSamples)
-      bufferedFramesCount += samples.size
+      bufferedFramesCount += normalized.size
 
       if (bufferedFramesCount >= highWaterMarkFrames) {
         isPlaying = true
@@ -582,9 +586,9 @@ class WebAudioPlayer {
       if (nextTime < currentTime) {
         // Underrun — re-buffer to avoid repeated stutters
         isPlaying = false
-        bufferedSamples.add(samples)
+        bufferedSamples.add(normalized)
         bufferedJsSamples.add(jsSamples)
-        bufferedFramesCount += samples.size
+        bufferedFramesCount += normalized.size
         amplitude = 0f
       } else {
         amplitude = (rms * 10f).coerceIn(0f, 1f)
@@ -592,7 +596,7 @@ class WebAudioPlayer {
           if (jsSamples != null) {
             jsScheduleAudioBufferDirect(c, sampleRate, nextTime, jsSamples)
           } else {
-            jsScheduleAudioBuffer(c, sampleRate, nextTime, samples.size) { i -> samples[i] }
+            jsScheduleAudioBuffer(c, sampleRate, nextTime, normalized.size) { i -> normalized[i] }
           }
       }
     }

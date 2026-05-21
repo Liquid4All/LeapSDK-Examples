@@ -421,6 +421,7 @@ class LeapVoiceConversation(private val conv: Conversation, private val systemPr
         when (response) {
           is MessageResponse.AudioSample -> onAudioChunk(response.samples, response.sampleRate)
           is MessageResponse.Complete -> stats = response.stats
+          is MessageResponse.Error -> throw response.throwable
           else -> Unit
         }
       }

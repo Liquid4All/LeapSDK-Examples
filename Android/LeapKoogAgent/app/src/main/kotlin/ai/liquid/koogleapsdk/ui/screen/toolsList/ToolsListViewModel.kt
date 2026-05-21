@@ -9,28 +9,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class ToolsListViewModel(
-    private val navigationService: NavigationService = NavigationService.Companion.Instance
+  private val navigationService: NavigationService = NavigationService.Companion.Instance
 ) : MviViewModel<ToolsListState, ToolsListEvent>() {
-    private val _state = MutableStateFlow(
-        ToolsListState(
-            tools = allTools
-        )
-    )
-    override val state: StateFlow<ToolsListState> = _state.asStateFlow()
+  private val _state = MutableStateFlow(ToolsListState(tools = allTools))
+  override val state: StateFlow<ToolsListState> = _state.asStateFlow()
 
-    override fun onEvent(event: ToolsListEvent) {
-        when (event) {
-            is ToolsListEvent.OnToolClick -> {
-                navigationService.navigateTo(resolveDestination(event.toolId))
-            }
-        }
+  override fun onEvent(event: ToolsListEvent) {
+    when (event) {
+      is ToolsListEvent.OnToolClick -> {
+        navigationService.navigateTo(resolveDestination(event.toolId))
+      }
     }
+  }
 
-    private fun resolveDestination(toolId: String): Destination {
-        return when (toolId) {
-            ToolsListState.ToolItem.Companion.TOOL_ID_CALCULATOR -> Destination.CalculatorTool
-            ToolsListState.ToolItem.Companion.TOOL_ID_WEATHER -> Destination.WeatherTool
-            else -> throw IllegalArgumentException("Unknown toolId: $toolId")
-        }
+  private fun resolveDestination(toolId: String): Destination {
+    return when (toolId) {
+      ToolsListState.ToolItem.Companion.TOOL_ID_CALCULATOR -> Destination.CalculatorTool
+      ToolsListState.ToolItem.Companion.TOOL_ID_WEATHER -> Destination.WeatherTool
+      else -> throw IllegalArgumentException("Unknown toolId: $toolId")
     }
+  }
 }

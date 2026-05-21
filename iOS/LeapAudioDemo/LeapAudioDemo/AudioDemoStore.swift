@@ -176,16 +176,10 @@ final class AudioDemoStore {
 
     streamingTask = Task { [weak self] in
       guard let self else { return }
-      do {
-        for try await event in stream {
-          if Task.isCancelled { break }
-          await MainActor.run {
-            self.handle(event)
-          }
-        }
-      } catch {
+      for await event in stream {
+        if Task.isCancelled { break }
         await MainActor.run {
-          self.handleGenerationError(error)
+          self.handle(event)
         }
       }
       await MainActor.run {
@@ -207,6 +201,12 @@ final class AudioDemoStore {
       status = "Received function call: \(fc.functionCalls.count)"
     case .complete(let completion):
       finish(with: completion)
+    case .error(let err):
+      // SKIE bridges the underlying Flow as non-throwing (Failure = Never), so generation
+      // failures are delivered in-band via MessageResponse.Error rather than as thrown errors.
+      isGenerating = false
+      streamingText = ""
+      status = "Generation failed: \(err.message)"
     }
   }
 
@@ -236,12 +236,6 @@ final class AudioDemoStore {
     if let audioData {
       playbackManager.play(wavData: audioData)
     }
-  }
-
-  private func handleGenerationError(_ error: Error) {
-    isGenerating = false
-    streamingText = ""
-    status = "Generation failed: \(error.localizedDescription)"
   }
 
   private func finishReasonDescription(_ reason: GenerationFinishReason) -> String {

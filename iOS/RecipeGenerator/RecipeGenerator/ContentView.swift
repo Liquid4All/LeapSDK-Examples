@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-  @StateObject var viewModel = GeneratorViewModel()
+  @State var viewModel = GeneratorViewModel()
   @State private var errorMessage: String?
 
   var body: some View {

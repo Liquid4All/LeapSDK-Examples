@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">RecipeGenerator</string>
+
+    <!-- Status messages shown while the model loads and a recipe is being generated. -->
+    <string name="status_not_ready">Not ready to generate</string>
+    <string name="status_checking_model">Checking model status…</string>
+    <string name="status_starting_download">Starting download…</string>
+    <string name="status_downloading">Downloading: %1$d%% (%2$d MB / %3$d MB)</string>
+    <string name="status_download_complete">Download complete!</string>
+    <string name="status_loading_model">Loading model…</string>
+    <string name="status_model_loaded">Model loaded</string>
+    <string name="status_generating">Generating the recipe…</string>
+    <string name="status_success">Recipe generated successfully!</string>
+    <string name="status_error">Error: %1$s</string>
+    <string name="status_error_with_text">Error: %1$s\n\nGenerated text:\n%2$s</string>
+
+    <!-- Model-download foreground service notification. -->
+    <string name="notification_downloading_model">Downloading Recipe Generator Model</string>
+    <string name="notification_model_ready">Model Ready!</string>
+
+    <!-- Recipe view labels. -->
+    <string name="recipe_cooking_time">Cooking time: %1$d min</string>
+    <string name="recipe_vegetarian_yes">Vegetarian: Yes</string>
+    <string name="recipe_vegetarian_no">Vegetarian: No</string>
+    <string name="recipe_ingredients_header">Ingredients</string>
+    <string name="recipe_steps_header">Steps</string>
 </resources>

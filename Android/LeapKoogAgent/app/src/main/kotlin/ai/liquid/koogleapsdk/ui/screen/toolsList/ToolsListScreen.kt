@@ -1,5 +1,6 @@
 package ai.liquid.koogleapsdk.ui.screen.toolsList
 
+import ai.liquid.koogleapsdk.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,74 +20,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ai.liquid.koogleapsdk.R
 
 @Composable
-fun ToolsListScreen(
-    state: ToolsListState,
-    onEvent: (ToolsListEvent) -> Unit
-) {
-    Column {
-        Text(
-            text = stringResource(R.string.available_tools),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+fun ToolsListScreen(state: ToolsListState, onEvent: (ToolsListEvent) -> Unit) {
+  Column {
+    Text(
+      text = stringResource(R.string.available_tools),
+      style = MaterialTheme.typography.headlineMedium,
+      modifier = Modifier.fillMaxWidth().padding(16.dp),
+    )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(state.tools, key = { it.id }) {
-                ToolListItem(
-                    item = it,
-                    onClick = {
-                        onEvent(
-                            ToolsListEvent.OnToolClick(
-                                it.id
-                            )
-                        )
-                    }
-                )
-            }
-        }
+    LazyColumn(
+      modifier = Modifier.fillMaxSize().padding(8.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      items(state.tools, key = { it.id }) {
+        ToolListItem(item = it, onClick = { onEvent(ToolsListEvent.OnToolClick(it.id)) })
+      }
     }
+  }
 }
 
 @Composable
-private fun ToolListItem(
-    item: ToolsListState.ToolItem,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun ToolListItem(item: ToolsListState.ToolItem, onClick: () -> Unit) {
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(8.dp))
+        .background(MaterialTheme.colorScheme.surfaceContainer)
+        .clickable(onClick = onClick)
+        .padding(16.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(
+      modifier = Modifier.weight(1f),
+      horizontalAlignment = Alignment.Start,
+      verticalArrangement = Arrangement.Center,
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = item.name,
-                modifier = Modifier.padding(bottom = 4.dp),
-                style = MaterialTheme.typography.bodyLarge
-            )
+      Text(
+        text = item.name,
+        modifier = Modifier.padding(bottom = 4.dp),
+        style = MaterialTheme.typography.bodyLarge,
+      )
 
-            Text(
-                text = item.description,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+      Text(text = item.description, style = MaterialTheme.typography.bodyMedium)
     }
+  }
 }

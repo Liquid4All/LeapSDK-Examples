@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">ShareAI</string>
+    <string name="summary_screen_title">Summary Generator</string>
+    <string name="summary_status_processing">Processing your content…</string>
+    <string name="summary_status_error">Error occurred</string>
+    <string name="summary_status_complete">Summary Complete</string>
+    <string name="step_loading_model_title">Loading Model</string>
+    <string name="step_loading_model_description">Initializing AI model</string>
+    <string name="step_scraping_webpage_title">Scraping Webpage</string>
+    <string name="step_scraping_webpage_description">Extracting content</string>
+    <string name="step_thinking_title">Thinking</string>
+    <string name="step_thinking_description">Analyzing content</string>
+    <string name="step_generating_summary_title">Generating Summary</string>
+    <string name="step_generating_summary_description">Creating final summary</string>
+    <string name="status_completed_description">Completed</string>
+    <string name="error_card_title">Error</string>
+    <string name="summary_card_thinking_title">🤔 Thinking</string>
+    <string name="summary_card_summary_title">📝 Summary</string>
+    <string name="notification_downloading_shareai_model">Downloading ShareAI Model</string>
+    <string name="notification_shareai_model_ready">Model Ready!</string>
 </resources>

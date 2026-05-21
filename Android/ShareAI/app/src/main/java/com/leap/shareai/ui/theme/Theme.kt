@@ -9,7 +9,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val lightScheme = lightColorScheme(
+private val lightScheme =
+  lightColorScheme(
     primary = primaryLight,
     onPrimary = onPrimaryLight,
     primaryContainer = primaryContainerLight,
@@ -45,9 +46,10 @@ private val lightScheme = lightColorScheme(
     surfaceContainer = surfaceContainerLight,
     surfaceContainerHigh = surfaceContainerHighLight,
     surfaceContainerHighest = surfaceContainerHighestLight,
-)
+  )
 
-private val darkScheme = darkColorScheme(
+private val darkScheme =
+  darkColorScheme(
     primary = primaryDark,
     onPrimary = onPrimaryDark,
     primaryContainer = primaryContainerDark,
@@ -83,9 +85,10 @@ private val darkScheme = darkColorScheme(
     surfaceContainer = surfaceContainerDark,
     surfaceContainerHigh = surfaceContainerHighDark,
     surfaceContainerHighest = surfaceContainerHighestDark,
-)
+  )
 
-private val mediumContrastLightColorScheme = lightColorScheme(
+private val mediumContrastLightColorScheme =
+  lightColorScheme(
     primary = primaryLightMediumContrast,
     onPrimary = onPrimaryLightMediumContrast,
     primaryContainer = primaryContainerLightMediumContrast,
@@ -121,9 +124,10 @@ private val mediumContrastLightColorScheme = lightColorScheme(
     surfaceContainer = surfaceContainerLightMediumContrast,
     surfaceContainerHigh = surfaceContainerHighLightMediumContrast,
     surfaceContainerHighest = surfaceContainerHighestLightMediumContrast,
-)
+  )
 
-private val highContrastLightColorScheme = lightColorScheme(
+private val highContrastLightColorScheme =
+  lightColorScheme(
     primary = primaryLightHighContrast,
     onPrimary = onPrimaryLightHighContrast,
     primaryContainer = primaryContainerLightHighContrast,
@@ -159,9 +163,10 @@ private val highContrastLightColorScheme = lightColorScheme(
     surfaceContainer = surfaceContainerLightHighContrast,
     surfaceContainerHigh = surfaceContainerHighLightHighContrast,
     surfaceContainerHighest = surfaceContainerHighestLightHighContrast,
-)
+  )
 
-private val mediumContrastDarkColorScheme = darkColorScheme(
+private val mediumContrastDarkColorScheme =
+  darkColorScheme(
     primary = primaryDarkMediumContrast,
     onPrimary = onPrimaryDarkMediumContrast,
     primaryContainer = primaryContainerDarkMediumContrast,
@@ -197,9 +202,10 @@ private val mediumContrastDarkColorScheme = darkColorScheme(
     surfaceContainer = surfaceContainerDarkMediumContrast,
     surfaceContainerHigh = surfaceContainerHighDarkMediumContrast,
     surfaceContainerHighest = surfaceContainerHighestDarkMediumContrast,
-)
+  )
 
-private val highContrastDarkColorScheme = darkColorScheme(
+private val highContrastDarkColorScheme =
+  darkColorScheme(
     primary = primaryDarkHighContrast,
     onPrimary = onPrimaryDarkHighContrast,
     primaryContainer = primaryContainerDarkHighContrast,
@@ -235,30 +241,25 @@ private val highContrastDarkColorScheme = darkColorScheme(
     surfaceContainer = surfaceContainerDarkHighContrast,
     surfaceContainerHigh = surfaceContainerHighDarkHighContrast,
     surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
-)
-
+  )
 
 @Composable
 fun ThemeShareAi(
-    darkTheme: Boolean = isSystemInDarkTheme(), // Will be determined by collected theme setting
-    dynamicColor: Boolean = true, // Will be determined by collected theme setting
-    content: @Composable () -> Unit
+  darkTheme: Boolean = isSystemInDarkTheme(), // Will be determined by collected theme setting
+  dynamicColor: Boolean = true, // Will be determined by collected theme setting
+  content: @Composable () -> Unit,
 ) {
-    //currentThemeSetting == ThemeSetting.DYNAMIC
-    val context = LocalContext.current
+  // currentThemeSetting == ThemeSetting.DYNAMIC
+  val context = LocalContext.current
 
-    val colorScheme = when {
-        dynamicColor -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> darkScheme
-        else -> lightScheme
+  val colorScheme =
+    when {
+      dynamicColor -> {
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+      }
+      darkTheme -> darkScheme
+      else -> lightScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        content = content
-    )
+  MaterialTheme(colorScheme = colorScheme, typography = AppTypography, content = content)
 }
-

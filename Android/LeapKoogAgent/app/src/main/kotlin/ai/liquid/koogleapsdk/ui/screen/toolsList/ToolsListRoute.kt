@@ -7,11 +7,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ToolsListRoute() {
-    val viewModel = viewModel { ToolsListViewModel() }
-    val state by viewModel.state.collectAsStateWithLifecycle()
+  val viewModel = viewModel { ToolsListViewModel() }
+  val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ToolsListScreen(
-        state = state,
-        onEvent = viewModel::onEvent
-    )
+  ToolsListScreen(state = state, onEvent = viewModel::onEvent)
 }

@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    revision: v0.10.7
+    revision: v0.10.8
 
 targets:
   LeapAudioDemo:
@@ -40,6 +40,7 @@ targets:
         product: LeapModelDownloader
     settings:
       base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapAudioDemo
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES

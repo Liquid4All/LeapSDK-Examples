@@ -37,14 +37,14 @@ struct MessagesListView: View {
         .padding(.horizontal)
         .padding(.top, 8)
       }
-      .onChange(of: store.messages.count) { _ in
+      .onChange(of: store.messages.count) { _, _ in
         if let lastMessage = store.messages.last {
           withAnimation(.easeOut(duration: 0.3)) {
             proxy.scrollTo(lastMessage.id, anchor: .bottom)
           }
         }
       }
-      .onChange(of: store.currentAssistantMessage) { _ in
+      .onChange(of: store.currentAssistantMessage) { _, _ in
         withAnimation(.easeOut(duration: 0.1)) {
           if store.isLoading && !store.currentAssistantMessage.isEmpty {
             proxy.scrollTo("streaming", anchor: .bottom)

@@ -39,7 +39,6 @@ import androidx.compose.ui.window.ComposeViewport
 import kotlinx.browser.document
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -56,7 +55,7 @@ private external fun hasSharedArrayBuffer(): Boolean
 
 /** Audio model used for voice interaction. */
 private const val MODEL_NAME = "LFM2.5-Audio-1.5B"
-private const val QUANTIZATION_SLUG = "Q4_0"
+private const val QUANTIZATION_TYPE = "Q4_0"
 private const val SYSTEM_PROMPT = "Respond with interleaved text and audio."
 
 private const val FRAME_DELAY_MS = 16L
@@ -64,14 +63,23 @@ private const val FRAME_DELAY_MS = 16L
 /**
  * Browser entry point for the Leap voice demo.
  *
- * Downloads [MODEL_NAME]/[QUANTIZATION_SLUG] to Emscripten MEMFS via the browser Fetch API, then
+ * Downloads [MODEL_NAME]/[QUANTIZATION_TYPE] to Emscripten MEMFS via the browser Fetch API, then
  * provides an interactive voice assistant: press-and-hold to record, release to send the audio to
  * the model, and stream the audio response back. The orb animation is driven by real microphone /
  * playback amplitude in both directions.
  */
+private fun Float.toFixed1(): String {
+  // round() so 9.95 → "10.0" instead of "9.9" (truncation via toLong()).
+  val rounded = kotlin.math.round(this * 10).toLong()
+  val intPart = rounded / 10
+  val frac = (rounded % 10).let { if (it < 0) -it else it }
+  return "$intPart.$frac"
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-  ComposeViewport(document.body!!) {
+  val body = document.body ?: error("Document body not available; cannot mount Compose viewport")
+  ComposeViewport(body) {
     MaterialTheme(colorScheme = darkColorScheme(background = Color.Black, surface = Color.Black)) {
       var widgetState by remember { mutableStateOf(VoiceAssistantState()) }
       var idleLabel by remember { mutableStateOf("Initializing…") }
@@ -93,7 +101,7 @@ fun main() {
             val runner =
               downloader.loadModel(
                 modelName = MODEL_NAME,
-                quantizationType = QUANTIZATION_SLUG,
+                quantizationType = QUANTIZATION_TYPE,
                 progress = { pd ->
                   val pct = if (pd.total > 0) " ${(pd.bytes * 100 / pd.total).toInt()}%" else ""
                   idleLabel = "Downloading$pct"
@@ -109,7 +117,7 @@ fun main() {
               if (hasJspi()) append(", JSPI")
             }
             debugInfo =
-              "$MODEL_NAME $QUANTIZATION_SLUG\nBackends: $backends\nThreads: $threads\nWASM: $wasmFeatures"
+              "$MODEL_NAME $QUANTIZATION_TYPE\nBackends: $backends\nThreads: $threads\nWASM: $wasmFeatures"
           }
           .onFailure { e ->
             consoleError(e.stackTraceToString())
@@ -181,6 +189,7 @@ fun main() {
                                 is MessageResponse.AudioSample ->
                                   player.enqueue(response.samples, response.sampleRate)
                                 is MessageResponse.Complete -> lastStats = response.stats
+                                is MessageResponse.Error -> throw response.throwable
                                 else -> Unit
                               }
                             }
@@ -217,8 +226,7 @@ fun main() {
           val stats = lastStats
           val statsLine =
             if (stats != null) {
-              val tps = stats.tokenPerSecond
-              val tpsStr = "${tps.toInt()}.${((tps * 10).toInt() % 10)}"
+              val tpsStr = stats.tokenPerSecond.toFixed1()
               "\nLast gen: $tpsStr tok/s | ${stats.promptTokens} prompt | ${stats.completionTokens} gen tokens"
             } else ""
           Text(
