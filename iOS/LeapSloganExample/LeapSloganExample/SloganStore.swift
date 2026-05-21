@@ -1,4 +1,4 @@
-import LeapSDK
+import LeapModelDownloader
 import SwiftUI
 
 // System prompt and user prompt constants
@@ -31,9 +31,15 @@ class SloganStore {
 
     do {
       // Use manifest downloading for LFM2.5-1.2B-Instruct (best for instruction following)
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       modelRunner = try await Leap.shared.load(
         model: "LFM2.5-1.2B-Instruct",
         quantization: "Q4_0",
+        options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath)
+        ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             if progress < 1.0 {
@@ -48,9 +54,15 @@ class SloganStore {
       )
 
       // Initialize conversation for regular generation
+      guard let runner = modelRunner else {
+        modelStatus = "● Model: Error"
+        modelStatusColor = .red
+        isModelLoading = false
+        return
+      }
       let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
       conversation = Conversation(
-        modelRunner: modelRunner!,
+        modelRunner: runner,
         history: [systemMessage]
       )
 
@@ -107,6 +119,13 @@ class SloganStore {
     generatedText = "Generating...\n\n"
 
     generationTask = Task { @MainActor in
+      guard let runner = modelRunner else {
+        isGenerating = false
+        isThinking = false
+        generationTask = nil
+        generatedText = "Model is not loaded."
+        return
+      }
       do {
         // Use constrained generation for structured output
         generatedText = "Generating structured slogans...\n\n"
@@ -114,7 +133,7 @@ class SloganStore {
         // Create conversation with constrained generation options
         let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
         let constrainedConversation = Conversation(
-          modelRunner: modelRunner!,
+          modelRunner: runner,
           history: [systemMessage]
         )
 
@@ -126,15 +145,22 @@ class SloganStore {
           role: .user,
           textContent: String(format: USER_PROMPT_TEMPLATE, topic))
 
-        // generateResponse(message:generationOptions:) returns a raw Kotlin flow;
-        // bridge it to SkieSwiftFlow for async iteration
-        let rawFlow = constrainedConversation.generateResponse(
+        // generateResponse(message:generationOptions:) returns a SkieSwiftFlow directly,
+        // suitable for async iteration.
+        let stream = constrainedConversation.generateResponse(
           message: userMessage, generationOptions: options)
-        let stream = rawFlow as! SkieSwiftFlow<any MessageResponse>
 
         var jsonResponse = ""
-        for try await response in stream {
+        var streamError: String?
+        for await response in stream {
           if Task.isCancelled { break }
+          // SKIE bridges the flow as non-throwing; surface in-band errors via runtime cast
+          // (the .Error case is excluded from SKIE's sealed-enum codegen — name collides with
+          // Swift's `Error` protocol).
+          if let err = response as? MessageResponseError {
+            streamError = err.message
+            continue
+          }
           switch onEnum(of: response) {
           case .chunk(let chunk):
             jsonResponse.append(chunk.text)
@@ -148,9 +174,16 @@ class SloganStore {
             break
           }
         }
+        if let streamError {
+          throw NSError(
+            domain: "SloganStore",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: streamError]
+          )
+        }
 
         // Parse the JSON response
-        let jsonData = jsonResponse.data(using: .utf8)!
+        let jsonData = Data(jsonResponse.utf8)
         let sloganResponse = try JSONDecoder().decode(SloganResponse.self, from: jsonData)
 
         // Format the structured output nicely
@@ -176,49 +209,50 @@ class SloganStore {
 
         // Reset conversation for each generation to avoid context length issues
         let systemMessage = ChatMessage(role: .system, textContent: SYSTEM_PROMPT)
-        conversation = Conversation(
-          modelRunner: modelRunner!,
+        let fallbackConversation = Conversation(
+          modelRunner: runner,
           history: [systemMessage]
         )
+        conversation = fallbackConversation
 
         let prompt = String(format: USER_PROMPT_TEMPLATE, topic)
         let userMessage = ChatMessage(role: .user, textContent: prompt)
 
-        let stream = conversation!.generateResponse(message: userMessage)
+        let stream = fallbackConversation.generateResponse(message: userMessage)
 
         generatedText = "Generating (fallback mode)...\n\n"
 
-        do {
-          for try await response in stream {
-            if Task.isCancelled { break }
+        for await response in stream {
+          if Task.isCancelled { break }
 
-            switch onEnum(of: response) {
-            case .chunk(let chunk):
-              isThinking = false
-              if generatedText.hasPrefix("Generating (fallback mode)...") {
-                generatedText = chunk.text
-              } else {
-                generatedText.append(chunk.text)
-              }
-            case .audioSample:
-              break
-            case .complete:
-              isGenerating = false
-              isThinking = false
-              generationTask = nil
-            case .reasoningChunk:
-              if !isThinking {
-                isThinking = true
-              }
-            case .functionCalls:
-              break
-            }
+          if let err = response as? MessageResponseError {
+            isGenerating = false
+            isThinking = false
+            generationTask = nil
+            generatedText.append("\n\n[Error: \(err.message)]")
+            continue
           }
-        } catch {
-          isGenerating = false
-          isThinking = false
-          generationTask = nil
-          generatedText = "Error generating slogans: \(error.localizedDescription)"
+          switch onEnum(of: response) {
+          case .chunk(let chunk):
+            isThinking = false
+            if generatedText.hasPrefix("Generating (fallback mode)...") {
+              generatedText = chunk.text
+            } else {
+              generatedText.append(chunk.text)
+            }
+          case .audioSample:
+            break
+          case .complete:
+            isGenerating = false
+            isThinking = false
+            generationTask = nil
+          case .reasoningChunk:
+            if !isThinking {
+              isThinking = true
+            }
+          case .functionCalls:
+            break
+          }
         }
       }
     }

@@ -1,6 +1,6 @@
 import AVFoundation
 import Foundation
-import LeapSDK
+import LeapModelDownloader
 import Observation
 
 struct AudioDemoMessage: Identifiable, Equatable {
@@ -49,10 +49,14 @@ final class AudioDemoStore {
       status = "Downloading \(Self.modelName) model..."
 
       // Use manifest downloading for LFM2.5-Audio-1.5B (speech + text input/output)
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
         options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath),
           contextSize: 1024,
           nGpuLayers: 0
         ),
@@ -172,16 +176,10 @@ final class AudioDemoStore {
 
     streamingTask = Task { [weak self] in
       guard let self else { return }
-      do {
-        for try await event in stream {
-          if Task.isCancelled { break }
-          await MainActor.run {
-            self.handle(event)
-          }
-        }
-      } catch {
+      for await event in stream {
+        if Task.isCancelled { break }
         await MainActor.run {
-          self.handleGenerationError(error)
+          self.handle(event)
         }
       }
       await MainActor.run {
@@ -191,6 +189,16 @@ final class AudioDemoStore {
   }
 
   private func handle(_ event: any MessageResponse) {
+    // SKIE bridges the underlying Flow as non-throwing (Failure = Never), so generation
+    // failures are delivered in-band via MessageResponse.Error rather than as thrown errors.
+    // The .Error case is excluded from SKIE's sealed-enum codegen (name collides with Swift's
+    // `Error` protocol), so check it with a runtime cast before falling into the switch.
+    if let err = event as? MessageResponseError {
+      isGenerating = false
+      streamingText = ""
+      status = "Generation failed: \(err.message)"
+      return
+    }
     switch onEnum(of: event) {
     case .chunk(let chunk):
       streamingText.append(chunk.text)
@@ -232,12 +240,6 @@ final class AudioDemoStore {
     if let audioData {
       playbackManager.play(wavData: audioData)
     }
-  }
-
-  private func handleGenerationError(_ error: Error) {
-    isGenerating = false
-    streamingText = ""
-    status = "Generation failed: \(error.localizedDescription)"
   }
 
   private func finishReasonDescription(_ reason: GenerationFinishReason) -> String {

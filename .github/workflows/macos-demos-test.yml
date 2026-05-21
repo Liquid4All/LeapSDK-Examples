@@ -1,0 +1,82 @@
+name: macOS Demos Build
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'macOS/**'
+      - '.github/workflows/macos-demos-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'macOS/**'
+      - '.github/workflows/macos-demos-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege default. xcodegen + xcodebuild only need to read the workspace
+# and pull SPM dependencies from GitHub; no write scopes required.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        demo:
+          - LeapVLMExample
+          - LeapVoiceAssistantDemo
+    defaults:
+      run:
+        working-directory: macOS/${{ matrix.demo }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Select Xcode 26
+        # GitHub-hosted macos-26 ships Xcode 26 by default; pin explicitly to guard against
+        # image-default drift. Falls back to whatever xcode-select already points at if
+        # Xcode_26.app isn't present (defensive — should always exist on macos-26).
+        run: |
+          if [ -d /Applications/Xcode_26.app ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          fi
+          xcodebuild -version
+        working-directory: .
+      - name: Install xcodegen
+        run: brew install xcodegen
+        working-directory: .
+      - name: Skip macro fingerprint validation
+        # Cheap precaution — none of the current macOS demos pull LeapSDKMacros, but
+        # opting out keeps the workflow robust if a future demo adopts the macro and
+        # avoids interactive prompts under `xcodebuild`.
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+        working-directory: .
+      - name: Clear SPM caches if LeapSDK pin is a SNAPSHOT tag
+        # SPM caches a force-pushed snapshot tag's old revision and refuses to resolve
+        # with "does not match previously recorded value". Wipe both SPM caches and
+        # DerivedData when the demo pins a -SNAPSHOT revision so resolution starts
+        # clean. No-op for stable tags.
+        run: |
+          if grep -qE '^\s*revision:\s*[A-Za-z0-9.\-]+-SNAPSHOT\s*$' project.yml; then
+            echo "Detected -SNAPSHOT revision; clearing SPM caches"
+            rm -rf ~/Library/Caches/org.swift.swiftpm \
+                   ~/Library/org.swift.swiftpm \
+                   ~/Library/Developer/Xcode/DerivedData
+          else
+            echo "Stable LeapSDK pin; SPM caches left in place"
+          fi
+      - name: Generate Xcode project
+        # No Makefile in macOS demos; invoke xcodegen directly per the per-demo README.
+        run: xcodegen generate
+      - name: Build for macOS
+        run: |
+          xcodebuild -project ${{ matrix.demo }}.xcodeproj \
+            -scheme ${{ matrix.demo }} \
+            -destination 'platform=macOS' \
+            build

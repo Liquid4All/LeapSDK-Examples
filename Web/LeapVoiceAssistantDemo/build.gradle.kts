@@ -10,9 +10,7 @@ plugins {
 kotlin {
   @OptIn(ExperimentalWasmDsl::class)
   wasmJs {
-    browser {
-      commonWebpackConfig { outputFileName = "leap-voice-assistant-demo-web.js" }
-    }
+    browser { commonWebpackConfig { outputFileName = "leap-voice-assistant-demo-web.js" } }
     binaries.executable()
   }
 
@@ -21,6 +19,7 @@ kotlin {
       dependencies {
         implementation(libs.leap.sdk)
         implementation(libs.leap.ui)
+        implementation(libs.kotlinx.coroutines.core)
         implementation(libs.jetbrains.compose.runtime)
         implementation(libs.jetbrains.compose.ui)
         implementation(libs.jetbrains.compose.foundation)
@@ -63,4 +62,6 @@ listOf(
     "wasmJsBrowserProductionWebpack",
     "wasmJsBrowserDistribution",
   )
-  .forEach { taskName -> tasks.matching { it.name == taskName }.configureEach { dependsOn(extractWasmVendor) } }
+  .forEach { taskName ->
+    tasks.matching { it.name == taskName }.configureEach { dependsOn(extractWasmVendor) }
+  }

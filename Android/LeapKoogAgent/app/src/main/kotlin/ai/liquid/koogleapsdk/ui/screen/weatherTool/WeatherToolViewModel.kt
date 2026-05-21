@@ -12,57 +12,44 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WeatherToolViewModel : MviViewModel<WeatherToolState, WeatherToolEvent>() {
-    private val _state = MutableStateFlow(WeatherToolState())
-    override val state: StateFlow<WeatherToolState> = _state.asStateFlow()
+  private val _state = MutableStateFlow(WeatherToolState())
+  override val state: StateFlow<WeatherToolState> = _state.asStateFlow()
 
-    override fun onEvent(event: WeatherToolEvent) {
-        when (event) {
-            is WeatherToolEvent.OnSearchClick -> {
-                fetchWeather(event.cityName)
-            }
-        }
+  override fun onEvent(event: WeatherToolEvent) {
+    when (event) {
+      is WeatherToolEvent.OnSearchClick -> {
+        fetchWeather(event.cityName)
+      }
     }
+  }
 
-    internal fun fetchWeather(cityName: String) {
-        // Simulate fetching weather data
-        _state.update {
-            it.copy(isLoading = true, weatherInfo = null)
-        }
+  internal fun fetchWeather(cityName: String) {
+    // Simulate fetching weather data
+    _state.update { it.copy(isLoading = true, weatherInfo = null) }
 
-        viewModelScope.launch {
-            val prompt = "What is the weather in: $cityName"
-            try {
-                val agent = WeatherAgentProvider().provideAgent(
-                    onToolCallEvent = {
-                        Log.w(this@WeatherToolViewModel::class.simpleName, "Tool call: $it")
-                    },
-                    onErrorEvent = {
-                        SnackbarUtil.showSnackbar(
-                            "Error occurred: $it",
-                        )
-                    },
-                    onAssistantMessage = {
-                        Log.w(this@WeatherToolViewModel::class.simpleName, "Assistant: $it")
-                        val explained = it
-                        _state.update { state ->
-                            state.copy(
-                                weatherInfo = explained,
-                            )
-                        }
-                        explained
-                    }
-                )
-                val result = agent.run(prompt)
+    viewModelScope.launch {
+      val prompt = "What is the weather in: $cityName"
+      try {
+        val agent =
+          WeatherAgentProvider()
+            .provideAgent(
+              onToolCallEvent = {
+                Log.w(this@WeatherToolViewModel::class.simpleName, "Tool call: $it")
+              },
+              onErrorEvent = { SnackbarUtil.showSnackbar("Error occurred: $it") },
+              onAssistantMessage = {
+                Log.w(this@WeatherToolViewModel::class.simpleName, "Assistant: $it")
+                val explained = it
+                _state.update { state -> state.copy(weatherInfo = explained) }
+                explained
+              },
+            )
+        val result = agent.run(prompt)
 
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        weatherInfo = result,
-                    )
-                }
-            } catch (ex: Exception) {
-                // TODO handle errors
-            }
-        }
+        _state.update { it.copy(isLoading = false, weatherInfo = result) }
+      } catch (ex: Exception) {
+        // TODO handle errors
+      }
     }
+  }
 }

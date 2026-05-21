@@ -8,11 +8,11 @@ generate:
 
 build: generate
 	@echo "🏗️ Building LeapAudioDemo..."
-	xcodebuild -project LeapAudioDemo.xcodeproj -scheme LeapAudioDemo -destination 'platform=iOS Simulator,name=iPhone 16' build
+	xcodebuild -project LeapAudioDemo.xcodeproj -scheme LeapAudioDemo -destination 'platform=iOS Simulator,name=iPhone 17' build
 
 run: generate
 	@echo "🚀 Running LeapAudioDemo..."
-	xcodebuild -project LeapAudioDemo.xcodeproj -scheme LeapAudioDemo -destination 'platform=iOS Simulator,name=iPhone 16' run
+	xcodebuild -project LeapAudioDemo.xcodeproj -scheme LeapAudioDemo -destination 'platform=iOS Simulator,name=iPhone 17' run
 
 clean:
 	@echo "🧹 Cleaning..."

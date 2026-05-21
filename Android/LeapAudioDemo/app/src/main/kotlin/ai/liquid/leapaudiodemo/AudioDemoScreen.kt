@@ -1,15 +1,18 @@
 package ai.liquid.leapaudiodemo
 
+import android.content.Context
+import android.os.SystemClock
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityManager
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -72,10 +75,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import android.content.Context
-import android.os.SystemClock
-import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityManager
 import androidx.core.content.getSystemService
 
 // Extension function for accessibility announcements
@@ -105,17 +104,16 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
   LaunchedEffect(state.recordingState) {
     val accessibilityManager = context.getSystemService<AccessibilityManager>()
     if (accessibilityManager?.isEnabled == true) {
-      val announcement = when {
-        state.recordingState is RecordingState.Recording ->
-          context.getString(R.string.status_recording)
-        state.recordingState is RecordingState.Idle &&
-          previousRecordingState is RecordingState.Recording ->
-          context.getString(R.string.a11y_recording_stopped)
-        else -> null
-      }
-      announcement?.let {
-        accessibilityManager.announceForAccessibility(context, it)
-      }
+      val announcement =
+        when {
+          state.recordingState is RecordingState.Recording ->
+            context.getString(R.string.status_recording)
+          state.recordingState is RecordingState.Idle &&
+            previousRecordingState is RecordingState.Recording ->
+            context.getString(R.string.a11y_recording_stopped)
+          else -> null
+        }
+      announcement?.let { accessibilityManager.announceForAccessibility(context, it) }
     }
     previousRecordingState = state.recordingState
   }
@@ -153,7 +151,7 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
           Image(
             painter = painterResource(id = R.drawable.leap_logo),
             contentDescription = stringResource(R.string.app_name),
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(24.dp),
           )
         },
         colors =
@@ -222,22 +220,21 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
         tonalElevation = 2.dp,
       ) {
         Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically,
         ) {
           // Status text
-          val statusText = when (state.modelState) {
-            is ModelState.NotLoaded -> stringResource(R.string.load_model)
-            else -> state.status ?: stringResource(R.string.load_model)
-          }
+          val statusText =
+            when (state.modelState) {
+              is ModelState.NotLoaded -> stringResource(R.string.load_model)
+              else -> state.status ?: stringResource(R.string.load_model)
+            }
 
           Text(
             text = statusText,
-            modifier = Modifier
-              .semantics {
+            modifier =
+              Modifier.semantics {
                 // Announce status changes to screen readers
                 liveRegion = LiveRegionMode.Polite
               },
@@ -253,21 +250,15 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
               // Determinate progress
               LinearProgressIndicator(
                 progress = { state.downloadProgress },
-                modifier = Modifier
-                  .weight(1f)
-                  .semantics {
-                    contentDescription = statusLoadingModel
-                  },
+                modifier =
+                  Modifier.weight(1f).semantics { contentDescription = statusLoadingModel },
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
               )
             } else {
               // Indeterminate progress
               LinearProgressIndicator(
-                modifier = Modifier
-                  .weight(1f)
-                  .semantics {
-                    contentDescription = statusLoadingModel
-                  },
+                modifier =
+                  Modifier.weight(1f).semantics { contentDescription = statusLoadingModel },
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
               )
             }
@@ -291,16 +282,18 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
               modifier = Modifier.size(40.dp),
             ) {
               Icon(
-                imageVector = if (state.isModelCached) {
-                  Icons.Outlined.Folder
-                } else {
-                  Icons.Outlined.CloudDownload
-                },
-                contentDescription = if (state.isModelCached) {
-                  stringResource(R.string.load_model)
-                } else {
-                  stringResource(R.string.load_model) // Could be "Download and load model"
-                },
+                imageVector =
+                  if (state.isModelCached) {
+                    Icons.Outlined.Folder
+                  } else {
+                    Icons.Outlined.CloudDownload
+                  },
+                contentDescription =
+                  if (state.isModelCached) {
+                    stringResource(R.string.load_model)
+                  } else {
+                    stringResource(R.string.load_model) // Could be "Download and load model"
+                  },
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
               )
             }
@@ -321,7 +314,9 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
           }
 
           // Show delete icon when model is loaded and not generating
-          if (state.modelState is ModelState.Ready && state.generationState is GenerationState.Idle) {
+          if (
+            state.modelState is ModelState.Ready && state.generationState is GenerationState.Idle
+          ) {
             IconButton(
               onClick = { onEvent(AudioDemoEvent.DeleteModel) },
               modifier = Modifier.size(40.dp),
@@ -351,16 +346,13 @@ fun AudioDemoScreen(state: AudioDemoState, onEvent: (AudioDemoEvent) -> Unit) {
               modifier = Modifier.padding(horizontal = 16.dp),
             )
 
-            Button(
-              onClick = { onEvent(AudioDemoEvent.RetryLoadModel) },
-            ) {
+            Button(onClick = { onEvent(AudioDemoEvent.RetryLoadModel) }) {
               Text(stringResource(R.string.retry))
             }
           }
         }
         else -> {}
       }
-
 
       // Messages list
       LazyColumn(
@@ -445,10 +437,10 @@ fun MessageBubble(
         Spacer(modifier = Modifier.height(8.dp))
         // Ensure minimum 48dp touch target for accessibility (WCAG AA)
         Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onStopAudio() }
-            .padding(vertical = 8.dp, horizontal = 4.dp), // Increased vertical padding for 48dp
+          modifier =
+            Modifier.fillMaxWidth()
+              .clickable { onStopAudio() }
+              .padding(vertical = 8.dp, horizontal = 4.dp), // Increased vertical padding for 48dp
           horizontalArrangement = Arrangement.Center,
           verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -478,10 +470,12 @@ fun MessageBubble(
 
       // Show play/stop button for completed messages with valid audio
       // Validate: non-null, non-empty data, and valid sample rate
-      if (!isStreaming &&
+      if (
+        !isStreaming &&
           message.audioData != null &&
           message.audioData.isNotEmpty() &&
-          message.sampleRate > 0) {
+          message.sampleRate > 0
+      ) {
         Spacer(modifier = Modifier.height(8.dp))
         // Ensure minimum 48dp touch target for accessibility (WCAG AA)
         Row(
@@ -525,13 +519,15 @@ fun MessageBubble(
       if (isStreaming) {
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(
-          modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = if (isStreamingAudio) {
-              statusStreamingAudio
-            } else {
-              statusAwaitingResponse
+          modifier =
+            Modifier.fillMaxWidth().semantics {
+              contentDescription =
+                if (isStreamingAudio) {
+                  statusStreamingAudio
+                } else {
+                  statusAwaitingResponse
+                }
             }
-          }
         )
       }
     }
@@ -562,21 +558,20 @@ fun InputBar(
     if (isRecording) {
       // Recording indicator with pulsing animation for prominence
       val infiniteTransition = rememberInfiniteTransition(label = "recording_pulse")
-      val alpha = infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(
-          animation = tween(800),
-          repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha_animation"
-      )
+      val alpha =
+        infiniteTransition.animateFloat(
+          initialValue = 1f,
+          targetValue = 0.3f,
+          animationSpec =
+            infiniteRepeatable(animation = tween(800), repeatMode = RepeatMode.Reverse),
+          label = "alpha_animation",
+        )
 
       Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp, vertical = 20.dp)
-          .graphicsLayer { this.alpha = alpha.value },
+        modifier =
+          Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp).graphicsLayer {
+            this.alpha = alpha.value
+          },
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
       ) {
@@ -605,9 +600,7 @@ fun InputBar(
         }
         Spacer(modifier = Modifier.width(12.dp))
         CircularProgressIndicator(
-          modifier = Modifier.size(24.dp).semantics {
-            contentDescription = cdRecordingInProgress
-          },
+          modifier = Modifier.size(24.dp).semantics { contentDescription = cdRecordingInProgress },
           color = MaterialTheme.colorScheme.error,
           strokeWidth = 2.dp,
         )
@@ -615,9 +608,7 @@ fun InputBar(
     } else {
       // Normal input UI
       Row(
-        modifier =
-          Modifier.fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {

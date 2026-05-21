@@ -18,7 +18,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0
+    revision: v0.10.8
 
 targets:
   LeapVLMExample:
@@ -32,6 +32,7 @@ targets:
         product: LeapModelDownloader
     settings:
       base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.examples.LeapVLMExample.macOS
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "5.9"

@@ -98,9 +98,18 @@ final class AppleVoiceConversation: VoiceConversation {
                         promptTokens: stats.promptTokens,
                         completionTokens: stats.completionTokens,
                         totalTokens: stats.totalTokens,
-                        tokenPerSecond: stats.tokenPerSecond
+                        tokenPerSecond: stats.tokenPerSecond,
+                        cachedPromptTokens: stats.cachedPromptTokens
                     )
                 }
+            } else if let err = response as? MessageResponseError {
+                // SKIE bridges the flow as non-throwing; rethrow in-band errors so the
+                // outer Task's catch routes them through completionHandler(nil, error).
+                throw NSError(
+                    domain: "AppleVoiceConversation",
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: err.message]
+                )
             }
         }
 

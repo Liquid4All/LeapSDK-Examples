@@ -3,6 +3,7 @@ package ai.liquid.leap.uidemo
 import ai.liquid.leap.ui.StatusType
 import ai.liquid.leap.ui.VoiceAssistantWidget
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -59,9 +60,20 @@ class MainActivity : ComponentActivity() {
         val vm = viewModel<VoiceAssistantViewModel>()
         val state by vm.state.collectAsState()
 
-        val permissionLauncher =
+        val recordAudioLauncher =
           rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-        LaunchedEffect(Unit) { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+        LaunchedEffect(Unit) { recordAudioLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+
+        // POST_NOTIFICATIONS is required on Android 13+ for LeapModelDownloader to surface
+        // download-progress notifications. The model download still succeeds without it; the
+        // permission only affects user-visible notification delivery.
+        val postNotificationsLauncher =
+          rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          LaunchedEffect(Unit) {
+            postNotificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+          }
+        }
 
         val statusColor =
           when (state.statusType) {

@@ -4,7 +4,7 @@
     <string name="user_input_placeholder">What\'s your business about?</string>
     <string name="generate_button_label">Generate a slogan ✨</string>
 
-    <string name="stop_button_label">Stop \uD83D\uDED1"</string>
+    <string name="stop_button_label">Stop 🛑"</string>
     <string name="model_status_loading">● Model: Loading…</string>
     <string name="model_status_loaded">● Model: Loaded ✓</string>
     <string name="model_status_error">● Model: Error</string>
@@ -14,4 +14,11 @@
     <string name="model_loading_in_progress_label">Initiating AI model …</string>
     <string name="model_loaded_label">Model ready! 🎯</string>
     <string name="error_loading_ai_model_oops_an_error_happened">Error loading AI model: %1$s\n\nOops! An error happened.</string>
+    <string name="notification_downloading_slogan_model">Downloading Slogan Generator Model</string>
+    <string name="notification_slogan_model_ready">Model Ready!</string>
+    <string name="status_starting_download">Starting download…</string>
+    <string name="status_downloading_progress">Downloading: %1$d%% (%2$d MB / %3$d MB)</string>
+    <string name="status_download_complete">Download complete!</string>
+    <string name="error_generation_failed">Error generating slogan: %1$s Try again? 🎨</string>
+    <string name="generation_stopped_appended">\n\n[Generation stopped…]</string>
 </resources>

@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">VLMTestApp</string>
+    <string name="take_picture_button">Take a picture</string>
+    <string name="image_content_description">Captured image to describe</string>
+    <string name="status_loading_model">Loading the model…</string>
+    <string name="notification_downloading_model">Downloading VLM Model</string>
+    <string name="notification_model_ready">Model Ready!</string>
+    <string name="status_starting_download">Starting download…</string>
+    <string name="status_downloading_progress">Downloading: %1$d%% (%2$d MB / %3$d MB)</string>
+    <string name="status_download_complete">Download complete!</string>
+    <string name="status_generating_description">Looking at the image and generating a description…</string>
+    <string name="system_prompt_vlm">You are a helpful multimodal assistant by Liquid AI.</string>
+    <string name="user_prompt_describe_image">Describe this image.</string>
+    <string name="error_generation_failed">Error: %1$s</string>
 </resources>

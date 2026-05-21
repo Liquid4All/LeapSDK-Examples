@@ -1,3 +1,13 @@
+# This demo links the LeapUI SPM library product, which transitively bundles the LeapSDK
+# target. LeapUI doesn't `export(project(":leap-sdk"))` in its K/N framework binary, so the
+# LeapSDK Kotlin types aren't re-emitted into LeapUi.framework — that means dual-importing
+# `LeapSDK` + `LeapUi` here is unambiguous, and the demo continues to read SDK conveniences
+# from `LeapSDK.framework/Frameworks/` (where the engine dylibs ship).
+#
+# The other five iOS demos depend on the LeapModelDownloader SPM library product (which is
+# single-target and DOES re-emit leap-sdk's Kotlin types via export), so those demos point at
+# `LeapModelDownloader.framework/Frameworks/` instead. See
+# `leap-sdk/src/appleMain/MIGRATION.md` for the "which product do I depend on?" decision tree.
 name: LeapVoiceAssistantDemo
 options:
   bundleIdPrefix: ai.liquid.leap
@@ -17,7 +27,7 @@ settings:
 packages:
   LeapSDK:
     url: https://github.com/Liquid4All/leap-sdk
-    exactVersion: 0.10.0
+    revision: v0.10.8
 
 targets:
   LeapVoiceAssistantDemo:
@@ -31,6 +41,7 @@ targets:
         product: LeapUI
     settings:
       base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         PRODUCT_BUNDLE_IDENTIFIER: ai.liquid.leap.LeapVoiceAssistantDemo
         INFOPLIST_FILE: LeapVoiceAssistantDemo/Info.plist
         SWIFT_VERSION: "5.0"

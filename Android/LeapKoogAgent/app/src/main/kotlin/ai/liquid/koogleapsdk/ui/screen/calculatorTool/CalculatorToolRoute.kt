@@ -7,11 +7,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CalculatorToolRoute() {
-    val viewModel = viewModel { CalculatorToolViewModel() }
-    val state by viewModel.state.collectAsStateWithLifecycle()
+  val viewModel = viewModel { CalculatorToolViewModel() }
+  val state by viewModel.state.collectAsStateWithLifecycle()
 
-    CalculatorToolScreen(
-        state = state,
-        onEvent = viewModel::onEvent
-    )
+  CalculatorToolScreen(state = state, onEvent = viewModel::onEvent)
 }

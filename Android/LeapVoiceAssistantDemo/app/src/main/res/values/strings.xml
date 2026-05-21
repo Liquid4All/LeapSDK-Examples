@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Leap UI Demo</string>
+    <string name="notification_downloading_model">Downloading Voice Model</string>
+    <string name="notification_model_ready">Voice Model Ready</string>
 </resources>

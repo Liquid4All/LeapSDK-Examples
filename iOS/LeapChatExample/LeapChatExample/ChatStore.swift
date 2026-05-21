@@ -1,4 +1,4 @@
-import LeapSDK
+import LeapModelDownloader
 import PhotosUI
 import SwiftUI
 
@@ -30,11 +30,15 @@ class ChatStore {
           content: "📦 Downloading LFM2.5-VL-1.6B model...",
           isUser: false))
 
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let modelRunner = try await Leap.shared.load(
         model: "LFM2.5-VL-1.6B",
         quantization: "Q4_0",
         options: LiquidInferenceEngineManifestOptions(
-          contextSize: 4096  // Reduced from default for mobile memory constraints
+          cacheOptions: .enabled(path: cachePath),
+          contextSize: 4096
         ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
@@ -102,7 +106,12 @@ class ChatStore {
       messageContent.append(ChatMessageContent.text(trimmed))
     }
 
-    let userMessage = ChatMessage_withArray(role: .user, content: messageContent)
+    let userMessage = ChatMessage(
+      role: .user,
+      content: messageContent,
+      reasoningContent: nil,
+      functionCalls: nil
+    )
 
     // Create display content for the message bubble
     var displayContent = trimmed
@@ -117,39 +126,42 @@ class ChatStore {
     currentAssistantMessage = ""
 
     let stream = conversation!.generateResponse(message: userMessage)
-    do {
-      for try await resp in stream {
-        switch onEnum(of: resp) {
-        case .reasoningChunk:
-          break
-        case .chunk(let chunk):
-          currentAssistantMessage.append(chunk.text)
-        case .audioSample:
-          break
-        case .complete(let completion):
-          let finalText = completion.fullMessage.content.compactMap { content -> String? in
-            if case .text(let t) = onEnum(of: content) {
-              return t.text
-            }
-            return nil
-          }.joined()
-          if !finalText.isEmpty {
-            currentAssistantMessage = finalText
-          }
-          if !currentAssistantMessage.isEmpty {
-            messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
-          }
-          currentAssistantMessage = ""
-          isLoading = false
-        case .functionCalls:
-          break  // Function calls not used in this example
-        }
+    for await resp in stream {
+      // SKIE bridges the flow as non-throwing; surface in-band errors explicitly via the
+      // runtime cast (the .Error case is excluded from SKIE's sealed-enum codegen because
+      // its name collides with Swift's `Error` protocol).
+      if let err = resp as? MessageResponseError {
+        messages.append(
+          MessageBubble(content: "🚨 Generation error: \(err.message)", isUser: false))
+        currentAssistantMessage = ""
+        isLoading = false
+        continue
       }
-    } catch {
-      currentAssistantMessage = "Error: \(error.localizedDescription)"
-      messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
-      currentAssistantMessage = ""
-      isLoading = false
+      switch onEnum(of: resp) {
+      case .reasoningChunk:
+        break
+      case .chunk(let chunk):
+        currentAssistantMessage.append(chunk.text)
+      case .audioSample:
+        break
+      case .complete(let completion):
+        let finalText = completion.fullMessage.content.compactMap { content -> String? in
+          if case .text(let t) = onEnum(of: content) {
+            return t.text
+          }
+          return nil
+        }.joined()
+        if !finalText.isEmpty {
+          currentAssistantMessage = finalText
+        }
+        if !currentAssistantMessage.isEmpty {
+          messages.append(MessageBubble(content: currentAssistantMessage, isUser: false))
+        }
+        currentAssistantMessage = ""
+        isLoading = false
+      case .functionCalls:
+        break  // Function calls not used in this example
+      }
     }
   }
 

@@ -1,5 +1,4 @@
 import Foundation
-import LeapSDK
 import LeapSDKMacros
 
 // SloganResponse structure for constrained generation using Swift macros

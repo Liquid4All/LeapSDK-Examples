@@ -1,0 +1,127 @@
+name: Windows LeapChatCli Build
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Windows/LeapChatCli/**'
+      - '.github/workflows/windows-leap-chat-cli-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Windows/LeapChatCli/**'
+      - '.github/workflows/windows-leap-chat-cli-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege default.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Windows/LeapChatCli
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+      - name: Cache Kotlin/Native distribution
+        uses: actions/cache@v5
+        with:
+          path: ~\.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('Windows/LeapChatCli/gradle/libs.versions.toml') }}
+      - name: Purge cached leap-sdk artifacts if Sonatype snapshot was republished
+        # The pin may be a SNAPSHOT in which case the upstream may force-update it under
+        # the same SNAPSHOT version, with new contents. When that happens,
+        # `--refresh-dependencies` alone isn't enough: the gradle cache restored by
+        # setup-java's cache: 'gradle' still contains the prior artifact, and gradle
+        # short-circuits the re-download because the cached SHA matches its metadata.
+        #
+        # Detect the situation by comparing Sonatype's <lastUpdated> for the snapshot
+        # against a marker we wrote on the previous run. Purge only when they differ —
+        # so the cache stays warm in the common case (no upstream republish) and
+        # rebuilds get the new artifact in the rare case (snapshot updated).
+        shell: pwsh
+        run: |
+          $sdkLine = (Get-Content "gradle\libs.versions.toml" | Select-String '^\s*leapSdk\s*=' | Select-Object -First 1).Line
+          if ($sdkLine -match '"([^"]+)"') { $sdkVersion = $matches[1] } else {
+            Write-Host "(could not parse leapSdk version from gradle/libs.versions.toml — skipping purge check)"
+            return
+          }
+          # Whitelist version shape before interpolating into the metadata URL.
+          if ($sdkVersion -notmatch '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)*(-[A-Za-z0-9.]+)?(-SNAPSHOT)?$') {
+            Write-Host "(unexpected leapSdk version shape '$sdkVersion' — skipping purge check)"
+            return
+          }
+          if ($sdkVersion -notmatch '-SNAPSHOT$') {
+            Write-Host "leap-sdk pinned to stable $sdkVersion; skipping snapshot purge check"
+            return
+          }
+          # Check the parent `leap-sdk` artifact's <lastUpdated> — when the SDK is
+          # republished, the parent and every per-target sibling get re-uploaded
+          # together with the same timestamp, so one URL is representative for any
+          # workflow. Marker lives under ~/.gradle/caches so it's preserved by
+          # setup-java's gradle cache between runs.
+          $metaUrl = "https://central.sonatype.com/repository/maven-snapshots/ai/liquid/leap/leap-sdk/$sdkVersion/maven-metadata.xml"
+          $marker  = "$env:USERPROFILE\.gradle\caches\leap-snapshot-marker"
+          try {
+            $xml = [xml](Invoke-WebRequest -Uri $metaUrl -UseBasicParsing).Content
+            $remoteTs = $xml.metadata.versioning.lastUpdated
+          } catch {
+            Write-Host "(could not fetch snapshot metadata for $sdkVersion from Sonatype — skipping purge check)"
+            return
+          }
+          $localTs = if (Test-Path $marker) { Get-Content $marker -Raw } else { "" }
+          $localTs = $localTs.Trim()
+          if ($remoteTs -eq $localTs) {
+            Write-Host "Sonatype snapshot timestamp unchanged for $sdkVersion ($localTs); leap-sdk cache is fresh"
+          } else {
+            $shown = if ($localTs) { $localTs } else { "<none>" }
+            Write-Host "Sonatype snapshot timestamp changed for $sdkVersion ($shown -> $remoteTs); purging leap-sdk cache"
+            Get-ChildItem -Path "$env:USERPROFILE\.gradle\caches\modules-2" -Filter "ai.liquid.leap*" -Recurse -Force -ErrorAction SilentlyContinue |
+              Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path (Split-Path $marker) | Out-Null
+            Set-Content -Path $marker -Value $remoteTs -NoNewline
+          }
+      - name: Build native executable
+        # Build-only — no smoke test on the github-hosted runner. The .exe links
+        # against libgcc_s_seh-1.dll (Konan's MinGW toolchain ships only the
+        # import library, no static counterpart for libgcc_s on x86_64), so the
+        # binary fails to load on a clean Windows host with STATUS_DLL_NOT_FOUND
+        # (0xC0000135) before any Kotlin code runs. End-to-end download + chat
+        # works on developer hosts that have a MinGW runtime on PATH (or with
+        # the DLL co-located). A proper redistributable bundle of the MinGW
+        # runtime DLLs is deferred — see JVM/LeapChatCli for the portable
+        # JNI-based equivalent that has no native runtime dependencies.
+        run: .\gradlew.bat --refresh-dependencies linkReleaseExecutableMingwX64
+      - name: Verify expected artifacts produced
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $dir = "build\bin\mingwX64\releaseExecutable"
+          $expected = @(
+            "leap-chat-cli.exe",
+            "inference_engine.dll",
+            "libinference_engine_llamacpp_backend.dll",
+            "ie_zip.dll"
+          )
+          Write-Host "--- files in $dir ---"
+          Get-ChildItem $dir | Select-Object Name, Length | Format-Table
+          $missing = $expected | Where-Object { -not (Test-Path "$dir\$_") }
+          if ($missing) {
+            throw "missing expected artifacts: $($missing -join ', ')"
+          }

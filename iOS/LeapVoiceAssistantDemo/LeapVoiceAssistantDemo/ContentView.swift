@@ -8,7 +8,7 @@ import SwiftUI
 /// A status text overlay and post-generation stats are shown at the bottom, matching the Android
 /// and web demos.
 struct ContentView: View {
-    @StateObject private var viewModel = DemoViewModel()
+    @State private var viewModel = DemoViewModel()
 
     var body: some View {
         ZStack {

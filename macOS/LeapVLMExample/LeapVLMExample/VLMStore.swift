@@ -1,5 +1,5 @@
 import AppKit
-import LeapSDK
+import LeapModelDownloader
 import Observation
 
 @Observable
@@ -13,6 +13,7 @@ final class VLMStore {
   private static let quantization = "Q4_0"
 
   private var modelRunner: (any ModelRunner)?
+  private var generationTask: Task<Void, Never>?
 
   @MainActor
   func setupModel() async {
@@ -21,9 +22,15 @@ final class VLMStore {
     do {
       status = "Downloading \(Self.modelName) model..."
 
+      let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("leap-cache").path
+      try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
       let runner = try await Leap.shared.load(
         model: Self.modelName,
         quantization: Self.quantization,
+        options: LiquidInferenceEngineManifestOptions(
+          cacheOptions: .enabled(path: cachePath)
+        ),
         progress: { [weak self] progress, speed in
           Task { @MainActor in
             if progress < 1.0 {
@@ -52,11 +59,14 @@ final class VLMStore {
       return
     }
 
+    // Cancel any in-flight generation before starting a new one.
+    generationTask?.cancel()
+
     isGenerating = true
     generatedText = ""
     status = "Generating..."
 
-    do {
+    generationTask = Task { @MainActor in
       let imageContent = ChatMessageContent.Image.fromJPEGData(jpegData)
       let message = ChatMessage(
         role: .user,
@@ -67,7 +77,16 @@ final class VLMStore {
 
       let conversation = runner.createConversation(systemPrompt: nil)
 
-      for try await resp in conversation.generateResponse(message: message) {
+      for await resp in conversation.generateResponse(message: message) {
+        if Task.isCancelled { break }
+        // SKIE bridges the flow as non-throwing; surface in-band errors via runtime cast
+        // (the .Error case is excluded from SKIE's sealed-enum codegen — name collides with
+        // Swift's `Error` protocol).
+        if let err = resp as? MessageResponseError {
+          isGenerating = false
+          status = "Generation failed: \(err.message)"
+          continue
+        }
         switch onEnum(of: resp) {
         case .chunk(let chunk):
           generatedText.append(chunk.text)
@@ -78,11 +97,17 @@ final class VLMStore {
           break
         }
       }
-    } catch {
-      generatedText = "Error: \(error.localizedDescription)"
-      isGenerating = false
-      status = "Model ready"
+      generationTask = nil
     }
+  }
+
+  func stop() {
+    generationTask?.cancel()
+    generationTask = nil
+  }
+
+  deinit {
+    generationTask?.cancel()
   }
 
   private func resizedJPEGData(forAsset name: String, maxSize: CGSize) -> Data? {

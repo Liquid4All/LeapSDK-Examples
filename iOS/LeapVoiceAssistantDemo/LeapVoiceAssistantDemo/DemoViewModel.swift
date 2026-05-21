@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import LeapSDK
 import LeapUi
+import Observation
 
 private let modelName = "LFM2.5-Audio-1.5B"
 private let quantizationSlug = "Q4_0"
@@ -15,15 +16,16 @@ private let systemPrompt = "Respond with interleaved text and audio."
 /// - Loading the model and wiring it to the store via `AppleVoiceConversation`
 /// - Observing `store.state` and publishing changes for SwiftUI
 @MainActor
-final class DemoViewModel: ObservableObject {
+@Observable
+final class DemoViewModel {
 
-    // MARK: - Published state
+    // MARK: - Observed state
 
     let store: VoiceAssistantStore
 
-    @Published private(set) var statusText: String = "Initializing\u{2026}"
-    @Published private(set) var statusType: DemoStatusType = .loading
-    @Published private(set) var statsText: String? = nil
+    private(set) var statusText: String = "Initializing\u{2026}"
+    private(set) var statusType: DemoStatusType = .loading
+    private(set) var statsText: String? = nil
 
     // MARK: - Private
 
@@ -75,9 +77,15 @@ final class DemoViewModel: ObservableObject {
     private func loadModel() async {
         store.setModelProgress(fraction: 0, message: "Resolving manifest\u{2026}")
         do {
+            let cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("leap-cache").path
+            try? FileManager.default.createDirectory(atPath: cachePath, withIntermediateDirectories: true)
             let runner = try await Leap.shared.load(
                 model: modelName,
                 quantization: quantizationSlug,
+                options: LiquidInferenceEngineManifestOptions(
+                    cacheOptions: .enabled(path: cachePath)
+                ),
                 progress: { [weak self] fraction, _ in
                     Task { @MainActor [weak self] in
                         self?.store.setModelProgress(
@@ -100,6 +108,6 @@ final class DemoViewModel: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
         try? session.setActive(true)
-        session.requestRecordPermission { _ in }
+        AVAudioApplication.requestRecordPermission { _ in }
     }
 }
