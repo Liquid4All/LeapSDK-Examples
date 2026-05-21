@@ -127,6 +127,16 @@ class ChatStore {
 
     let stream = conversation!.generateResponse(message: userMessage)
     for await resp in stream {
+      // SKIE bridges the flow as non-throwing; surface in-band errors explicitly via the
+      // runtime cast (the .Error case is excluded from SKIE's sealed-enum codegen because
+      // its name collides with Swift's `Error` protocol).
+      if let err = resp as? MessageResponseError {
+        messages.append(
+          MessageBubble(content: "🚨 Generation error: \(err.message)", isUser: false))
+        currentAssistantMessage = ""
+        isLoading = false
+        continue
+      }
       switch onEnum(of: resp) {
       case .reasoningChunk:
         break
@@ -151,12 +161,6 @@ class ChatStore {
         isLoading = false
       case .functionCalls:
         break  // Function calls not used in this example
-      case .error(let err):
-        // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
-        messages.append(
-          MessageBubble(content: "🚨 Generation error: \(err.message)", isUser: false))
-        currentAssistantMessage = ""
-        isLoading = false
       }
     }
   }

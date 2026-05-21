@@ -154,6 +154,13 @@ class SloganStore {
         var streamError: String?
         for await response in stream {
           if Task.isCancelled { break }
+          // SKIE bridges the flow as non-throwing; surface in-band errors via runtime cast
+          // (the .Error case is excluded from SKIE's sealed-enum codegen — name collides with
+          // Swift's `Error` protocol).
+          if let err = response as? MessageResponseError {
+            streamError = err.message
+            continue
+          }
           switch onEnum(of: response) {
           case .chunk(let chunk):
             jsonResponse.append(chunk.text)
@@ -165,9 +172,6 @@ class SloganStore {
             break
           case .functionCalls:
             break
-          case .error(let err):
-            // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
-            streamError = err.message
           }
         }
         if let streamError {
@@ -221,6 +225,13 @@ class SloganStore {
         for await response in stream {
           if Task.isCancelled { break }
 
+          if let err = response as? MessageResponseError {
+            isGenerating = false
+            isThinking = false
+            generationTask = nil
+            generatedText.append("\n\n[Error: \(err.message)]")
+            continue
+          }
           switch onEnum(of: response) {
           case .chunk(let chunk):
             isThinking = false
@@ -241,11 +252,6 @@ class SloganStore {
             }
           case .functionCalls:
             break
-          case .error(let err):
-            isGenerating = false
-            isThinking = false
-            generationTask = nil
-            generatedText.append("\n\n[Error: \(err.message)]")
           }
         }
       }

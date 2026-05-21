@@ -89,14 +89,18 @@ class GeneratorViewModel {
       var jsonResponse = ""
       var streamError: String?
       for await event in stream {
+        // SKIE bridges the flow as non-throwing; surface in-band errors via runtime cast
+        // (the .Error case is excluded from SKIE's sealed-enum codegen — name collides with
+        // Swift's `Error` protocol).
+        if let err = event as? MessageResponseError {
+          streamError = err.message
+          continue
+        }
         switch onEnum(of: event) {
         case .chunk(let chunk):
           jsonResponse.append(chunk.text)
         case .complete, .audioSample, .reasoningChunk, .functionCalls:
           break
-        case .error(let err):
-          // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
-          streamError = err.message
         }
       }
       if let streamError {

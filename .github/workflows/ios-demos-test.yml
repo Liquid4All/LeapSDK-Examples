@@ -84,5 +84,5 @@ jobs:
         run: |
           xcodebuild -project ${{ matrix.demo }}.xcodeproj \
             -scheme ${{ matrix.demo }} \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             build

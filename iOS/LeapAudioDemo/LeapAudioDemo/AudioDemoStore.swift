@@ -189,6 +189,16 @@ final class AudioDemoStore {
   }
 
   private func handle(_ event: any MessageResponse) {
+    // SKIE bridges the underlying Flow as non-throwing (Failure = Never), so generation
+    // failures are delivered in-band via MessageResponse.Error rather than as thrown errors.
+    // The .Error case is excluded from SKIE's sealed-enum codegen (name collides with Swift's
+    // `Error` protocol), so check it with a runtime cast before falling into the switch.
+    if let err = event as? MessageResponseError {
+      isGenerating = false
+      streamingText = ""
+      status = "Generation failed: \(err.message)"
+      return
+    }
     switch onEnum(of: event) {
     case .chunk(let chunk):
       streamingText.append(chunk.text)
@@ -201,12 +211,6 @@ final class AudioDemoStore {
       status = "Received function call: \(fc.functionCalls.count)"
     case .complete(let completion):
       finish(with: completion)
-    case .error(let err):
-      // SKIE bridges the underlying Flow as non-throwing (Failure = Never), so generation
-      // failures are delivered in-band via MessageResponse.Error rather than as thrown errors.
-      isGenerating = false
-      streamingText = ""
-      status = "Generation failed: \(err.message)"
     }
   }
 

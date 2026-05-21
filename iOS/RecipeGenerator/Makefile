@@ -8,11 +8,11 @@ generate:
 
 build: generate
 	@echo "🏗️ Building RecipeGenerator..."
-	xcodebuild -project RecipeGenerator.xcodeproj -scheme RecipeGenerator -destination 'platform=iOS Simulator,name=iPhone 16' build
+	xcodebuild -project RecipeGenerator.xcodeproj -scheme RecipeGenerator -destination 'platform=iOS Simulator,name=iPhone 17' build
 
 run: generate
 	@echo "🚀 Running RecipeGenerator..."
-	xcodebuild -project RecipeGenerator.xcodeproj -scheme RecipeGenerator -destination 'platform=iOS Simulator,name=iPhone 16' run
+	xcodebuild -project RecipeGenerator.xcodeproj -scheme RecipeGenerator -destination 'platform=iOS Simulator,name=iPhone 17' run
 
 clean:
 	@echo "🧹 Cleaning..."

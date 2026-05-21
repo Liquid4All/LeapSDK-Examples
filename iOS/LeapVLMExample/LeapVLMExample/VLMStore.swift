@@ -79,16 +79,20 @@ final class VLMStore {
 
       for await resp in conversation.generateResponse(message: message) {
         if Task.isCancelled { break }
+        // SKIE bridges the flow as non-throwing; surface in-band errors via runtime cast
+        // (the .Error case is excluded from SKIE's sealed-enum codegen — name collides with
+        // Swift's `Error` protocol).
+        if let err = resp as? MessageResponseError {
+          isGenerating = false
+          status = "Generation failed: \(err.message)"
+          continue
+        }
         switch onEnum(of: resp) {
         case .chunk(let chunk):
           generatedText.append(chunk.text)
         case .complete:
           isGenerating = false
           status = "Model ready"
-        case .error(let err):
-          // SKIE bridges the flow as non-throwing; surface in-band errors explicitly.
-          isGenerating = false
-          status = "Generation failed: \(err.message)"
         default:
           break
         }
