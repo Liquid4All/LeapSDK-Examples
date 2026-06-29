@@ -228,6 +228,52 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/Frameworks/LeapSDK.framework/Frameworks"
 ```
 
+## LoRA Adapters
+
+LoRA (Low-Rank Adaptation) adapters specialize a base model — for tone, domain, or task — without
+shipping a separate full checkpoint. Adapters are `.gguf` files; multiple can be active at once and
+their contributions stack. Each is a `LoraAdapterConfig(path:scale:)`.
+
+> LoRA is supported on the llama.cpp backend (`.gguf` checkpoints). The ExecuTorch (`.bundle`) and
+> LFM2-audio backends do not support adapter swaps.
+
+**Load adapters when the model loads** (sideloaded GGUF via `LiquidInferenceEngineOptions`):
+
+```swift
+let options = LiquidInferenceEngineOptions(
+    bundlePath: modelURL.path,
+    loraAdapters: [LoraAdapterConfig(path: adapterURL.path, scale: 1.0)]
+)
+let runner = try await LiquidInferenceEngineRunner.create(options: options)
+```
+
+**Swap or clear adapters at runtime.** `setLoraAdapters` fully replaces the active set; pass an
+empty array to return to the base model. It works on any runner (including one returned by
+`Leap.shared.load(...)`):
+
+```swift
+// Replace the active set
+try await modelRunner.setLoraAdapters([
+    LoraAdapterConfig(path: styleAdapterURL.path, scale: 0.6)
+])
+
+// Clear all adapters → back to the base model
+try await modelRunner.setLoraAdapters([])
+```
+
+The swap is safe to call concurrently with generation — it is serialized behind any in-flight
+generation (and `unload`) and applied once that completes; the call suspends until it lands.
+
+**Scales** are independent per-adapter multipliers and need **not** sum to 1: `1.0` is full strength,
+lower blends more lightly, higher over-drives, and multiple adapters can each be `1.0`. Stacking many
+at high scales can degrade output quality.
+
+**Memory:** clearing an adapter only *deactivates* it — the engine keeps every distinct adapter it
+has loaded (keyed by path) resident for the lifetime of the loaded model. Re-activating is cheap, but
+the cache grows with the number of distinct paths used, and adapter memory is reclaimed only on
+`modelRunner.unload()`. To bound memory while rotating through many large adapters, recreate the
+runner rather than relying on `setLoraAdapters([])`.
+
 ## Model Requirements
 
 **All examples use automatic model downloading** - no manual model setup required!
