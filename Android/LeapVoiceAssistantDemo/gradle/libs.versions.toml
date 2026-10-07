@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.4.1"
 kotlin = "2.3.20"
 coreKtx = "1.17.0"
 leapSdk = "0.10.0"
@@ -27,6 +27,5 @@ leap-ui = { module = "ai.liquid.leap:leap-ui", version.ref = "leapSdk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 com-ncorti-ktfmt-gradle = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
